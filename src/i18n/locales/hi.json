@@ -1,0 +1,112 @@
+{
+  "brand": {
+    "name": "Diodetronix",
+    "tagline": "DTX Secure"
+  },
+  "auth": {
+    "signIn": {
+      "submit": "लॉगिन",
+      "forgotPassword": "पासवर्ड भूल गए",
+      "footerPrompt": "खाता नहीं है?",
+      "footerAction": "रजिस्टर करें"
+    },
+    "signUp": {
+      "submit": "रजिस्टर करें",
+      "footerPrompt": "पहले से खाता है?",
+      "footerAction": "साइन इन करें"
+    },
+    "fields": {
+      "identifier": {
+        "label": "ईमेल या यूज़रनेम",
+        "placeholder": "अपना ईमेल या यूज़रनेम दर्ज करें"
+      },
+      "fullName": {
+        "label": "पूरा नाम",
+        "placeholder": "अपना पूरा नाम दर्ज करें"
+      },
+      "email": {
+        "label": "ईमेल पता",
+        "placeholder": "अपना ईमेल पता दर्ज करें"
+      },
+      "password": {
+        "label": "पासवर्ड",
+        "placeholder": "अपना सुरक्षा पासवर्ड दर्ज करें"
+      },
+      "newPassword": {
+        "label": "पासवर्ड",
+        "placeholder": "पासवर्ड बनाएं"
+      },
+      "confirmPassword": {
+        "label": "पासवर्ड की पुष्टि करें",
+        "placeholder": "सुरक्षा पासवर्ड की पुष्टि करें"
+      }
+    }
+  },
+  "validation": {
+    "required": "{{field}} आवश्यक है",
+    "invalidEmail": "मान्य ईमेल पता दर्ज करें",
+    "passwordTooShort": "पासवर्ड कम से कम {{count}} अक्षरों का होना चाहिए",
+    "passwordMismatch": "पासवर्ड मेल नहीं खाते"
+  },
+  "tabs": {
+    "main": "मुख्य",
+    "zone": "ज़ोन",
+    "dialer": "डायलर",
+    "events": "इवेंट्स",
+    "settings": "सेटिंग्स"
+  },
+  "screens": {
+    "main": "सिस्टम अवलोकन और आर्म या डिसआर्म नियंत्रण।",
+    "zone": "परिसर के सेंसर और ज़ोन।",
+    "dialer": "आपातकालीन और संपर्क नंबर।",
+    "events": "अलार्म इतिहास और सिस्टम सूचनाएं।",
+    "settings": "खाता, पैनल और सूचना प्राथमिकताएं।"
+  },
+  "settings": {
+    "language": "भाषा",
+    "theme": "थीम",
+    "themeLight": "लाइट",
+    "themeDark": "डार्क",
+    "themeSystem": "सिस्टम"
+  },
+  "a11y": {
+    "switchToLight": "लाइट मोड पर जाएं",
+    "switchToDark": "डार्क मोड पर जाएं",
+    "showPassword": "पासवर्ड दिखाएं",
+    "hidePassword": "पासवर्ड छिपाएं",
+    "selectLanguage": "भाषा चुनें"
+  },
+  "common": {
+    "back": "वापस"
+  },
+  "profile": {
+    "title": "प्रोफ़ाइल",
+    "account": "खाता",
+    "appTheme": "ऐप थीम",
+    "appLanguage": "ऐप भाषा",
+    "support": "सहायता",
+    "logout": "लॉग आउट",
+    "guest": "अतिथि",
+    "noEmail": "कोई ईमेल दर्ज नहीं है",
+    "themeSubtitle": "ऐप का रूप बदलें",
+    "languageSubtitle": "पसंदीदा भाषा चुनें",
+    "helpSubtitle": "सामान्य प्रश्न, सहायता से संपर्क",
+    "profileSubtitle": "आपके खाते का विवरण",
+    "selectTheme": "थीम चुनें",
+    "selectLanguage": "भाषा चुनें",
+    "preferences": "प्राथमिकताएं"
+  },
+  "help": {
+    "title": "सहायता और समर्थन",
+    "introTitle": "हम आपकी मदद के लिए हैं",
+    "introBody": "सेटअप, पैनल खराबी या खाते से जुड़े सवालों के लिए Diodetronix टीम से संपर्क करें।",
+    "contactUs": "संपर्क करें",
+    "email": "ईमेल",
+    "phone": "फ़ोन",
+    "emailSubject": "Diodetronix ऐप सहायता",
+    "writeTo": "{{value}} पर लिखें",
+    "callTo": "{{value}} पर कॉल करें",
+    "hours": "सोमवार से शनिवार, सुबह 9:00 से शाम 6:00 बजे (IST)।",
+    "noApp": "कोई ऐप उपलब्ध नहीं है"
+  }
+}

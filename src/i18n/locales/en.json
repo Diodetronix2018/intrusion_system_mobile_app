@@ -1,0 +1,112 @@
+{
+  "brand": {
+    "name": "Diodetronix",
+    "tagline": "DTX Secure"
+  },
+  "auth": {
+    "signIn": {
+      "submit": "Login",
+      "forgotPassword": "Forgot password",
+      "footerPrompt": "Don't have an account?",
+      "footerAction": "Register"
+    },
+    "signUp": {
+      "submit": "Register",
+      "footerPrompt": "Already have an account?",
+      "footerAction": "Sign in"
+    },
+    "fields": {
+      "identifier": {
+        "label": "Email or Username",
+        "placeholder": "Enter your email or username"
+      },
+      "fullName": {
+        "label": "Full Name",
+        "placeholder": "Enter your full name"
+      },
+      "email": {
+        "label": "Email Address",
+        "placeholder": "Enter your email address"
+      },
+      "password": {
+        "label": "Password",
+        "placeholder": "Enter your security password"
+      },
+      "newPassword": {
+        "label": "Password",
+        "placeholder": "Create password"
+      },
+      "confirmPassword": {
+        "label": "Confirm Password",
+        "placeholder": "Confirm security password"
+      }
+    }
+  },
+  "validation": {
+    "required": "{{field}} is required",
+    "invalidEmail": "Enter a valid email address",
+    "passwordTooShort": "Password must be at least {{count}} characters",
+    "passwordMismatch": "Passwords do not match"
+  },
+  "tabs": {
+    "main": "Main",
+    "zone": "Zone",
+    "dialer": "Dialer",
+    "events": "Events",
+    "settings": "Settings"
+  },
+  "screens": {
+    "main": "System overview and arm or disarm controls.",
+    "zone": "Sensors and zones across the property.",
+    "dialer": "Emergency and contact numbers.",
+    "events": "Alarm history and system notifications.",
+    "settings": "Account, panel and notification preferences."
+  },
+  "settings": {
+    "language": "Language",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System"
+  },
+  "a11y": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "selectLanguage": "Select language"
+  },
+  "common": {
+    "back": "Back"
+  },
+  "profile": {
+    "title": "Profile",
+    "account": "Account",
+    "appTheme": "App Theme",
+    "appLanguage": "App Language",
+    "support": "Support",
+    "logout": "Logout",
+    "guest": "Guest",
+    "noEmail": "No email on file",
+    "themeSubtitle": "Customize app appearance",
+    "languageSubtitle": "Select preferred language",
+    "helpSubtitle": "FAQs, contact support",
+    "profileSubtitle": "Your account details",
+    "selectTheme": "Select theme",
+    "selectLanguage": "Select language",
+    "preferences": "Preferences"
+  },
+  "help": {
+    "title": "Help & Support",
+    "introTitle": "We're here to help",
+    "introBody": "Reach the Diodetronix team for setup, panel faults or account questions.",
+    "contactUs": "Contact us",
+    "email": "Email",
+    "phone": "Phone",
+    "emailSubject": "Diodetronix app support",
+    "writeTo": "Write to {{value}}",
+    "callTo": "Call {{value}}",
+    "hours": "Monday to Saturday, 9:00 AM to 6:00 PM IST.",
+    "noApp": "No app available"
+  }
+}
