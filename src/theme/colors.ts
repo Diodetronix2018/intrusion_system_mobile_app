@@ -14,6 +14,21 @@ export type ThemeColors = {
   backgroundGrouped: string;
   /** A settings card sitting on `backgroundGrouped` */
   card: string;
+  /**
+   * The design uses three distinct page tints; each is its own token so a
+   * screen never reaches for a near-miss value.
+   * `backgroundGrouped` #EFF1F5 · `backgroundSubtle` #F4F5F8 · `backgroundSoft` #F8FAFC
+   */
+  backgroundSubtle: string;
+  backgroundSoft: string;
+  /** Wash behind a chevron / action circle on a card */
+  accentWell: string;
+  /** Tint of the striped rows in a zebra list; the others keep the card */
+  rowStripe: string;
+  /** Track of a switch in the off position */
+  switchTrackOff: string;
+  /** Fill of an unselected chip */
+  chipBackground: string;
   /** Colour of the card drop shadow */
   cardShadow: string;
 
@@ -74,6 +89,12 @@ export const lightColors: ThemeColors = {
   surface: '#FFFFFF',
   backgroundGrouped: '#EFF1F5',
   card: '#FFFFFF',
+  backgroundSubtle: '#F4F5F8',
+  backgroundSoft: '#F8FAFC',
+  accentWell: '#E5E5F5',
+  rowStripe: '#F4F5F8',
+  switchTrackOff: '#D1D5DB',
+  chipBackground: '#F4F5F8',
   cardShadow: '#000000',
 
   headerBackground: '#F8FAFC',
@@ -125,6 +146,14 @@ export const darkColors: ThemeColors = {
   // grey-page / white-card separation
   backgroundGrouped: '#0B1120',
   card: '#1E293B',
+  backgroundSubtle: '#0B1120',
+  backgroundSoft: '#0B1120',
+  accentWell: 'rgba(74, 108, 240, 0.22)',
+  // a tint rather than a fixed colour, so it works on any card surface
+  rowStripe: 'rgba(255, 255, 255, 0.04)',
+  switchTrackOff: '#334155',
+  // sits lighter than the page so an unselected chip stays visible
+  chipBackground: '#1E293B',
   cardShadow: '#000000',
 
   // the app bar takes the brand colour on dark, where a near-black bar would

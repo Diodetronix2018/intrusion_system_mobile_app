@@ -75,6 +75,22 @@ export const cardElevation = (shadowColor: string, isDark: boolean) =>
     default: {},
   })!;
 
+/**
+ * `0px 2px 8px 0px #0000000A, 0px 14px 28px -12px #00000012` from the spec.
+ *
+ * Two stacked shadows need the CSS-style `boxShadow` prop, which React Native
+ * supports on the New Architecture (enabled in android/gradle.properties).
+ * On dark it is dropped — a 4% black shadow is invisible there, and the card
+ * already separates by being lighter than the page.
+ */
+export const layeredCardShadow = (isDark: boolean) =>
+  isDark
+    ? {}
+    : {
+        boxShadow:
+          '0px 2px 8px 0px #0000000A, 0px 14px 28px -12px #00000012',
+      };
+
 export const tokens = {
   spacing,
   radius,

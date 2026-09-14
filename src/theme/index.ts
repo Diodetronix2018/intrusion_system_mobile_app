@@ -17,6 +17,7 @@ export type { TypographyVariant } from './typography';
 export {
   cardElevation,
   elevation,
+  layeredCardShadow,
   radius,
   sizing,
   spacing,

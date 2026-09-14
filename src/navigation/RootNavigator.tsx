@@ -10,6 +10,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {
   HelpSupportScreen,
   ProfileScreen,
+  SettingsDetailScreen,
   SignInScreen,
   SignUpScreen,
 } from '../screens';
@@ -66,6 +67,10 @@ export function RootNavigator() {
             <Stack.Screen name="Tabs" component={BottomTabs} />
             <Stack.Screen name="Profile" component={ProfileScreen} />
             <Stack.Screen name="Help" component={HelpSupportScreen} />
+            <Stack.Screen
+              name="SettingsDetail"
+              component={SettingsDetailScreen}
+            />
           </Stack.Group>
         ) : (
           <Stack.Group screenOptions={{ animation: 'fade' }}>

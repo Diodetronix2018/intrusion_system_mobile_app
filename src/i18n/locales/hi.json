@@ -46,7 +46,10 @@
     "required": "{{field}} आवश्यक है",
     "invalidEmail": "मान्य ईमेल पता दर्ज करें",
     "passwordTooShort": "पासवर्ड कम से कम {{count}} अक्षरों का होना चाहिए",
-    "passwordMismatch": "पासवर्ड मेल नहीं खाते"
+    "passwordMismatch": "पासवर्ड मेल नहीं खाते",
+    "phoneRequired": "फ़ोन नंबर आवश्यक है",
+    "phoneLength": "{{count}} अंकों का मोबाइल नंबर दर्ज करें",
+    "phoneInvalid": "मान्य भारतीय मोबाइल नंबर दर्ज करें"
   },
   "tabs": {
     "main": "मुख्य",
@@ -67,7 +70,35 @@
     "theme": "थीम",
     "themeLight": "लाइट",
     "themeDark": "डार्क",
-    "themeSystem": "सिस्टम"
+    "themeSystem": "सिस्टम",
+    "configTitle": "सेटिंग्स कॉन्फ़िगरेशन",
+    "comingSoon": "जल्द आ रहा है",
+    "options": {
+      "specialNotify": {
+        "title": "विशेष सूचना कॉन्फ़िगरेशन",
+        "subtitle": "एसी विफलता, बैटरी और उपयोगकर्ता अलर्ट"
+      },
+      "partSetting": {
+        "title": "पार्ट सेटिंग कॉन्फ़िगरेशन",
+        "subtitle": "ज़ोन 1-9 विभाजन सेटिंग्स"
+      },
+      "silence": {
+        "title": "साइलेंस कॉन्फ़िगरेशन",
+        "subtitle": "फ़ॉल्ट और अलार्म साइलेंस मोड"
+      },
+      "repeat": {
+        "title": "रिपीट कॉन्फ़िगरेशन",
+        "subtitle": "कॉल, वॉइस और एडमिन रिपीट"
+      },
+      "autoArm": {
+        "title": "ऑटो आर्म कॉन्फ़िगरेशन",
+        "subtitle": "निर्धारित ऑटो-आर्म समय"
+      },
+      "relay": {
+        "title": "रिले कॉन्फ़िगरेशन",
+        "subtitle": "ज़ोन रिले असाइनमेंट"
+      }
+    }
   },
   "a11y": {
     "switchToLight": "लाइट मोड पर जाएं",
@@ -77,7 +108,13 @@
     "selectLanguage": "भाषा चुनें"
   },
   "common": {
-    "back": "वापस"
+    "back": "वापस",
+    "save": "सहेजें",
+    "cancel": "रद्द करें",
+    "delete": "हटाएं",
+    "close": "बंद करें",
+    "on": "चालू",
+    "off": "बंद"
   },
   "profile": {
     "title": "प्रोफ़ाइल",
@@ -108,5 +145,34 @@
     "callTo": "{{value}} पर कॉल करें",
     "hours": "सोमवार से शनिवार, सुबह 9:00 से शाम 6:00 बजे (IST)।",
     "noApp": "कोई ऐप उपलब्ध नहीं है"
+  },
+  "dialer": {
+    "title": "डायलर कॉन्फ़िगरेशन",
+    "type": "प्रकार",
+    "alert": "अलर्ट",
+    "methodSms": "एसएमएस",
+    "methodCall": "कॉल",
+    "methodCallAndSms": "कॉल + एसएमएस",
+    "alertBurglar": "चोरी",
+    "alertFire": "आग",
+    "alertBurglarAndFire": "चोरी + आग",
+    "addNumber": "फ़ोन नंबर जोड़ें",
+    "editNumber": "फ़ोन नंबर संपादित करें",
+    "deleteNumber": "नंबर हटाएं",
+    "deleteAll": "सभी नंबर हटाएं",
+    "confirmDelete": "क्या {{phone}} को सूची से हटाना है?",
+    "confirmDeleteAll": "इससे सूची के सभी नंबर हट जाएंगे।",
+    "phoneLabel": "फ़ोन नंबर",
+    "phonePlaceholder": "फ़ोन नंबर दर्ज करें",
+    "invalidPhone": "मान्य फ़ोन नंबर दर्ज करें",
+    "empty": "अभी कोई नंबर कॉन्फ़िगर नहीं है।",
+    "maxReached": "आप अधिकतम {{count}} नंबर जोड़ सकते हैं।",
+    "phoneHint": "{{count}} अंकों का मोबाइल नंबर, +91 के बिना"
+  },
+  "partSetting": {
+    "zone": "ज़ोन {{number}}",
+    "tamper": "टैम्पर",
+    "saveConfiguration": "कॉन्फ़िगरेशन सहेजें",
+    "saved": "कॉन्फ़िगरेशन सहेजा गया"
   }
 }

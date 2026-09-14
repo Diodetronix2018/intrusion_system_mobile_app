@@ -1,13 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  BellIcon,
-  HomeIcon,
-  LocationPinIcon,
-  PhoneIcon,
-  SettingsIcon,
-} from '../../icons';
+import { BellIcon, HomeIcon, LocationPinIcon } from '../../icons';
 import { useTheme } from '../../theme';
 import { PlaceholderScreen } from './PlaceholderScreen';
 
@@ -43,17 +37,6 @@ export function ZoneScreen() {
   );
 }
 
-export function DialerScreen() {
-  const { title, description, color } = useTabScreen('dialer');
-  return (
-    <PlaceholderScreen
-      title={title}
-      description={description}
-      icon={<PhoneIcon size={32} color={color} />}
-    />
-  );
-}
-
 export function EventsScreen() {
   const { title, description, color } = useTabScreen('events');
   return (
@@ -65,15 +48,13 @@ export function EventsScreen() {
   );
 }
 
-export function SettingsScreen() {
-  const { title, description, color } = useTabScreen('settings');
-  return (
-    <PlaceholderScreen
-      title={title}
-      description={description}
-      icon={<SettingsIcon size={32} color={color} />}
-    />
-  );
-}
-
+export { DialerScreen } from './dialer';
+export {
+  findSettingsOption,
+  SETTINGS_OPTIONS,
+  SettingsDetailScreen,
+  SettingsOptionCard,
+  SettingsScreen,
+} from './settings';
+export type { SettingsOption, SettingsOptionId } from './settings';
 export { PlaceholderScreen } from './PlaceholderScreen';

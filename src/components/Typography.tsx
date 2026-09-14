@@ -7,7 +7,11 @@ import {
   fontFor,
   FontWeightToken,
 } from '../theme/fonts';
-import { percentOf, TypographyVariant } from '../theme/typography';
+import {
+  percentOf,
+  typographyVariants,
+  TypographyVariant,
+} from '../theme/typography';
 
 /** `'5%'` is read as a percentage of the font size, matching Figma. */
 export type Measure = number | `${number}%`;
@@ -64,6 +68,9 @@ export function Typography({
   const base = typography[variant];
 
   const fontSize = size ?? (base.fontSize as number);
+  // a `weight` override must keep the variant's family, or overriding the
+  // weight on a Poppins variant would silently fall back to the default family
+  const resolvedFamily = family ?? typographyVariants[variant].family;
 
   const transform: TextStyle['textTransform'] | undefined = uppercase
     ? 'uppercase'
@@ -74,7 +81,9 @@ export function Typography({
     : undefined;
 
   const override: TextStyle = {
-    ...(weight || family ? fontFor(weight ?? '400', family) : null),
+    ...(weight || family
+      ? fontFor(weight ?? typographyVariants[variant].weight, resolvedFamily)
+      : null),
     ...(size !== undefined ? { fontSize } : null),
     ...(lineHeight !== undefined
       ? { lineHeight: resolve(lineHeight, fontSize) }

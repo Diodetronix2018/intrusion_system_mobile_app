@@ -17,5 +17,6 @@ export { ScreenHeader } from './ScreenHeader';
 export { SectionLabel, SettingsCard, SettingsRow } from './SettingsList';
 export type { SettingsRowProps } from './SettingsList';
 export type { ScreenProps } from './Screen';
+export { ToggleSwitch } from './ToggleSwitch';
 export { Typography } from './Typography';
 export type { Measure, TypographyProps } from './Typography';

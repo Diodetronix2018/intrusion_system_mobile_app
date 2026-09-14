@@ -19,7 +19,8 @@ export type TypographyVariant =
   | 'captionBold'
   | 'button'
   | 'cardTitle'
-  | 'cardSubtitle';
+  | 'cardSubtitle'
+  | 'screenTitle';
 
 /**
  * Variants deliberately set no lineHeight or letterSpacing — the platform
@@ -58,6 +59,8 @@ const specs: Record<TypographyVariant, VariantSpec> = {
   cardTitle: { fontSize: 15, weight: '700', family: 'poppins' },
   /** Settings card supporting line — Poppins 12/400 */
   cardSubtitle: { fontSize: 12, weight: '400', family: 'poppins' },
+  /** Page heading inside a tab — Poppins 22/800 */
+  screenTitle: { fontSize: 22, weight: '800', family: 'poppins' },
 };
 
 function toTextStyle(spec: VariantSpec): TextStyle {

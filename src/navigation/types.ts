@@ -2,6 +2,8 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+import type { SettingsOptionId } from '../screens/main/settings/options';
+
 /** Screens pushed on the root stack. */
 export type RootStackParamList = {
   SignIn: undefined;
@@ -9,6 +11,7 @@ export type RootStackParamList = {
   Tabs: undefined;
   Profile: undefined;
   Help: undefined;
+  SettingsDetail: { optionId: SettingsOptionId };
 };
 
 /** Tabs inside the `Tabs` route. */

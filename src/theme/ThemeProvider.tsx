@@ -8,7 +8,13 @@ import React, {
 import { useColorScheme } from 'react-native';
 
 import { darkColors, lightColors, ThemeColors } from './colors';
-import { cardElevation, elevation, tokens, Tokens } from './tokens';
+import {
+  cardElevation,
+  elevation,
+  layeredCardShadow,
+  tokens,
+  Tokens,
+} from './tokens';
 
 /** `system` follows the OS setting; `light`/`dark` pin the app to one theme. */
 export type ThemeMode = 'light' | 'dark' | 'system';
@@ -20,6 +26,8 @@ export type Theme = Tokens & {
   shadow: ReturnType<typeof elevation>;
   /** Ready-made shadow style for a settings card */
   cardShadow: ReturnType<typeof cardElevation>;
+  /** Two-layer shadow used by the dialer cards */
+  layeredShadow: ReturnType<typeof layeredCardShadow>;
 };
 
 type ThemeContextValue = {
@@ -43,6 +51,7 @@ function buildTheme(isDark: boolean): Theme {
     isDark,
     shadow: elevation(colors.shadow),
     cardShadow: cardElevation(colors.cardShadow, isDark),
+    layeredShadow: layeredCardShadow(isDark),
   };
 }
 

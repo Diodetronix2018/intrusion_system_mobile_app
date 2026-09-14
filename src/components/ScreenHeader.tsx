@@ -15,7 +15,8 @@ export function ScreenHeader({
   onBack,
   background,
 }: {
-  title: string;
+  /** Omit on screens that render their own page title below the bar */
+  title?: string;
   onBack?: () => void;
   /** Matches the page when the screen uses a grouped background */
   background?: string;
@@ -56,15 +57,19 @@ export function ScreenHeader({
         <View style={styles.back} />
       )}
 
-      <Typography
-        variant="captionBold"
-        size={17}
-        color={colors.text}
-        numberOfLines={1}
-        style={styles.title}
-      >
-        {title}
-      </Typography>
+      {title ? (
+        <Typography
+          variant="captionBold"
+          size={17}
+          color={colors.text}
+          numberOfLines={1}
+          style={styles.title}
+        >
+          {title}
+        </Typography>
+      ) : (
+        <View style={styles.title} />
+      )}
 
       {/* balances the back button so the title stays optically centred */}
       <View style={styles.back} />

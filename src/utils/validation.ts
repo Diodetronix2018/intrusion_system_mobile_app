@@ -45,6 +45,44 @@ export function validatePassword(
       };
 }
 
+/** Indian mobile numbers are exactly ten digits and start 6-9. */
+export const INDIAN_MOBILE_LENGTH = 10;
+const INDIAN_MOBILE_RE = /^[6-9]\d{9}$/;
+
+/**
+ * Reduces user input to the ten national digits: drops spaces, dashes and
+ * brackets, then strips a +91 / 91 / 0 trunk prefix if one was typed.
+ */
+export function normalizeIndianMobile(value: string): string {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length > INDIAN_MOBILE_LENGTH) {
+    if (digits.startsWith('91')) {
+      return digits.slice(2);
+    }
+    if (digits.startsWith('0')) {
+      return digits.replace(/^0+/, '');
+    }
+  }
+  return digits;
+}
+
+export function validateIndianMobile(value: string): ValidationError {
+  const digits = normalizeIndianMobile(value);
+  if (!digits) {
+    return { key: 'validation.phoneRequired' };
+  }
+  if (digits.length !== INDIAN_MOBILE_LENGTH) {
+    return {
+      key: 'validation.phoneLength',
+      params: { count: INDIAN_MOBILE_LENGTH },
+    };
+  }
+  if (!INDIAN_MOBILE_RE.test(digits)) {
+    return { key: 'validation.phoneInvalid' };
+  }
+  return undefined;
+}
+
 export function validateMatch(
   value: string,
   other: string,

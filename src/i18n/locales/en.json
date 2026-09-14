@@ -46,7 +46,10 @@
     "required": "{{field}} is required",
     "invalidEmail": "Enter a valid email address",
     "passwordTooShort": "Password must be at least {{count}} characters",
-    "passwordMismatch": "Passwords do not match"
+    "passwordMismatch": "Passwords do not match",
+    "phoneRequired": "Phone number is required",
+    "phoneLength": "Enter a {{count}}-digit mobile number",
+    "phoneInvalid": "Enter a valid Indian mobile number"
   },
   "tabs": {
     "main": "Main",
@@ -67,7 +70,35 @@
     "theme": "Theme",
     "themeLight": "Light",
     "themeDark": "Dark",
-    "themeSystem": "System"
+    "themeSystem": "System",
+    "configTitle": "Settings Configuration",
+    "comingSoon": "Coming soon",
+    "options": {
+      "specialNotify": {
+        "title": "Special Notify Configuration",
+        "subtitle": "AC fail, battery & user alerts"
+      },
+      "partSetting": {
+        "title": "Part Setting Configuration",
+        "subtitle": "Zone 1-9 partition settings"
+      },
+      "silence": {
+        "title": "Silence Configuration",
+        "subtitle": "Fault & alarm silence modes"
+      },
+      "repeat": {
+        "title": "Repeat Configuration",
+        "subtitle": "Call, voice & admin repeats"
+      },
+      "autoArm": {
+        "title": "Auto ARM Configuration",
+        "subtitle": "Scheduled auto-arm timing"
+      },
+      "relay": {
+        "title": "Relay Configuration",
+        "subtitle": "Zone relay assignments"
+      }
+    }
   },
   "a11y": {
     "switchToLight": "Switch to light mode",
@@ -77,7 +108,13 @@
     "selectLanguage": "Select language"
   },
   "common": {
-    "back": "Back"
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "close": "Close",
+    "on": "ON",
+    "off": "OFF"
   },
   "profile": {
     "title": "Profile",
@@ -108,5 +145,34 @@
     "callTo": "Call {{value}}",
     "hours": "Monday to Saturday, 9:00 AM to 6:00 PM IST.",
     "noApp": "No app available"
+  },
+  "dialer": {
+    "title": "Dialer Configuration",
+    "type": "Type",
+    "alert": "Alert",
+    "methodSms": "SMS",
+    "methodCall": "Call",
+    "methodCallAndSms": "Call + SMS",
+    "alertBurglar": "Burglar",
+    "alertFire": "Fire",
+    "alertBurglarAndFire": "Burglar + Fire",
+    "addNumber": "Add Phone Number",
+    "editNumber": "Edit Phone Number",
+    "deleteNumber": "Delete number",
+    "deleteAll": "Delete All Numbers",
+    "confirmDelete": "Remove {{phone}} from the dial-out list?",
+    "confirmDeleteAll": "This removes every number from the dial-out list.",
+    "phoneLabel": "Phone Number",
+    "phonePlaceholder": "Enter phone number",
+    "invalidPhone": "Enter a valid phone number",
+    "empty": "No numbers configured yet.",
+    "maxReached": "You can add up to {{count}} numbers.",
+    "phoneHint": "{{count}}-digit mobile number, without +91"
+  },
+  "partSetting": {
+    "zone": "Zone {{number}}",
+    "tamper": "Tamper",
+    "saveConfiguration": "Save Configuration",
+    "saved": "Configuration saved"
   }
 }
