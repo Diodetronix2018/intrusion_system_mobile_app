@@ -7,6 +7,7 @@ import { useTheme } from '../../../theme';
 import type { RootStackScreenProps } from '../../../navigation/types';
 import { findSettingsOption, SettingsOption } from './options';
 import { PartSettingScreen } from './detail/PartSettingScreen';
+import { RelayScreen } from './detail/RelayScreen';
 
 /**
  * Shared body for the six configuration screens until each gets its own
@@ -19,6 +20,10 @@ export function SettingsDetailScreen({
 
   if (option.id === 'partSetting') {
     return <PartSettingScreen />;
+  }
+
+  if (option.id === 'relay') {
+    return <RelayScreen />;
   }
 
   return <SettingsPlaceholder option={option} />;

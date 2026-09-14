@@ -114,7 +114,9 @@
     "delete": "Delete",
     "close": "Close",
     "on": "ON",
-    "off": "OFF"
+    "off": "OFF",
+    "saveConfiguration": "Save Configuration",
+    "configurationSaved": "Configuration saved"
   },
   "profile": {
     "title": "Profile",
@@ -171,8 +173,10 @@
   },
   "partSetting": {
     "zone": "Zone {{number}}",
-    "tamper": "Tamper",
-    "saveConfiguration": "Save Configuration",
-    "saved": "Configuration saved"
+    "tamper": "Tamper"
+  },
+  "relay": {
+    "zoneAssignment": "Zone Assignment",
+    "allZones": "All Zones"
   }
 }

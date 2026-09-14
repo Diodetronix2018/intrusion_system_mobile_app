@@ -114,7 +114,9 @@
     "delete": "हटाएं",
     "close": "बंद करें",
     "on": "चालू",
-    "off": "बंद"
+    "off": "बंद",
+    "saveConfiguration": "कॉन्फ़िगरेशन सहेजें",
+    "configurationSaved": "कॉन्फ़िगरेशन सहेजा गया"
   },
   "profile": {
     "title": "प्रोफ़ाइल",
@@ -171,8 +173,10 @@
   },
   "partSetting": {
     "zone": "ज़ोन {{number}}",
-    "tamper": "टैम्पर",
-    "saveConfiguration": "कॉन्फ़िगरेशन सहेजें",
-    "saved": "कॉन्फ़िगरेशन सहेजा गया"
+    "tamper": "टैम्पर"
+  },
+  "relay": {
+    "zoneAssignment": "ज़ोन असाइनमेंट",
+    "allZones": "सभी ज़ोन"
   }
 }

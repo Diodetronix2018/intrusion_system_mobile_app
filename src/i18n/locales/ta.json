@@ -114,7 +114,9 @@
     "delete": "நீக்கு",
     "close": "மூடு",
     "on": "இயக்கு",
-    "off": "அணை"
+    "off": "அணை",
+    "saveConfiguration": "உள்ளமைவைச் சேமி",
+    "configurationSaved": "உள்ளமைவு சேமிக்கப்பட்டது"
   },
   "profile": {
     "title": "சுயவிவரம்",
@@ -171,8 +173,10 @@
   },
   "partSetting": {
     "zone": "மண்டலம் {{number}}",
-    "tamper": "டேம்பர்",
-    "saveConfiguration": "உள்ளமைவைச் சேமி",
-    "saved": "உள்ளமைவு சேமிக்கப்பட்டது"
+    "tamper": "டேம்பர்"
+  },
+  "relay": {
+    "zoneAssignment": "மண்டல ஒதுக்கீடு",
+    "allZones": "அனைத்து மண்டலங்கள்"
   }
 }
