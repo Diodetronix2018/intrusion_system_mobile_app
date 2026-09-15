@@ -17,6 +17,15 @@ export interface CognitoConfig {
   identityPoolId: string;
 }
 
+/** Temporary AWS credentials minted by the Identity Pool. */
+export interface AwsCredentials {
+  accessKeyId: string;
+  secretKey: string;
+  sessionToken: string;
+  /** Epoch ms the credentials stop working. */
+  expiration?: number;
+}
+
 export interface AuthTokens {
   idToken: string;
   /** Cognito access token — required by self-service calls (GlobalSignOut…). */
@@ -30,12 +39,12 @@ export interface AuthTokens {
 // Transport — the Cognito JSON 1.1 protocol over plain fetch.
 // ---------------------------------------------------------------------------
 
-async function cognitoCall(
-  region: string,
+async function awsJsonCall(
+  host: string,
   target: string,
   body: object,
 ): Promise<any> {
-  const res = await fetch(`https://cognito-idp.${region}.amazonaws.com/`, {
+  const res = await fetch(`https://${host}/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-amz-json-1.1',
@@ -58,6 +67,10 @@ async function cognitoCall(
   }
   return json;
 }
+
+/** The User Pool endpoint — sign-in, sign-up, passwords, attributes. */
+const cognitoCall = (region: string, target: string, body: object) =>
+  awsJsonCall(`cognito-idp.${region}.amazonaws.com`, target, body);
 
 /** Carries Cognito's error code (e.g. `UserNotConfirmedException`) alongside the message. */
 export class CognitoError extends Error {
@@ -427,6 +440,71 @@ export async function globalSignOut(
   await cognitoCall(cfg.region, 'AWSCognitoIdentityProviderService.GlobalSignOut', {
     AccessToken: accessToken,
   });
+}
+
+// ---------------------------------------------------------------------------
+// Identity Pool — swaps the ID token for temporary AWS credentials, which is
+// what lets the app sign a DynamoDB call during the device claim.
+// ---------------------------------------------------------------------------
+
+export async function getCredentials(
+  cfg: CognitoConfig,
+  idToken: string,
+): Promise<{ identityId: string; credentials: AwsCredentials }> {
+  const host = `cognito-identity.${cfg.region}.amazonaws.com`;
+  const provider = `cognito-idp.${cfg.region}.amazonaws.com/${cfg.userPoolId}`;
+  const logins = { [provider]: idToken };
+
+  const idRes = await awsJsonCall(host, 'AWSCognitoIdentityService.GetId', {
+    IdentityPoolId: cfg.identityPoolId,
+    Logins: logins,
+  });
+  const identityId = idRes?.IdentityId;
+  if (!identityId) {
+    throw new Error('Identity Pool did not return an IdentityId.');
+  }
+
+  const credRes = await awsJsonCall(
+    host,
+    'AWSCognitoIdentityService.GetCredentialsForIdentity',
+    { IdentityId: identityId, Logins: logins },
+  );
+  const c = credRes?.Credentials;
+  if (!c?.AccessKeyId || !c?.SecretKey) {
+    throw new Error('Identity Pool did not return AWS credentials.');
+  }
+  return {
+    identityId,
+    credentials: {
+      accessKeyId: c.AccessKeyId,
+      secretKey: c.SecretKey,
+      sessionToken: c.SessionToken,
+      expiration: c.Expiration ? Number(c.Expiration) * 1000 : undefined,
+    },
+  };
+}
+
+/**
+ * Self-service update of the signed-in user's own attributes (uses the access
+ * token — no admin credentials). The claim step writes `custom:thingName` with
+ * it; the new value only appears after the next token refresh.
+ */
+export async function updateUserAttributes(
+  cfg: CognitoConfig,
+  accessToken: string,
+  attributes: Record<string, string>,
+): Promise<void> {
+  await cognitoCall(
+    cfg.region,
+    'AWSCognitoIdentityProviderService.UpdateUserAttributes',
+    {
+      AccessToken: accessToken,
+      UserAttributes: Object.entries(attributes).map(([Name, Value]) => ({
+        Name,
+        Value,
+      })),
+    },
+  );
 }
 
 // ---------------------------------------------------------------------------

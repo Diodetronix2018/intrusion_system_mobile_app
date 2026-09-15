@@ -84,6 +84,31 @@
       "tryAgain": "Please try again."
     }
   },
+  "claim": {
+    "title": "Scan QR Code",
+    "manualTitle": "Enter device details",
+    "scanInstruction": "Point your camera at the QR Code on the device",
+    "enterManually": "Enter manually",
+    "permissionTitle": "Camera access needed",
+    "permissionBody": "Allow camera access to scan the device QR code.",
+    "grantPermission": "Allow camera access",
+    "noCamera": "No camera is available on this device.",
+    "cameraErrorTitle": "Camera couldn't start",
+    "retry": "Try again",
+    "thingLabel": "Device ID",
+    "thingPlaceholder": "DTX_…",
+    "codeLabel": "Claim code",
+    "codePlaceholder": "XXXX-XXXX-XXXX",
+    "linkButton": "Link device",
+    "linking": "Linking…",
+    "invalidQr": "That QR code isn't a device code.",
+    "missingFields": "Enter both the device ID and the claim code.",
+    "successTitle": "Device linked",
+    "successBody": "Setting up your panel…",
+    "rejectedTitle": "Could not link device",
+    "rejectedBody": "This device is already claimed, or the code is incorrect.",
+    "failedTitle": "Something went wrong"
+  },
   "validation": {
     "required": "{{field}} is required",
     "invalidEmail": "Enter a valid email address",

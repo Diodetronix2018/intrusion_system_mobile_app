@@ -84,6 +84,31 @@
       "tryAgain": "कृपया फिर से प्रयास करें।"
     }
   },
+  "claim": {
+    "title": "QR कोड स्कैन करें",
+    "manualTitle": "डिवाइस विवरण दर्ज करें",
+    "scanInstruction": "अपने कैमरे को डिवाइस के QR कोड पर रखें",
+    "enterManually": "खुद दर्ज करें",
+    "permissionTitle": "कैमरा एक्सेस चाहिए",
+    "permissionBody": "डिवाइस का QR कोड स्कैन करने के लिए कैमरा एक्सेस दें।",
+    "grantPermission": "कैमरा एक्सेस दें",
+    "noCamera": "इस डिवाइस पर कोई कैमरा उपलब्ध नहीं है।",
+    "cameraErrorTitle": "कैमरा शुरू नहीं हो सका",
+    "retry": "फिर से कोशिश करें",
+    "thingLabel": "डिवाइस आईडी",
+    "thingPlaceholder": "DTX_…",
+    "codeLabel": "क्लेम कोड",
+    "codePlaceholder": "XXXX-XXXX-XXXX",
+    "linkButton": "डिवाइस जोड़ें",
+    "linking": "जोड़ा जा रहा है…",
+    "invalidQr": "यह QR कोड डिवाइस कोड नहीं है।",
+    "missingFields": "डिवाइस आईडी और क्लेम कोड दोनों दर्ज करें।",
+    "successTitle": "डिवाइस जुड़ गया",
+    "successBody": "आपका पैनल सेट किया जा रहा है…",
+    "rejectedTitle": "डिवाइस नहीं जोड़ा जा सका",
+    "rejectedBody": "यह डिवाइस पहले ही क्लेम हो चुका है, या कोड गलत है।",
+    "failedTitle": "कुछ गलत हो गया"
+  },
   "validation": {
     "required": "{{field}} आवश्यक है",
     "invalidEmail": "मान्य ईमेल पता दर्ज करें",

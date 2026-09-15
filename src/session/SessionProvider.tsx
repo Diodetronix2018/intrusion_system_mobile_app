@@ -8,19 +8,22 @@ import React, {
   useState,
 } from 'react';
 
-import { COGNITO } from '../config/awsConfig';
+import { CLAIMS_TABLE, COGNITO, THING_ATTRIBUTE } from '../config/awsConfig';
 import { StorageService } from '../storage';
 import {
   confirmForgotPassword as cognitoConfirmForgotPassword,
   confirmSignUp as cognitoConfirmSignUp,
   decodeJwtClaims,
   forgotPassword as cognitoForgotPassword,
+  getCredentials,
   globalSignOut,
   refreshSession,
   resendConfirmationCode,
   signInUserPool,
   signUp as cognitoSignUp,
+  updateUserAttributes,
 } from './cognito';
+import { claimDeviceInDynamo } from './deviceClaim';
 
 const SESSION_KEY = 'auth_session';
 /** Refresh the ID token this many ms before it actually expires. */
@@ -37,6 +40,12 @@ export type AuthSession = {
   email: string;
   /** Full name from the Cognito `name` attribute, if the profile has one. */
   name?: string;
+  /**
+   * IoT Thing this user owns, from the `custom:thingName` attribute the claim
+   * step stamps on them. Undefined until they have claimed a device — until
+   * then the app has no panel to show.
+   */
+  thingName?: string;
   /** User Pool ID token (JWT) — carries the profile claims. */
   idToken: string;
   /** Access token — used for self-service calls (GlobalSignOut…). */
@@ -51,6 +60,8 @@ type SessionContextValue = {
   user: User | null;
   session: AuthSession | null;
   isAuthenticated: boolean;
+  /** False until the signed-in user has claimed a device. */
+  hasDevice: boolean;
   /** True while a stale persisted session is being refreshed on launch. */
   restoring: boolean;
   signIn: (identifier: string, password: string) => Promise<void>;
@@ -71,6 +82,13 @@ type SessionContextValue = {
   ) => Promise<void>;
   /** Returns a non-expired ID token, refreshing it first if needed. */
   getFreshIdToken: () => Promise<string>;
+  /**
+   * Claim a device from its QR (thing name + code) directly against AWS: flips
+   * the claims row, stamps `custom:thingName` on the user, and refreshes the
+   * session so the app sees the newly-owned Thing. Throws `ClaimRejectedError`
+   * if the code is wrong or the device is already claimed.
+   */
+  claimDevice: (thingName: string, claimCode: string) => Promise<void>;
   signOut: () => void;
 };
 
@@ -110,6 +128,7 @@ const sessionFromTokens = (
   return {
     email: claims.email || fallbackEmail,
     name: claims.name,
+    thingName: claims[THING_ATTRIBUTE],
     idToken: tokens.idToken,
     accessToken: tokens.accessToken,
     refreshToken: tokens.refreshToken,
@@ -168,8 +187,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
             { ...tokens, refreshToken: stale.refreshToken },
             stale.email,
           );
-          // Keep the name we already had if this token happens to omit it.
-          applySession({ ...refreshed, name: refreshed.name ?? stale.name });
+          // Keep what we already had if this token happens to omit it.
+          applySession({
+            ...refreshed,
+            name: refreshed.name ?? stale.name,
+            thingName: refreshed.thingName ?? stale.thingName,
+          });
         }
       } catch {
         // Refresh token expired or revoked → start signed out.
@@ -225,6 +248,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         accessToken: tokens.accessToken,
         email: claims.email || current.email,
         name: claims.name ?? current.name,
+        // Picks up a device claimed since the last token — the attribute only
+        // appears in freshly minted tokens.
+        thingName: claims[THING_ATTRIBUTE] ?? current.thingName,
         expiresAt: Date.now() + tokens.expiresIn * 1000,
       });
       return tokens.idToken;
@@ -234,6 +260,61 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       throw err;
     }
   }, [applySession]);
+
+  // Mint a fresh token regardless of expiry — used right after claiming a device
+  // so the new `custom:thingName` attribute lands in the session immediately
+  // (the token in hand was minted before the attribute existed).
+  const forceRefresh = useCallback(async (): Promise<void> => {
+    const current = sessionRef.current;
+    if (!current) {
+      throw new Error('Not signed in.');
+    }
+    const tokens = await refreshSession(COGNITO, current.refreshToken);
+    const claims = decodeJwtClaims(tokens.idToken);
+    applySession({
+      ...current,
+      idToken: tokens.idToken,
+      accessToken: tokens.accessToken,
+      email: claims.email || current.email,
+      name: claims.name ?? current.name,
+      thingName: claims[THING_ATTRIBUTE] ?? current.thingName,
+      expiresAt: Date.now() + tokens.expiresIn * 1000,
+    });
+  }, [applySession]);
+
+  const claimDevice = useCallback(
+    async (thingName: string, claimCode: string): Promise<void> => {
+      const idToken = await getFreshIdToken();
+      const owner = decodeJwtClaims(idToken).sub;
+      if (!owner) {
+        throw new Error('Could not read your account id from the session.');
+      }
+
+      const { credentials } = await getCredentials(COGNITO, idToken);
+      // 1. Atomic check-and-claim (throws ClaimRejectedError if already taken).
+      await claimDeviceInDynamo({
+        region: COGNITO.region,
+        table: CLAIMS_TABLE,
+        thingName,
+        claimCode,
+        owner,
+        creds: credentials,
+      });
+
+      // 2. Point this user at the Thing so it rides in every future token.
+      const accessToken = sessionRef.current?.accessToken;
+      if (!accessToken) {
+        throw new Error('Missing access token; please sign in again.');
+      }
+      await updateUserAttributes(COGNITO, accessToken, {
+        [THING_ATTRIBUTE]: thingName,
+      });
+
+      // 3. Refresh so `thingName` is in the session now → the app unlocks.
+      await forceRefresh();
+    },
+    [getFreshIdToken, forceRefresh],
+  );
 
   const signUp = useCallback(
     (name: string, email: string, password: string) =>
@@ -276,6 +357,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       user,
       session,
       isAuthenticated: session !== null,
+      hasDevice: Boolean(session?.thingName),
       restoring,
       signIn,
       signUp,
@@ -284,6 +366,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       forgotPassword,
       confirmForgotPassword,
       getFreshIdToken,
+      claimDevice,
       signOut,
     }),
     [
@@ -297,6 +380,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       forgotPassword,
       confirmForgotPassword,
       getFreshIdToken,
+      claimDevice,
       signOut,
     ],
   );

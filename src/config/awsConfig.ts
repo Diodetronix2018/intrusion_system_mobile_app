@@ -27,3 +27,12 @@ export const COGNITO: CognitoConfig = {
 // source of configuration to reach for.
 export const IOT_ENDPOINT = ENV_IOT_ENDPOINT;
 export const IOT_POLICY_NAME = ENV_IOT_POLICY_NAME;
+
+// DynamoDB table the provisioner writes each device + one-time claim code into
+// (partition key: thingName). The app claims a device by conditionally flipping
+// its row here.
+export const CLAIMS_TABLE = 'dtx_device_claims';
+
+// Cognito custom attribute that holds the claimed Thing for a user. Written by
+// the claim step, read back from the ID token on every login.
+export const THING_ATTRIBUTE = 'custom:thingName';

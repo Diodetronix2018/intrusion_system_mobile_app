@@ -22,3 +22,16 @@ jest.mock('react-native-mmkv', () => {
     }),
   };
 });
+
+// vision-camera reaches for its native module on import too. The claim screen
+// only needs the hooks to report "no camera here", which is a real state it
+// already renders (the manual-entry path).
+jest.mock('react-native-vision-camera', () => ({
+  Camera: () => null,
+  useCameraDevice: () => undefined,
+  useCameraPermission: () => ({
+    hasPermission: false,
+    requestPermission: jest.fn(),
+  }),
+  useCodeScanner: (config) => config,
+}));

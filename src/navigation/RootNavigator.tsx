@@ -9,6 +9,7 @@ import {
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import {
+  ClaimDeviceScreen,
   ConfirmSignUpScreen,
   ForgotPasswordScreen,
   HelpSupportScreen,
@@ -26,14 +27,15 @@ import type { RootStackParamList } from './types';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 /**
- * Auth screens until a session exists, then the app.
+ * Three stacks, one at a time: auth until a session exists, then device
+ * claiming until the account owns a panel, then the app.
  *
- * Swapping the whole stack on `isAuthenticated` is the React Navigation
- * pattern for auth: there is no stale history to pop back into after logout,
- * and no imperative reset to get wrong.
+ * Swapping the whole stack rather than navigating is the React Navigation
+ * pattern for auth: there is no stale history to pop back into after logout or
+ * after a claim, and no imperative reset to get wrong.
  */
 export function RootNavigator() {
-  const { isAuthenticated, restoring } = useSession();
+  const { isAuthenticated, hasDevice, restoring } = useSession();
   const { colors, isDark } = useTheme();
 
   // hands React Navigation our palette so its own surfaces (the screen
@@ -76,17 +78,7 @@ export function RootNavigator() {
           gestureEnabled: true,
         }}
       >
-        {isAuthenticated ? (
-          <Stack.Group>
-            <Stack.Screen name="Tabs" component={BottomTabs} />
-            <Stack.Screen name="Profile" component={ProfileScreen} />
-            <Stack.Screen name="Help" component={HelpSupportScreen} />
-            <Stack.Screen
-              name="SettingsDetail"
-              component={SettingsDetailScreen}
-            />
-          </Stack.Group>
-        ) : (
+        {!isAuthenticated ? (
           <Stack.Group screenOptions={{ animation: 'fade' }}>
             <Stack.Screen name="SignIn" component={SignInScreen} />
             <Stack.Screen name="SignUp" component={SignUpScreen} />
@@ -96,6 +88,22 @@ export function RootNavigator() {
               component={ForgotPasswordScreen}
             />
             <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+          </Stack.Group>
+        ) : !hasDevice ? (
+          // Signed in but no `custom:thingName` yet — there is nothing to show
+          // until a panel is linked, so claiming is the whole app.
+          <Stack.Group screenOptions={{ animation: 'fade' }}>
+            <Stack.Screen name="ClaimDevice" component={ClaimDeviceScreen} />
+          </Stack.Group>
+        ) : (
+          <Stack.Group>
+            <Stack.Screen name="Tabs" component={BottomTabs} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="Help" component={HelpSupportScreen} />
+            <Stack.Screen
+              name="SettingsDetail"
+              component={SettingsDetailScreen}
+            />
           </Stack.Group>
         )}
       </Stack.Navigator>
