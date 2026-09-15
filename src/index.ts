@@ -15,6 +15,8 @@ export type {
   TabScreenProps,
 } from './navigation/types';
 export { SessionProvider, useSession } from './session/SessionProvider';
-export type { User } from './session/SessionProvider';
+export type { AuthSession, User } from './session/SessionProvider';
+export { COGNITO } from './config/awsConfig';
+export { storage, StorageService } from './storage';
 export { breakpoints, useResponsive } from './utils/responsive';
 export type { Responsive } from './utils/responsive';

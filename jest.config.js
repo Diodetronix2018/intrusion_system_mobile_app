@@ -8,6 +8,6 @@ module.exports = {
     '\\.svg$': '<rootDir>/__mocks__/svgMock.js',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(?:@react-native|react-native|@react-native-vector-icons|react-native-svg|react-native-keyboard-controller|react-native-reanimated|react-native-worklets)/)',
+    'node_modules/(?!(?:@react-native|react-native|@react-navigation|@react-native-vector-icons|react-native-svg|react-native-keyboard-controller|react-native-reanimated|react-native-worklets|react-native-toast-message|react-native-mmkv|react-native-nitro-modules)/)',
   ],
 };

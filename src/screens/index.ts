@@ -1,7 +1,11 @@
+export { AuthFooter } from './auth/AuthFooter';
+export { AuthHeader } from './auth/AuthHeader';
+export { AuthPrompt } from './auth/AuthPrompt';
+export { ConfirmSignUpScreen } from './auth/ConfirmSignUpScreen';
+export { ForgotPasswordScreen } from './auth/ForgotPasswordScreen';
+export { ResetPasswordScreen } from './auth/ResetPasswordScreen';
 export { SignInScreen } from './auth/SignInScreen';
-export type { SignInScreenProps } from './auth/SignInScreen';
 export { SignUpScreen } from './auth/SignUpScreen';
-export type { SignUpScreenProps, SignUpValues } from './auth/SignUpScreen';
 export {
   DialerScreen,
   EventsScreen,

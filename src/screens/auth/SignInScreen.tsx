@@ -2,9 +2,11 @@ import React, { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import Toast from 'react-native-toast-message';
 
 import { Button, Input, Screen, Typography } from '../../components';
 import { EyeIcon, EyeOffIcon, LockIcon, UserIcon } from '../../icons';
+import { useSession } from '../../session/SessionProvider';
 import { useTheme } from '../../theme';
 import { useValidationMessage } from '../../utils/useValidationMessage';
 import {
@@ -15,33 +17,24 @@ import {
 import { AuthFooter } from './AuthFooter';
 import { AuthHeader } from './AuthHeader';
 
-export type SignInScreenProps = {
-  onSignIn?: (credentials: { identifier: string; password: string }) => void;
-  onForgotPassword?: () => void;
-  onNavigateToSignUp?: () => void;
-};
-
 type Errors = { identifier?: ValidationError; password?: ValidationError };
 
-export function SignInScreen({
-  onSignIn,
-  onForgotPassword,
-  onNavigateToSignUp,
-}: SignInScreenProps) {
+export function SignInScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation();
-  const goToSignUp = onNavigateToSignUp ?? (() => navigation.navigate('SignUp'));
   const { colors, spacing } = useTheme();
   const message = useValidationMessage();
+  const { signIn } = useSession();
 
-  // accepts either an email or a username, so it is not validated as an email
-  const [identifier, setIdentifier] = useState('dfsdfsdfdsv');
-  const [password, setPassword] = useState('dfgdfgdfdsfg');
+  // Cognito's username is the sign-up email, but the pool also accepts a
+  // username alias — so this is not validated as an email address.
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
   const [secure, setSecure] = useState(true);
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     const next: Errors = {
       identifier: validateRequired(
         identifier,
@@ -56,11 +49,29 @@ export function SignInScreen({
 
     setSubmitting(true);
     try {
-      onSignIn?.({ identifier: identifier.trim(), password });
+      // On success the session updates and the root navigator swaps to the app.
+      await signIn(identifier, password);
+    } catch (err: any) {
+      // An account that never verified its email can't sign in — send them
+      // straight to the code screen instead of a dead-end error.
+      if (err?.code === 'UserNotConfirmedException') {
+        Toast.show({
+          type: 'info',
+          text1: t('auth.verify.title'),
+          text2: t('auth.verify.needed'),
+        });
+        navigation.navigate('ConfirmSignUp', { email: identifier.trim() });
+        return;
+      }
+      Toast.show({
+        type: 'error',
+        text1: t('auth.errors.signInFailed'),
+        text2: err?.message || t('auth.errors.tryAgain'),
+      });
     } finally {
       setSubmitting(false);
     }
-  }, [identifier, password, onSignIn, t]);
+  }, [identifier, password, signIn, navigation, t]);
 
   return (
     <Screen
@@ -74,7 +85,7 @@ export function SignInScreen({
           <AuthFooter
             prompt={t('auth.signIn.footerPrompt')}
             action={t('auth.signIn.footerAction')}
-            onPress={goToSignUp}
+            onPress={() => navigation.navigate('SignUp')}
           />
         </>
       }
@@ -127,7 +138,12 @@ export function SignInScreen({
         variant="caption"
         color={colors.link}
         align="right"
-        onPress={onForgotPassword}
+        onPress={() =>
+          navigation.navigate('ForgotPassword', {
+            // Carry whatever they already typed over to the reset form.
+            email: identifier.includes('@') ? identifier.trim() : undefined,
+          })
+        }
         accessibilityRole="link"
         style={[styles.forgot, { marginTop: spacing.lg }]}
       >

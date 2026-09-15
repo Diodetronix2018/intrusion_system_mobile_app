@@ -117,9 +117,6 @@ export function ZoneScreen() {
       edges={['left', 'right']}
       background={colors.background}
       contentContainerStyle={{ gap: spacing.md }}
-      footer={
-        <Button title={t('common.saveConfiguration')} onPress={handleSave} />
-      }
     >
       <ZoneSelector
         label={t('zone.label', { number: index + 1 })}
@@ -223,6 +220,14 @@ export function ZoneScreen() {
           </Typography>
         </View>
       </View>
+
+      {/* scrolls with the content: a pinned footer moves with the keyboard,
+          which fights the delay fields on device */}
+      <Button
+        title={t('common.saveConfiguration')}
+        onPress={handleSave}
+        style={{ marginTop: spacing['2xl'] }}
+      />
     </Screen>
   );
 }

@@ -13,7 +13,37 @@
     "signUp": {
       "submit": "Register",
       "footerPrompt": "Already have an account?",
-      "footerAction": "Sign in"
+      "footerAction": "Sign in",
+      "created": "Account created",
+      "canSignIn": "You can sign in now."
+    },
+    "verify": {
+      "title": "Verify your email",
+      "subtitle": "Enter the 6-digit code we sent to {{email}}.",
+      "needed": "Verify your email to finish setting up the account.",
+      "submit": "Verify",
+      "codeSent": "A verification code is on its way.",
+      "codeResent": "Code sent again",
+      "sentTo": "Sent to {{email}}",
+      "noCode": "Didn't get the code?",
+      "resend": "Resend",
+      "sending": "Sending…",
+      "verified": "Email verified"
+    },
+    "forgot": {
+      "title": "Forgot your password?",
+      "subtitle": "Enter your email address and we will send you a reset code.",
+      "submit": "Send reset code",
+      "codeSent": "Reset code sent",
+      "footerPrompt": "Remembered it?",
+      "footerAction": "Back to login"
+    },
+    "reset": {
+      "title": "Set a new password",
+      "subtitle": "Enter the code sent to {{email}} and choose a new password.",
+      "submit": "Reset password",
+      "done": "Password updated",
+      "doneBody": "Sign in with your new password."
     },
     "fields": {
       "identifier": {
@@ -39,7 +69,19 @@
       "confirmPassword": {
         "label": "Confirm Password",
         "placeholder": "Confirm security password"
+      },
+      "code": {
+        "label": "Verification Code",
+        "placeholder": "Enter the 6-digit code"
       }
+    },
+    "errors": {
+      "signInFailed": "Couldn't sign in",
+      "signUpFailed": "Couldn't create the account",
+      "verificationFailed": "Verification failed",
+      "resendFailed": "Couldn't resend the code",
+      "resetFailed": "Couldn't reset the password",
+      "tryAgain": "Please try again."
     }
   },
   "validation": {
@@ -127,6 +169,7 @@
     "appLanguage": "App Language",
     "support": "Support",
     "logout": "Logout",
+    "logoutConfirm": "Sign out of this device? You will need to log in again.",
     "guest": "Guest",
     "noEmail": "No email on file",
     "themeSubtitle": "Customize app appearance",

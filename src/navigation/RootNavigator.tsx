@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import {
   DarkTheme,
   DefaultTheme,
@@ -8,8 +9,11 @@ import {
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import {
+  ConfirmSignUpScreen,
+  ForgotPasswordScreen,
   HelpSupportScreen,
   ProfileScreen,
+  ResetPasswordScreen,
   SettingsDetailScreen,
   SignInScreen,
   SignUpScreen,
@@ -29,7 +33,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
  * and no imperative reset to get wrong.
  */
 export function RootNavigator() {
-  const { isAuthenticated, signIn } = useSession();
+  const { isAuthenticated, restoring } = useSession();
   const { colors, isDark } = useTheme();
 
   // hands React Navigation our palette so its own surfaces (the screen
@@ -49,6 +53,16 @@ export function RootNavigator() {
       },
     };
   }, [isDark, colors]);
+
+  // A session saved by the last launch is being refreshed — hold on a plain
+  // splash rather than flashing sign-in at someone who is already signed in.
+  if (restoring) {
+    return (
+      <View style={[styles.splash, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <NavigationContainer theme={navigationTheme}>
@@ -74,36 +88,25 @@ export function RootNavigator() {
           </Stack.Group>
         ) : (
           <Stack.Group screenOptions={{ animation: 'fade' }}>
-            <Stack.Screen name="SignIn">
-              {() => (
-                <SignInScreen
-                  onSignIn={credentials =>
-                    // the form collects one identifier; treat an address as
-                    // the email and anything else as the display name
-                    signIn(
-                      credentials.identifier.includes('@')
-                        ? {
-                            name: credentials.identifier.split('@')[0],
-                            email: credentials.identifier,
-                          }
-                        : { name: credentials.identifier, email: '' },
-                    )
-                  }
-                />
-              )}
-            </Stack.Screen>
-            <Stack.Screen name="SignUp">
-              {() => (
-                <SignUpScreen
-                  onSignUp={values =>
-                    signIn({ name: values.fullName, email: values.email })
-                  }
-                />
-              )}
-            </Stack.Screen>
+            <Stack.Screen name="SignIn" component={SignInScreen} />
+            <Stack.Screen name="SignUp" component={SignUpScreen} />
+            <Stack.Screen name="ConfirmSignUp" component={ConfirmSignUpScreen} />
+            <Stack.Screen
+              name="ForgotPassword"
+              component={ForgotPasswordScreen}
+            />
+            <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
           </Stack.Group>
         )}
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  splash: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});

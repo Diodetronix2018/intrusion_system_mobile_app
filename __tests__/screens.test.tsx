@@ -4,11 +4,18 @@
 
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
+import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import i18n, { LANGUAGES, LanguageCode } from '../src/i18n';
 import { BottomTabs } from '../src/navigation/BottomTabs';
-import { SettingsScreen, SignInScreen, SignUpScreen } from '../src/screens';
+import {
+  ForgotPasswordScreen,
+  SettingsScreen,
+  SignInScreen,
+  SignUpScreen,
+} from '../src/screens';
+import { SessionProvider } from '../src/session/SessionProvider';
 import { ThemeMode, ThemeProvider } from '../src/theme';
 
 const METRICS = {
@@ -16,16 +23,28 @@ const METRICS = {
   insets: { top: 47, left: 0, right: 0, bottom: 34 },
 };
 
+/** The reset screens are route-driven; only `route.params` is read on mount. */
+const FORGOT_PROPS = {
+  route: { params: undefined },
+} as unknown as React.ComponentProps<typeof ForgotPasswordScreen>;
+
 /**
  * Mounts, then unmounts again — a tree left mounted would re-render on the
  * next language change and warn about updates outside act().
+ *
+ * The screens read the session and the navigation object, so both providers
+ * wrap every tree here the way the app wraps them.
  */
 async function render(node: React.ReactElement, mode: ThemeMode = 'light') {
   let tree: ReactTestRenderer.ReactTestRenderer | undefined;
   await ReactTestRenderer.act(() => {
     tree = ReactTestRenderer.create(
       <ThemeProvider initialMode={mode}>
-        <SafeAreaProvider initialMetrics={METRICS}>{node}</SafeAreaProvider>
+        <SessionProvider>
+          <SafeAreaProvider initialMetrics={METRICS}>
+            <NavigationContainer>{node}</NavigationContainer>
+          </SafeAreaProvider>
+        </SessionProvider>
       </ThemeProvider>,
     );
   });
@@ -38,6 +57,8 @@ async function render(node: React.ReactElement, mode: ThemeMode = 'light') {
 describe.each<ThemeMode>(['light', 'dark'])('in %s theme', mode => {
   test('sign in renders', () => render(<SignInScreen />, mode));
   test('sign up renders', () => render(<SignUpScreen />, mode));
+  test('forgot password renders', () =>
+    render(<ForgotPasswordScreen {...FORGOT_PROPS} />, mode));
   test('bottom tabs render', () => render(<BottomTabs />, mode));
   test('settings render', () => render(<SettingsScreen />, mode));
 });
@@ -59,6 +80,20 @@ const TRANSLATED_KEYS = [
   'auth.fields.password.label',
   'auth.fields.newPassword.placeholder',
   'auth.fields.confirmPassword.placeholder',
+  'auth.fields.code.label',
+  'auth.verify.title',
+  'auth.verify.submit',
+  'auth.verify.resend',
+  'auth.forgot.title',
+  'auth.forgot.subtitle',
+  'auth.forgot.submit',
+  'auth.forgot.footerAction',
+  'auth.reset.title',
+  'auth.reset.submit',
+  'auth.errors.signInFailed',
+  'auth.errors.tryAgain',
+  'profile.logout',
+  'profile.logoutConfirm',
   'validation.invalidEmail',
   'validation.passwordMismatch',
   'tabs.main',
@@ -83,5 +118,7 @@ describe.each(LANGUAGES.map(language => language.code))('in %s', code => {
 
   test('sign in renders', () => render(<SignInScreen />));
   test('sign up renders', () => render(<SignUpScreen />));
+  test('forgot password renders', () =>
+    render(<ForgotPasswordScreen {...FORGOT_PROPS} />));
   test('bottom tabs render', () => render(<BottomTabs />));
 });

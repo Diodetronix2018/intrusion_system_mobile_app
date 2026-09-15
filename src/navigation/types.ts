@@ -11,6 +11,12 @@ import type { SettingsOptionId } from '../screens/main/settings/options';
 export type RootStackParamList = {
   SignIn: undefined;
   SignUp: undefined;
+  /** Sign-up verification: the address Cognito emailed the code to. */
+  ConfirmSignUp: { email: string };
+  /** Password reset step 1; pre-filled when sign-in already had an address. */
+  ForgotPassword: { email?: string } | undefined;
+  /** Password reset step 2; `destination` is Cognito's masked address. */
+  ResetPassword: { email: string; destination?: string };
   Tabs: NavigatorScreenParams<TabParamList> | undefined;
   Profile: undefined;
   Help: undefined;

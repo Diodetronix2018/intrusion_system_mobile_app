@@ -1,22 +1,15 @@
 import React, { useCallback, useState } from 'react';
 import { View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
 
 import { Button, Input, Screen } from '../../components';
-import {
-  EyeIcon,
-  EyeOffIcon,
-  LockIcon,
-  MailIcon,
-  UserIcon,
-} from '../../icons';
+import { CheckIcon, EyeIcon, EyeOffIcon, LockIcon } from '../../icons';
+import type { RootStackScreenProps } from '../../navigation/types';
 import { useSession } from '../../session/SessionProvider';
 import { useTheme } from '../../theme';
 import { useValidationMessage } from '../../utils/useValidationMessage';
 import {
-  validateEmail,
   validateMatch,
   validatePassword,
   validateRequired,
@@ -24,19 +17,23 @@ import {
 } from '../../utils/validation';
 import { AuthFooter } from './AuthFooter';
 import { AuthHeader } from './AuthHeader';
+import { AuthPrompt } from './AuthPrompt';
 
-type Field = 'fullName' | 'email' | 'password' | 'confirmPassword';
+type Field = 'code' | 'password' | 'confirmPassword';
 type Errors = Partial<Record<Field, ValidationError>>;
 
-export function SignUpScreen() {
+/** Step 2 of the password reset: the emailed code plus the new password. */
+export function ResetPasswordScreen({
+  navigation,
+  route,
+}: RootStackScreenProps<'ResetPassword'>) {
   const { t } = useTranslation();
-  const navigation = useNavigation();
   const { spacing } = useTheme();
   const message = useValidationMessage();
-  const { signUp } = useSession();
+  const { confirmForgotPassword } = useSession();
+  const { email, destination } = route.params;
 
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [securePassword, setSecurePassword] = useState(true);
@@ -49,8 +46,7 @@ export function SignUpScreen() {
 
   const handleSubmit = useCallback(async () => {
     const next: Errors = {
-      fullName: validateRequired(fullName, t('auth.fields.fullName.label')),
-      email: validateEmail(email, t('auth.fields.email.label')),
+      code: validateRequired(code, t('auth.fields.code.label')),
       password: validatePassword(password, t('auth.fields.newPassword.label')),
       confirmPassword: validateMatch(confirmPassword, password),
     };
@@ -61,33 +57,23 @@ export function SignUpScreen() {
 
     setSubmitting(true);
     try {
-      const { userConfirmed } = await signUp(fullName, email, password);
-      if (userConfirmed) {
-        // The pool auto-confirms — nothing to verify, just sign in.
-        Toast.show({
-          type: 'success',
-          text1: t('auth.signUp.created'),
-          text2: t('auth.signUp.canSignIn'),
-        });
-        navigation.navigate('SignIn');
-      } else {
-        Toast.show({
-          type: 'success',
-          text1: t('auth.verify.title'),
-          text2: t('auth.verify.codeSent'),
-        });
-        navigation.navigate('ConfirmSignUp', { email: email.trim() });
-      }
+      await confirmForgotPassword(email, code, password);
+      Toast.show({
+        type: 'success',
+        text1: t('auth.reset.done'),
+        text2: t('auth.reset.doneBody'),
+      });
+      navigation.navigate('SignIn');
     } catch (err: any) {
       Toast.show({
         type: 'error',
-        text1: t('auth.errors.signUpFailed'),
+        text1: t('auth.errors.resetFailed'),
         text2: err?.message || t('auth.errors.tryAgain'),
       });
     } finally {
       setSubmitting(false);
     }
-  }, [fullName, email, password, confirmPassword, signUp, navigation, t]);
+  }, [code, password, confirmPassword, email, confirmForgotPassword, navigation, t]);
 
   const secureLabel = (hidden: boolean) =>
     hidden ? t('a11y.showPassword') : t('a11y.hidePassword');
@@ -97,13 +83,13 @@ export function SignUpScreen() {
       footer={
         <>
           <Button
-            title={t('auth.signUp.submit')}
+            title={t('auth.reset.submit')}
             onPress={handleSubmit}
             loading={submitting}
           />
           <AuthFooter
-            prompt={t('auth.signUp.footerPrompt')}
-            action={t('auth.signUp.footerAction')}
+            prompt={t('auth.forgot.footerPrompt')}
+            action={t('auth.forgot.footerAction')}
             onPress={() => navigation.navigate('SignIn')}
           />
         </>
@@ -111,37 +97,27 @@ export function SignUpScreen() {
     >
       <AuthHeader />
 
+      <AuthPrompt
+        title={t('auth.reset.title')}
+        subtitle={t('auth.reset.subtitle', { email: destination || email })}
+      />
+
       <View style={{ gap: spacing.xl }}>
         <Input
-          label={t('auth.fields.fullName.label')}
-          placeholder={t('auth.fields.fullName.placeholder')}
-          value={fullName}
+          label={t('auth.fields.code.label')}
+          placeholder={t('auth.fields.code.placeholder')}
+          value={code}
           onChangeText={text => {
-            setFullName(text);
-            clear('fullName');
+            setCode(text);
+            clear('code');
           }}
-          error={message(errors.fullName)}
-          leftIcon={<UserIcon size={20} />}
-          autoCapitalize="words"
-          autoComplete="name"
-          textContentType="name"
-        />
-
-        <Input
-          label={t('auth.fields.email.label')}
-          placeholder={t('auth.fields.email.placeholder')}
-          value={email}
-          onChangeText={text => {
-            setEmail(text);
-            clear('email');
-          }}
-          error={message(errors.email)}
-          leftIcon={<MailIcon size={20} />}
-          keyboardType="email-address"
+          error={message(errors.code)}
+          leftIcon={<CheckIcon size={20} />}
+          keyboardType="number-pad"
           autoCapitalize="none"
           autoCorrect={false}
-          autoComplete="email"
-          textContentType="emailAddress"
+          autoComplete="one-time-code"
+          textContentType="oneTimeCode"
         />
 
         <Input
@@ -188,7 +164,6 @@ export function SignUpScreen() {
           onSubmitEditing={handleSubmit}
         />
       </View>
-
     </Screen>
   );
 }

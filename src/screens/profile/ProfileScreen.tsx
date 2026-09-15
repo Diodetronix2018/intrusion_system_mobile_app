@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useCallback } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 
@@ -22,6 +22,15 @@ export function ProfileScreen() {
   const { colors, radius, spacing, cardShadow } = useTheme();
   const navigation = useNavigation();
   const { user, signOut } = useSession();
+
+  // Logging out revokes the refresh token, so the next launch needs a full
+  // sign-in again — worth one tap of confirmation.
+  const confirmSignOut = useCallback(() => {
+    Alert.alert(t('profile.logout'), t('profile.logoutConfirm'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('profile.logout'), style: 'destructive', onPress: signOut },
+    ]);
+  }, [signOut, t]);
 
   return (
     <View style={[styles.flex, { backgroundColor: colors.backgroundGrouped }]}>
@@ -87,7 +96,7 @@ export function ProfileScreen() {
         <Button
           title={t('profile.logout')}
           variant="error"
-          onPress={signOut}
+          onPress={confirmSignOut}
           leftIcon={<LogOutIcon size={18} color={colors.onError} />}
           style={{ marginTop: spacing.lg }}
         />
