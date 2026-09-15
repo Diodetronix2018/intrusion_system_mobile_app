@@ -23,7 +23,6 @@ export {
 export { ContactRow } from './profile/ContactRow';
 export {
   ALERT_KINDS,
-  ChipGroup,
   CONTACT_METHODS,
   DialerCard,
   MAX_DIALER_ENTRIES,
@@ -32,7 +31,6 @@ export {
 } from './main/dialer';
 export type {
   AlertKind,
-  ChipOption,
   ContactMethod,
   DialerEntry,
   DialerEntryInput,

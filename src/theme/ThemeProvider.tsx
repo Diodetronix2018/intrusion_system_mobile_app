@@ -12,6 +12,7 @@ import {
   cardElevation,
   elevation,
   layeredCardShadow,
+  subtleCardShadow,
   tokens,
   Tokens,
 } from './tokens';
@@ -28,6 +29,8 @@ export type Theme = Tokens & {
   cardShadow: ReturnType<typeof cardElevation>;
   /** Two-layer shadow used by the dialer cards */
   layeredShadow: ReturnType<typeof layeredCardShadow>;
+  /** Single-layer card shadow */
+  softShadow: ReturnType<typeof subtleCardShadow>;
 };
 
 type ThemeContextValue = {
@@ -52,6 +55,7 @@ function buildTheme(isDark: boolean): Theme {
     shadow: elevation(colors.shadow),
     cardShadow: cardElevation(colors.cardShadow, isDark),
     layeredShadow: layeredCardShadow(isDark),
+    softShadow: subtleCardShadow(isDark),
   };
 }
 

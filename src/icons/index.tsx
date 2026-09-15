@@ -8,7 +8,14 @@
  * Brand marks (Google, Apple) keep their own colours and ignore `color`.
  */
 import React from 'react';
-import Svg, { Circle, Line, Path, Polyline, Rect } from 'react-native-svg';
+import Svg, {
+  Circle,
+  Line,
+  Path,
+  Polygon,
+  Polyline,
+  Rect,
+} from 'react-native-svg';
 
 import { useTheme } from '../theme';
 
@@ -109,6 +116,40 @@ export const ShieldIcon = (props: IconProps) => (
   </Outline>
 );
 
+export const AlertTriangleIcon = (props: IconProps) => (
+  <Outline {...props}>
+    <Path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+    <Line x1="12" y1="9" x2="12" y2="13" />
+    <Line x1="12" y1="17" x2="12.01" y2="17" />
+  </Outline>
+);
+
+/** lucide `plug` */
+export const PlugIcon = (props: IconProps) => (
+  <Outline {...props}>
+    <Path d="M12 22v-5" />
+    <Path d="M9 8V2" />
+    <Path d="M15 8V2" />
+    <Path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z" />
+  </Outline>
+);
+
+export const Volume2Icon = (props: IconProps) => (
+  <Outline {...props}>
+    <Polygon points="11,5 6,9 2,9 2,15 6,15 11,19 11,5" />
+    <Path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+  </Outline>
+);
+
+export const UsersIcon = (props: IconProps) => (
+  <Outline {...props}>
+    <Path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <Circle cx="9" cy="7" r="4" />
+    <Path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+    <Path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </Outline>
+);
+
 export const PlusIcon = (props: IconProps) => (
   <Outline {...props}>
     <Line x1="12" y1="5" x2="12" y2="19" />
@@ -136,6 +177,26 @@ export const LogOutIcon = (props: IconProps) => (
     <Path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
     <Polyline points="16,17 21,12 16,7" />
     <Line x1="21" y1="12" x2="9" y2="12" />
+  </Outline>
+);
+
+export const ChevronUpIcon = (props: IconProps) => (
+  <Outline {...props}>
+    <Polyline points="18,15 12,9 6,15" />
+  </Outline>
+);
+
+export const ChevronDownIcon = (props: IconProps) => (
+  <Outline {...props}>
+    <Polyline points="6,9 12,15 18,9" />
+  </Outline>
+);
+
+export const InfoIcon = (props: IconProps) => (
+  <Outline {...props}>
+    <Circle cx="12" cy="12" r="10" />
+    <Line x1="12" y1="16" x2="12" y2="12" />
+    <Line x1="12" y1="8" x2="12.01" y2="8" />
   </Outline>
 );
 

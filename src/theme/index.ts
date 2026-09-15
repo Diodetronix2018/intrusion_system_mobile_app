@@ -19,6 +19,7 @@ export {
   elevation,
   layeredCardShadow,
   radius,
+  subtleCardShadow,
   sizing,
   spacing,
   tokens,

@@ -1,7 +1,5 @@
 export { DialerScreen } from './DialerScreen';
 export { DialerCard } from './DialerCard';
-export { ChipGroup } from './ChipGroup';
-export type { ChipOption } from './ChipGroup';
 export { DialerEntrySheet } from './DialerEntrySheet';
 export { useDialerEntries } from './useDialerEntries';
 export {

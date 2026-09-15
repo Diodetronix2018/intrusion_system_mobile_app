@@ -178,5 +178,66 @@
   "relay": {
     "zoneAssignment": "Zone Assignment",
     "allZones": "All Zones"
+  },
+  "repeat": {
+    "times_one": "{{count}} Time",
+    "times_other": "{{count}} Times",
+    "call": {
+      "title": "Call Repeat",
+      "description": "Number of times to repeat emergency calls"
+    },
+    "voice": {
+      "title": "Voice Repeat",
+      "description": "Number of times to repeat voice alerts"
+    },
+    "admin": {
+      "title": "Number of Admin",
+      "description": "Number of admin members with full access"
+    }
+  },
+  "autoArm": {
+    "title": "Auto ARM",
+    "description": "Automatically arm the system at a scheduled time",
+    "setTime": "Set ARM Time",
+    "info": "Auto ARM will activate at {{time}} daily"
+  },
+  "specialNotify": {
+    "acFail": {
+      "title": "AC Fail",
+      "description": "Notify when main power source is disconnected"
+    },
+    "batteryFail": {
+      "title": "Battery Fail",
+      "description": "Notify when backup battery is low or critically low"
+    },
+    "users": {
+      "title": "Number of Users",
+      "description": "Select group access level for notifications"
+    },
+    "groups": {
+      "admin": "Admin",
+      "upTo3": "1-3 Users",
+      "upTo5": "1-5 Users",
+      "all": "All Users"
+    }
+  },
+  "silence": {
+    "manual": "Manual Silence",
+    "auto": "Auto Silence",
+    "seconds": "sec",
+    "fault": {
+      "title": "Fault Silence",
+      "manualDescription": "Mutes active system fault buzzers",
+      "autoDescription": "Automatically silences faults after timeout"
+    },
+    "alarm": {
+      "title": "Alarm Silence",
+      "manualDescription": "Mutes active system alarms manually",
+      "autoDescription": "Automatically silences alarms after timeout"
+    },
+    "timer": {
+      "title": "Silence Timer",
+      "description": "Duration before alarm terminates"
+    }
   }
 }

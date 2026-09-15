@@ -1,10 +1,10 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { Typography } from '../../../components';
-import { useTheme } from '../../../theme';
+import { useTheme } from '../theme';
+import { Typography } from './Typography';
 
-export type ChipOption<T extends string> = {
+export type ChipOption<T extends string | number> = {
   value: T;
   label: string;
 };
@@ -16,7 +16,7 @@ export type ChipOption<T extends string> = {
  * 84/47 in the spec, so the longer translations ("Burglar + Fire", and the
  * Tamil and Hindi strings) don't get clipped.
  */
-export function ChipGroup<T extends string>({
+export function ChipGroup<T extends string | number>({
   options,
   selected,
   onSelect,

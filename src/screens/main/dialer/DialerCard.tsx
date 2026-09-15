@@ -2,10 +2,9 @@ import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { Typography } from '../../../components';
+import { ChipGroup, Typography } from '../../../components';
 import { EditIcon, TrashIcon } from '../../../icons';
 import { useTheme } from '../../../theme';
-import { ChipGroup } from './ChipGroup';
 import {
   ALERT_KINDS,
   AlertKind,

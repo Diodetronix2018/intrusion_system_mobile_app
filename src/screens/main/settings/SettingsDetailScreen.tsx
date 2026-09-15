@@ -8,6 +8,10 @@ import type { RootStackScreenProps } from '../../../navigation/types';
 import { findSettingsOption, SettingsOption } from './options';
 import { PartSettingScreen } from './detail/PartSettingScreen';
 import { RelayScreen } from './detail/RelayScreen';
+import { AutoArmScreen } from './detail/AutoArmScreen';
+import { SilenceScreen } from './detail/SilenceScreen';
+import { SpecialNotifyScreen } from './detail/SpecialNotifyScreen';
+import { RepeatScreen } from './detail/RepeatScreen';
 
 /**
  * Shared body for the six configuration screens until each gets its own
@@ -24,6 +28,22 @@ export function SettingsDetailScreen({
 
   if (option.id === 'relay') {
     return <RelayScreen />;
+  }
+
+  if (option.id === 'repeat') {
+    return <RepeatScreen />;
+  }
+
+  if (option.id === 'autoArm') {
+    return <AutoArmScreen />;
+  }
+
+  if (option.id === 'specialNotify') {
+    return <SpecialNotifyScreen />;
+  }
+
+  if (option.id === 'silence') {
+    return <SilenceScreen />;
   }
 
   return <SettingsPlaceholder option={option} />;

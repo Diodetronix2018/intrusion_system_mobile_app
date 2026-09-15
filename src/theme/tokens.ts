@@ -91,6 +91,13 @@ export const layeredCardShadow = (isDark: boolean) =>
           '0px 2px 8px 0px #0000000A, 0px 14px 28px -12px #00000012',
       };
 
+/**
+ * `0px 2px 8px 0px #0000000A` — the single-shadow card spec. 0x0A = 10/255
+ * ≈ 0.04 alpha. Dropped on dark for the same reason as the layered version.
+ */
+export const subtleCardShadow = (isDark: boolean) =>
+  isDark ? {} : { boxShadow: '0px 2px 8px 0px #0000000A' };
+
 export const tokens = {
   spacing,
   radius,

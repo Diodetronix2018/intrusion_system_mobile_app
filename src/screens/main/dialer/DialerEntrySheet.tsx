@@ -4,7 +4,7 @@ import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import { Button, Input, Typography } from '../../../components';
+import { Button, ChipGroup, Input, Typography } from '../../../components';
 import { PhoneIcon } from '../../../icons';
 import { useTheme } from '../../../theme';
 import { useValidationMessage } from '../../../utils/useValidationMessage';
@@ -15,7 +15,6 @@ import {
   ValidationError,
 } from '../../../utils/validation';
 import { useResponsive } from '../../../utils/responsive';
-import { ChipGroup } from './ChipGroup';
 import {
   ALERT_KINDS,
   AlertKind,
