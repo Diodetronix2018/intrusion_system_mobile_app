@@ -116,7 +116,8 @@
     "on": "இயக்கு",
     "off": "அணை",
     "saveConfiguration": "உள்ளமைவைச் சேமி",
-    "configurationSaved": "உள்ளமைவு சேமிக்கப்பட்டது"
+    "configurationSaved": "உள்ளமைவு சேமிக்கப்பட்டது",
+    "seconds": "வி"
   },
   "profile": {
     "title": "சுயவிவரம்",
@@ -224,7 +225,6 @@
   "silence": {
     "manual": "கைமுறை அமைதி",
     "auto": "தானியங்கு அமைதி",
-    "seconds": "வி",
     "fault": {
       "title": "கோளாறு அமைதி",
       "manualDescription": "செயலில் உள்ள கோளாறு ஒலிகளை முடக்கும்",
@@ -239,5 +239,29 @@
       "title": "அமைதி நேரம்",
       "description": "அலாரம் நிறைவடைவதற்கு முந்தைய கால அளவு"
     }
+  },
+  "zone": {
+    "label": "மண்டலம் {{number}}",
+    "previous": "முந்தைய மண்டலம்",
+    "next": "அடுத்த மண்டலம்",
+    "always": "எப்போதும்",
+    "night": "இரவு",
+    "nc": "NC",
+    "no": "NO",
+    "delays": "தாமதங்கள்",
+    "exitDelay": "வெளியேறும் தாமதம்",
+    "entryDelay": "நுழைவு தாமதம்",
+    "locationEntry": "இட நுழைவு",
+    "locations": {
+      "mainDoor": "முதன்மை கதவு",
+      "backDoor": "பின் கதவு",
+      "window": "ஜன்னல்",
+      "motion": "அசைவு",
+      "garage": "கேரேஜ்",
+      "balcony": "பால்கனி",
+      "kitchen": "சமையலறை",
+      "bedroom": "படுக்கையறை"
+    },
+    "delayRange": "({{min}} - {{max}} வி)"
   }
 }

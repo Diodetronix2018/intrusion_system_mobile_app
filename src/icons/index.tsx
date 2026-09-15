@@ -116,6 +116,53 @@ export const ShieldIcon = (props: IconProps) => (
   </Outline>
 );
 
+/** lucide `door-open` */
+export const DoorOpenIcon = (props: IconProps) => (
+  <Outline {...props}>
+    <Path d="M13 4h3a2 2 0 0 1 2 2v14" />
+    <Path d="M2 20h3" />
+    <Path d="M13 20h9" />
+    <Path d="M10 12v.01" />
+    <Path d="M13 4.562v16.157a1 1 0 0 1-1.242.97L5.758 20.16A2 2 0 0 1 4 18.219V5.78a2 2 0 0 1 1.758-1.985L11.758 2.3a1 1 0 0 1 1.242.97z" />
+  </Outline>
+);
+
+/** lucide `shield-check` */
+export const ShieldCheckIcon = (props: IconProps) => (
+  <Outline {...props}>
+    <Path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+    <Path d="m9 12 2 2 4-4" />
+  </Outline>
+);
+
+/** lucide `shield-x` */
+export const ShieldXIcon = (props: IconProps) => (
+  <Outline {...props}>
+    <Path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+    <Path d="m14.5 9.5-5 5" />
+    <Path d="m9.5 9.5 5 5" />
+  </Outline>
+);
+
+export const MoonIcon = (props: IconProps) => (
+  <Outline {...props}>
+    <Path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+  </Outline>
+);
+
+export const CheckCircleIcon = (props: IconProps) => (
+  <Outline {...props}>
+    <Path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+    <Polyline points="22,4 12,14.01 9,11.01" />
+  </Outline>
+);
+
+export const CircleIcon = (props: IconProps) => (
+  <Outline {...props}>
+    <Circle cx="12" cy="12" r="10" />
+  </Outline>
+);
+
 export const AlertTriangleIcon = (props: IconProps) => (
   <Outline {...props}>
     <Path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
@@ -197,6 +244,12 @@ export const InfoIcon = (props: IconProps) => (
     <Circle cx="12" cy="12" r="10" />
     <Line x1="12" y1="16" x2="12" y2="12" />
     <Line x1="12" y1="8" x2="12.01" y2="8" />
+  </Outline>
+);
+
+export const ChevronLeftIcon = (props: IconProps) => (
+  <Outline {...props}>
+    <Polyline points="15,18 9,12 15,6" />
   </Outline>
 );
 

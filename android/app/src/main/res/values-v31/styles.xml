@@ -1,0 +1,15 @@
+<resources>
+
+    <!--
+      Android 12+ draws its own splash and ignores windowBackground, so the
+      same theme is redefined here using the platform attributes. Done without
+      androidx.core:core-splashscreen, since the platform provides these
+      directly from API 31 and the activity swaps themes in onCreate anyway.
+    -->
+    <style name="SplashTheme" parent="AppTheme">
+        <item name="android:windowSplashScreenBackground">@color/splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/splash_background</item>
+    </style>
+
+</resources>

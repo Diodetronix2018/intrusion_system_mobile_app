@@ -1,4 +1,4 @@
-package com.myawesomeproject
+package com.diodetronix.dtxsecure
 
 import android.app.Application
 import com.facebook.react.PackageList

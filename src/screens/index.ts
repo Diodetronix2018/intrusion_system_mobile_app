@@ -14,6 +14,19 @@ export {
   ZoneScreen,
 } from './main';
 export type { SettingsOption, SettingsOptionId } from './main';
+export {
+  ChoiceCard,
+  ChoiceRow,
+  ZONE_COUNT,
+  ZoneSelector,
+  useZoneConfig,
+} from './main/zone';
+export type {
+  ZoneConfig,
+  ZoneContact,
+  ZoneSchedule,
+  ZoneState,
+} from './main/zone';
 export { ProfileScreen } from './profile/ProfileScreen';
 export {
   HelpSupportScreen,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { BellIcon, HomeIcon, LocationPinIcon } from '../../icons';
+import { BellIcon, HomeIcon } from '../../icons';
 import { useTheme } from '../../theme';
 import { PlaceholderScreen } from './PlaceholderScreen';
 
@@ -26,17 +26,6 @@ export function MainScreen() {
   );
 }
 
-export function ZoneScreen() {
-  const { title, description, color } = useTabScreen('zone');
-  return (
-    <PlaceholderScreen
-      title={title}
-      description={description}
-      icon={<LocationPinIcon size={32} color={color} />}
-    />
-  );
-}
-
 export function EventsScreen() {
   const { title, description, color } = useTabScreen('events');
   return (
@@ -49,6 +38,7 @@ export function EventsScreen() {
 }
 
 export { DialerScreen } from './dialer';
+export { ZoneScreen } from './zone';
 export {
   findSettingsOption,
   SETTINGS_OPTIONS,

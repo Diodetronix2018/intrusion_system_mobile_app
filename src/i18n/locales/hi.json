@@ -116,7 +116,8 @@
     "on": "चालू",
     "off": "बंद",
     "saveConfiguration": "कॉन्फ़िगरेशन सहेजें",
-    "configurationSaved": "कॉन्फ़िगरेशन सहेजा गया"
+    "configurationSaved": "कॉन्फ़िगरेशन सहेजा गया",
+    "seconds": "सेकंड"
   },
   "profile": {
     "title": "प्रोफ़ाइल",
@@ -224,7 +225,6 @@
   "silence": {
     "manual": "मैनुअल साइलेंस",
     "auto": "ऑटो साइलेंस",
-    "seconds": "सेकंड",
     "fault": {
       "title": "फ़ॉल्ट साइलेंस",
       "manualDescription": "सक्रिय सिस्टम फ़ॉल्ट बज़र को म्यूट करता है",
@@ -239,5 +239,29 @@
       "title": "साइलेंस टाइमर",
       "description": "अलार्म समाप्त होने से पहले की अवधि"
     }
+  },
+  "zone": {
+    "label": "ज़ोन {{number}}",
+    "previous": "पिछला ज़ोन",
+    "next": "अगला ज़ोन",
+    "always": "हमेशा",
+    "night": "रात",
+    "nc": "NC",
+    "no": "NO",
+    "delays": "विलंब",
+    "exitDelay": "निकास विलंब",
+    "entryDelay": "प्रवेश विलंब",
+    "locationEntry": "स्थान प्रविष्टि",
+    "locations": {
+      "mainDoor": "मुख्य द्वार",
+      "backDoor": "पिछला द्वार",
+      "window": "खिड़की",
+      "motion": "मोशन",
+      "garage": "गैराज",
+      "balcony": "बालकनी",
+      "kitchen": "रसोई",
+      "bedroom": "शयनकक्ष"
+    },
+    "delayRange": "({{min}} - {{max}} सेकंड)"
   }
 }

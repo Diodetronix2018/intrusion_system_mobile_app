@@ -1,0 +1,6 @@
+<resources>
+    <!-- The logo is a navy badge drawn on white, so both the adaptive-icon
+         and splash backgrounds stay white in either theme. -->
+    <color name="ic_launcher_background">#FFFFFF</color>
+    <color name="splash_background">#FFFFFF</color>
+</resources>

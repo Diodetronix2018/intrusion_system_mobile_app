@@ -176,7 +176,7 @@ export function SilenceScreen() {
                 onChange={setTimer}
                 min={SILENCE_TIMER_MIN}
                 max={SILENCE_TIMER_MAX}
-                unit={t('silence.seconds')}
+                unit={t('common.seconds')}
                 accessibilityLabel={t('silence.timer.title')}
               />
             }

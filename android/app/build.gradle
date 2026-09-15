@@ -77,9 +77,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.myawesomeproject"
+    namespace "com.diodetronix.dtxsecure"
     defaultConfig {
-        applicationId "com.myawesomeproject"
+        applicationId "com.diodetronix.dtxsecure"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

@@ -116,7 +116,8 @@
     "on": "ON",
     "off": "OFF",
     "saveConfiguration": "Save Configuration",
-    "configurationSaved": "Configuration saved"
+    "configurationSaved": "Configuration saved",
+    "seconds": "sec"
   },
   "profile": {
     "title": "Profile",
@@ -224,7 +225,6 @@
   "silence": {
     "manual": "Manual Silence",
     "auto": "Auto Silence",
-    "seconds": "sec",
     "fault": {
       "title": "Fault Silence",
       "manualDescription": "Mutes active system fault buzzers",
@@ -239,5 +239,29 @@
       "title": "Silence Timer",
       "description": "Duration before alarm terminates"
     }
+  },
+  "zone": {
+    "label": "Zone {{number}}",
+    "previous": "Previous zone",
+    "next": "Next zone",
+    "always": "Always",
+    "night": "Night",
+    "nc": "NC",
+    "no": "NO",
+    "delays": "Delays",
+    "exitDelay": "Exit Delay",
+    "entryDelay": "Entry Delay",
+    "locationEntry": "Location Entry",
+    "locations": {
+      "mainDoor": "Main Door",
+      "backDoor": "Back Door",
+      "window": "Window",
+      "motion": "Motion",
+      "garage": "Garage",
+      "balcony": "Balcony",
+      "kitchen": "Kitchen",
+      "bedroom": "Bedroom"
+    },
+    "delayRange": "({{min}} - {{max}} Sec)"
   }
 }
