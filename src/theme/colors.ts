@@ -29,6 +29,8 @@ export type ThemeColors = {
   switchTrackOff: string;
   /** Fill of an unselected chip */
   chipBackground: string;
+  /** Flat, borderless surface that sits on the page, e.g. the zone selector */
+  surfaceMuted: string;
   /** Colour of the card drop shadow */
   cardShadow: string;
 
@@ -45,6 +47,10 @@ export type ThemeColors = {
   primary: string;
   /** Content sitting on top of `primary` */
   onPrimary: string;
+  /** Supporting copy on a brand-filled surface */
+  onPrimaryMuted: string;
+  /** Hairline on a brand-filled surface */
+  onPrimaryDivider: string;
   /** Low-opacity brand wash for pressed/selected states */
   primaryMuted: string;
 
@@ -75,7 +81,10 @@ export type ThemeColors = {
   onError: string;
   /** Low-opacity red wash for destructive icon wells */
   errorMuted: string;
+  /** Subsystem status: healthy / degraded / faulted */
   success: string;
+  warning: string;
+  failed: string;
 
   /** Colour used by the elevated-button shadow */
   shadow: string;
@@ -95,6 +104,7 @@ export const lightColors: ThemeColors = {
   rowStripe: '#F4F5F8',
   switchTrackOff: '#D1D5DB',
   chipBackground: '#F4F5F8',
+  surfaceMuted: '#F3F4F6',
   cardShadow: '#000000',
 
   headerBackground: '#F8FAFC',
@@ -104,6 +114,8 @@ export const lightColors: ThemeColors = {
 
   primary: '#000055',
   onPrimary: '#FFFFFF',
+  onPrimaryMuted: '#B2B2CC',
+  onPrimaryDivider: '#E2E8F0',
   primaryMuted: 'rgba(0, 0, 85, 0.08)',
 
   text: '#111827',
@@ -124,7 +136,9 @@ export const lightColors: ThemeColors = {
   errorSurface: '#D32F2F',
   onError: '#FFFFFF',
   errorMuted: 'rgba(211, 47, 47, 0.12)',
-  success: '#059669',
+  success: '#00C853',
+  warning: '#F59E0B',
+  failed: '#EF4444',
 
   shadow: '#000055',
 
@@ -154,6 +168,7 @@ export const darkColors: ThemeColors = {
   switchTrackOff: '#334155',
   // sits lighter than the page so an unselected chip stays visible
   chipBackground: '#1E293B',
+  surfaceMuted: '#1E293B',
   cardShadow: '#000000',
 
   // the app bar takes the brand colour on dark, where a near-black bar would
@@ -165,6 +180,8 @@ export const darkColors: ThemeColors = {
 
   primary: '#4A6CF0',
   onPrimary: '#FFFFFF',
+  onPrimaryMuted: '#B2B2CC',
+  onPrimaryDivider: '#E2E8F0',
   primaryMuted: 'rgba(74, 108, 240, 0.18)',
 
   text: '#F1F5F9',
@@ -188,7 +205,10 @@ export const darkColors: ThemeColors = {
   errorSurface: '#D32F2F',
   onError: '#FFFFFF',
   errorMuted: 'rgba(248, 113, 113, 0.16)',
-  success: '#34D399',
+  // mid-tones that read on either canvas, so they do not change by theme
+  success: '#00C853',
+  warning: '#F59E0B',
+  failed: '#EF4444',
 
   shadow: '#000000',
 

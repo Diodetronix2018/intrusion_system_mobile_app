@@ -117,7 +117,8 @@
     "off": "बंद",
     "saveConfiguration": "कॉन्फ़िगरेशन सहेजें",
     "configurationSaved": "कॉन्फ़िगरेशन सहेजा गया",
-    "seconds": "सेकंड"
+    "seconds": "सेकंड",
+    "viewAll": "सभी देखें"
   },
   "profile": {
     "title": "प्रोफ़ाइल",
@@ -263,5 +264,47 @@
       "bedroom": "शयनकक्ष"
     },
     "delayRange": "({{min}} - {{max}} सेकंड)"
+  },
+  "main": {
+    "status": {
+      "title": "स्टे मोड सक्रिय",
+      "summary": "सभी सबसिस्टम ऑनलाइन • अंतिम सिंक {{ago}}",
+      "minutesAgo": "{{count}} मिनट पहले"
+    },
+    "modes": {
+      "stay": "स्टे",
+      "away": "बाहर"
+    },
+    "actions": {
+      "all": "सभी",
+      "part": "आंशिक",
+      "mute": "म्यूट",
+      "reset": "रीसेट"
+    },
+    "system": {
+      "title": "सिस्टम स्थिति",
+      "zone": "ज़ोन",
+      "battery": "बैटरी",
+      "ac": "एसी",
+      "hooter": "हूटर",
+      "tamper": "टैम्पर",
+      "signal": "सिग्नल"
+    },
+    "zoneStatus": {
+      "title": "ज़ोन स्थिति",
+      "normal": "सामान्य",
+      "warning": "चेतावनी",
+      "fault": "खराबी"
+    },
+    "activity": {
+      "title": "नवीनतम गतिविधि",
+      "events": {
+        "alarm": "अलार्म",
+        "fault": "खराबी",
+        "tamper": "टैम्पर",
+        "armed": "आर्म किया",
+        "disarmed": "डिसआर्म किया"
+      }
+    }
   }
 }

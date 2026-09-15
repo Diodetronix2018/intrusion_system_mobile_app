@@ -52,9 +52,22 @@ function DelayRow({
   onChange: (next: number) => void;
   unit: string;
 }) {
-  const { colors, spacing } = theme;
+  const { colors, radius, spacing } = theme;
   return (
-    <View style={[styles.delayRow, { gap: spacing.md }]}>
+    <View
+      style={[
+        styles.delayBox,
+        {
+          gap: spacing.md,
+          borderRadius: radius.lg,
+          borderColor: colors.border,
+          backgroundColor: colors.card,
+          paddingHorizontal: spacing.lg,
+          // the field is 37pt tall, so 8pt either side lands the box on 53-54
+          paddingVertical: spacing.sm,
+        },
+      ]}
+    >
       <Typography
         variant="caption"
         size={14}
@@ -98,23 +111,6 @@ export function ZoneScreen() {
     // no panel API yet; confirm the action so the button is not a dead end
     Toast.show({ type: 'success', text1: t('common.configurationSaved') });
   };
-
-  const card = (children: React.ReactNode) => (
-    <View
-      style={[
-        styles.card,
-        {
-          padding: spacing.lg,
-          gap: spacing.lg,
-          borderRadius: radius.lg,
-          borderColor: colors.border,
-          backgroundColor: colors.card,
-        },
-      ]}
-    >
-      {children}
-    </View>
-  );
 
   return (
     <Screen
@@ -180,26 +176,24 @@ export function ZoneScreen() {
 
       <View style={{ marginTop: spacing.lg }}>
         <SectionLabel>{t('zone.delays')}</SectionLabel>
-        {card(
-          <>
-            <DelayRow
-              theme={theme}
-              label={t('zone.exitDelay')}
-              range={delayRange}
-              value={config.exitDelay}
-              onChange={exitDelay => update({ exitDelay })}
-              unit={t('common.seconds')}
-            />
-            <DelayRow
-              theme={theme}
-              label={t('zone.entryDelay')}
-              range={delayRange}
-              value={config.entryDelay}
-              onChange={entryDelay => update({ entryDelay })}
-              unit={t('common.seconds')}
-            />
-          </>,
-        )}
+        <View style={{ gap: spacing.md }}>
+          <DelayRow
+            theme={theme}
+            label={t('zone.exitDelay')}
+            range={delayRange}
+            value={config.exitDelay}
+            onChange={exitDelay => update({ exitDelay })}
+            unit={t('common.seconds')}
+          />
+          <DelayRow
+            theme={theme}
+            label={t('zone.entryDelay')}
+            range={delayRange}
+            value={config.entryDelay}
+            onChange={entryDelay => update({ entryDelay })}
+            unit={t('common.seconds')}
+          />
+        </View>
       </View>
 
       <View style={{ marginTop: spacing.lg }}>
@@ -234,12 +228,12 @@ export function ZoneScreen() {
 }
 
 const styles = StyleSheet.create({
-  card: {
+  delayBox: {
+    minHeight: 54,
     borderWidth: 1,
-  },
-  delayRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   delayLabel: {
     flex: 1,

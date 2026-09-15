@@ -117,7 +117,8 @@
     "off": "OFF",
     "saveConfiguration": "Save Configuration",
     "configurationSaved": "Configuration saved",
-    "seconds": "sec"
+    "seconds": "sec",
+    "viewAll": "View all"
   },
   "profile": {
     "title": "Profile",
@@ -263,5 +264,47 @@
       "bedroom": "Bedroom"
     },
     "delayRange": "({{min}} - {{max}} Sec)"
+  },
+  "main": {
+    "status": {
+      "title": "Stay Mode Active",
+      "summary": "All subsystems online • Last sync {{ago}}",
+      "minutesAgo": "{{count}}m ago"
+    },
+    "modes": {
+      "stay": "Stay",
+      "away": "Away"
+    },
+    "actions": {
+      "all": "All",
+      "part": "Part",
+      "mute": "Mute",
+      "reset": "Reset"
+    },
+    "system": {
+      "title": "System Status",
+      "zone": "Zone",
+      "battery": "Battery",
+      "ac": "AC",
+      "hooter": "Hooter",
+      "tamper": "Tamper",
+      "signal": "Signal"
+    },
+    "zoneStatus": {
+      "title": "Zone Status",
+      "normal": "Normal",
+      "warning": "Warning",
+      "fault": "Fault"
+    },
+    "activity": {
+      "title": "Latest Activity",
+      "events": {
+        "alarm": "Alarm",
+        "fault": "Fault",
+        "tamper": "Tamper",
+        "armed": "Armed",
+        "disarmed": "Disarmed"
+      }
+    }
   }
 }
