@@ -144,23 +144,36 @@ const sessionFromTokens = (
  * user only signs in again when that refresh token itself expires (30 days by
  * default) or they log out.
  */
+type Restore = {
+  /** Good enough to render with immediately. */
+  live: AuthSession | null;
+  /** Needs a fresh token before it can be trusted. */
+  recheck: AuthSession | null;
+};
+
 export function SessionProvider({ children }: { children: React.ReactNode }) {
-  // Split what was persisted into "usable now" and "needs a refresh first",
-  // once, before the first render.
-  const initial = useRef<{ live: AuthSession | null; stale: AuthSession | null }>(
-    undefined as unknown as { live: AuthSession | null; stale: AuthSession | null },
-  );
+  // Work out once, before the first render, what the last launch left behind.
+  const initial = useRef<Restore>(undefined as unknown as Restore);
   if (!initial.current) {
     const saved = readPersistedSession();
-    const usable = !!saved && Date.now() < saved.expiresAt - EXPIRY_SKEW_MS;
+    const tokenFresh = !!saved && Date.now() < saved.expiresAt - EXPIRY_SKEW_MS;
+    // A session with no claimed device is re-checked even when its token is
+    // still valid: the device may have been claimed since (in this app or the
+    // 3-phase one), and `custom:thingName` only lands in a newly minted token.
+    // Without this the app would sit on the claim screen until the token aged
+    // out on its own.
+    const trusted = tokenFresh && !!saved!.thingName;
     initial.current = {
-      live: usable ? saved : null,
-      stale: saved && !usable ? saved : null,
+      live: tokenFresh ? saved : null,
+      recheck: trusted ? null : saved,
     };
   }
 
   const [session, setSession] = useState<AuthSession | null>(initial.current.live);
-  const [restoring, setRestoring] = useState(initial.current.stale !== null);
+  // Only block on the splash when there is nothing usable to show meanwhile.
+  const [restoring, setRestoring] = useState(
+    initial.current.recheck !== null && initial.current.live === null,
+  );
 
   // Lets async callbacks read the latest session without stale closures.
   const sessionRef = useRef<AuthSession | null>(session);
@@ -171,32 +184,39 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     persist(next);
   }, []);
 
-  // A persisted session whose ID token had already expired: refresh it before
-  // showing the app, and fall back to signed-out if the refresh token is gone.
+  // Bring the persisted session up to date on launch.
   useEffect(() => {
-    const stale = initial.current.stale;
-    if (!stale) {
+    const { recheck, live } = initial.current;
+    if (!recheck) {
       return;
     }
     let cancelled = false;
     (async () => {
       try {
-        const tokens = await refreshSession(COGNITO, stale.refreshToken);
+        const tokens = await refreshSession(COGNITO, recheck.refreshToken);
         if (!cancelled) {
           const refreshed = sessionFromTokens(
-            { ...tokens, refreshToken: stale.refreshToken },
-            stale.email,
+            { ...tokens, refreshToken: recheck.refreshToken },
+            recheck.email,
           );
           // Keep what we already had if this token happens to omit it.
           applySession({
             ...refreshed,
-            name: refreshed.name ?? stale.name,
-            thingName: refreshed.thingName ?? stale.thingName,
+            name: refreshed.name ?? recheck.name,
+            thingName: refreshed.thingName ?? recheck.thingName,
           });
         }
-      } catch {
-        // Refresh token expired or revoked → start signed out.
-        if (!cancelled) {
+      } catch (err: any) {
+        if (cancelled) {
+          return;
+        }
+        if (live) {
+          // The token in hand is still valid — this was only an opportunistic
+          // check for a device claimed elsewhere. Offline is not a reason to
+          // throw the user out.
+          console.warn('[auth] launch refresh failed, keeping session:', err?.message);
+        } else {
+          // Nothing usable and no new token: the refresh token is gone.
           applySession(null);
         }
       } finally {

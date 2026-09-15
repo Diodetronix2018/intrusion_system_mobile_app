@@ -34,11 +34,22 @@ function fakeIdToken(claims: Record<string, unknown>) {
   return `header.${payload}.signature`;
 }
 
-function persisted(expiresAt: number) {
+const THING = 'DTX867409070337741';
+
+// `null` means "this account has not claimed a device yet". It cannot be
+// `undefined` — that would fall through to the default parameter.
+function persisted(expiresAt: number, thing: string | null = THING) {
+  const thingName = thing ?? undefined;
+  const claims = {
+    email: 'ann@example.com',
+    name: 'Ann Lee',
+    ...(thingName ? { 'custom:thingName': thingName } : null),
+  };
   return {
     email: 'ann@example.com',
     name: 'Ann Lee',
-    idToken: fakeIdToken({ email: 'ann@example.com', name: 'Ann Lee' }),
+    thingName,
+    idToken: fakeIdToken(claims),
     accessToken: 'access-token',
     refreshToken: 'refresh-token',
     expiresAt,
@@ -103,7 +114,11 @@ test('restores a still-valid session without a network round trip', async () => 
 test('refreshes an expired ID token on launch and stays signed in', async () => {
   StorageService.setString(SESSION_KEY, JSON.stringify(persisted(Date.now() - HOUR)));
   cognito.refreshSession.mockResolvedValue({
-    idToken: fakeIdToken({ email: 'ann@example.com', name: 'Ann Lee' }),
+    idToken: fakeIdToken({
+      email: 'ann@example.com',
+      name: 'Ann Lee',
+      'custom:thingName': THING,
+    }),
     accessToken: 'new-access-token',
     expiresIn: 3600,
   });
@@ -119,6 +134,48 @@ test('refreshes an expired ID token on launch and stays signed in', async () => 
   // The refresh token is not rotated, so it must survive the refresh.
   expect(seen.current!.session!.refreshToken).toBe('refresh-token');
   expect(seen.current!.session!.accessToken).toBe('new-access-token');
+
+  await unmount();
+});
+
+test('re-checks a device-less session and picks up a device claimed elsewhere', async () => {
+  // Valid token, but it predates the claim — the attribute only appears in a
+  // freshly minted one.
+  StorageService.setString(
+    SESSION_KEY,
+    JSON.stringify(persisted(Date.now() + HOUR, null)),
+  );
+  cognito.refreshSession.mockResolvedValue({
+    idToken: fakeIdToken({
+      email: 'ann@example.com',
+      name: 'Ann Lee',
+      'custom:thingName': THING,
+    }),
+    accessToken: 'new-access-token',
+    expiresIn: 3600,
+  });
+
+  const { seen, unmount } = await mount();
+
+  expect(cognito.refreshSession).toHaveBeenCalled();
+  expect(seen.current!.hasDevice).toBe(true);
+  expect(seen.current!.session!.thingName).toBe(THING);
+
+  await unmount();
+});
+
+test('keeps a valid device-less session when the launch re-check fails', async () => {
+  StorageService.setString(
+    SESSION_KEY,
+    JSON.stringify(persisted(Date.now() + HOUR, null)),
+  );
+  cognito.refreshSession.mockRejectedValue(new Error('Network request failed'));
+
+  const { seen, unmount } = await mount();
+
+  // Offline is not a reason to sign someone out of a still-valid session.
+  expect(seen.current!.isAuthenticated).toBe(true);
+  expect(seen.current!.hasDevice).toBe(false);
 
   await unmount();
 });
@@ -149,7 +206,11 @@ test('ignores a corrupt persisted session', async () => {
 
 test('signing in persists the session, and logging out clears it', async () => {
   cognito.signInUserPool.mockResolvedValue({
-    idToken: fakeIdToken({ email: 'ann@example.com', name: 'Ann Lee' }),
+    idToken: fakeIdToken({
+      email: 'ann@example.com',
+      name: 'Ann Lee',
+      'custom:thingName': THING,
+    }),
     accessToken: 'access-token',
     refreshToken: 'refresh-token',
     expiresIn: 3600,
@@ -161,6 +222,10 @@ test('signing in persists the session, and logging out clears it', async () => {
     await seen.current!.signIn('ann@example.com', 'hunter2hunter2');
   });
   expect(seen.current!.isAuthenticated).toBe(true);
+  // The claimed device must come straight off the ID token, or the app strands
+  // the user on the claim screen.
+  expect(seen.current!.session!.thingName).toBe(THING);
+  expect(seen.current!.hasDevice).toBe(true);
   expect(StorageService.getString(SESSION_KEY)).toBeTruthy();
 
   await ReactTestRenderer.act(async () => {

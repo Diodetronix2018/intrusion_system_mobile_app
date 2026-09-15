@@ -8,6 +8,7 @@
  * The app client only allows USER_SRP_AUTH (USER_PASSWORD_AUTH is disabled), so
  * the password never leaves the device — only a zero-knowledge proof of it does.
  */
+import { Buffer } from 'buffer';
 import CryptoJS from 'crypto-js';
 
 export interface CognitoConfig {
@@ -511,24 +512,32 @@ export async function updateUserAttributes(
 // Token helpers
 // ---------------------------------------------------------------------------
 
-/** Decode a base64url segment to a UTF-8 string, without needing Buffer/atob. */
-function decodeBase64Url(segment: string): string {
-  const base64 = segment.replace(/-/g, '+').replace(/_/g, '/');
-  const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
-  return CryptoJS.enc.Base64.parse(padded).toString(CryptoJS.enc.Utf8);
-}
-
 /**
- * Decode the (unverified) claims out of a Cognito JWT — used only to read the
- * signed-in user's profile attributes (name, email) for display. The token was
+ * Decode the (unverified) claims out of a Cognito JWT — the profile attributes
+ * (`name`, `email`) and the claimed device (`custom:thingName`). The token was
  * already obtained over TLS from Cognito, so we don't re-verify the signature.
+ *
+ * `Buffer` comes from the `buffer` package: Hermes ships neither `Buffer` nor
+ * `atob`. Do not swap in `CryptoJS.enc.Utf8` here — it decodes via the legacy
+ * `escape()` global, which Hermes does not provide, and rethrows the failure as
+ * "Malformed UTF-8 data". That silently emptied every claim, so sign-in
+ * appeared to work while `custom:thingName` vanished and the app stranded the
+ * user on the claim screen.
  */
 export function decodeJwtClaims(token: string): Record<string, any> {
   try {
     const payload = token.split('.')[1];
-    if (!payload) return {};
-    return JSON.parse(decodeBase64Url(payload));
-  } catch {
+    if (!payload) {
+      console.warn('[auth] token has no payload segment');
+      return {};
+    }
+    const b64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const json = Buffer.from(b64, 'base64').toString('utf8');
+    return JSON.parse(json);
+  } catch (err: any) {
+    // Never silent: an empty claim set signs the user in with no name, no email
+    // and no device, which is near-impossible to diagnose from the outside.
+    console.warn('[auth] could not decode token claims:', err?.message);
     return {};
   }
 }
