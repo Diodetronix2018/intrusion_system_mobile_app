@@ -1,30 +1,40 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { Typography } from '../../../components';
-import { HomeIcon } from '../../../icons';
 import { useTheme } from '../../../theme';
+import { HomeAwayGlyph, HomeGlyph } from './ModeGlyphs';
+import type { ArmMode } from './useMainControls';
 
 const ICON_SIZE = 44;
 
 /**
  * The brand-filled panel status panel: icon, mode title, then a status line.
  *
+ * The title and icon track the same Stay/Away selection as the mode cards
+ * below — the same glyphs (`HomeGlyph`/`HomeAwayGlyph`), not a separate icon.
+ *
  * The two borders are pure-white alphas from the design (#FFFFFF14 on the
  * card, #FFFFFF1F on the icon ring). They are written inline rather than
  * tokenised because they are derived from white and identical in both themes.
  */
 export function StatusCard({
-  title,
+  mode,
   summary,
   online = true,
 }: {
-  title: string;
+  mode: ArmMode;
   summary: string;
   /** Drives the dot colour */
   online?: boolean;
 }) {
+  const { t } = useTranslation();
   const { colors, spacing } = useTheme();
+  const Glyph = mode === 'stay' ? HomeGlyph : HomeAwayGlyph;
+  const title = t(
+    mode === 'stay' ? 'main.status.titleStay' : 'main.status.titleAway',
+  );
 
   return (
     <View
@@ -39,7 +49,7 @@ export function StatusCard({
     >
       <View style={[styles.header, { gap: spacing.md }]}>
         <View style={styles.iconRing}>
-          <HomeIcon size={22} color={colors.onPrimary} />
+          <Glyph size={22} color={colors.onPrimary} />
         </View>
 
         <Typography

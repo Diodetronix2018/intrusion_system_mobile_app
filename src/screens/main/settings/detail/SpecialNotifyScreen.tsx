@@ -24,16 +24,24 @@ import {
 export function SpecialNotifyScreen() {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
-  const { settings, setAlert, setUserGroup } = useSpecialNotify();
+  const { settings, setAlert, setUserGroup, save, saving } = useSpecialNotify();
 
   const groupOptions: ChipOption<UserGroup>[] = USER_GROUPS.map(group => ({
     value: group,
     label: t(`specialNotify.groups.${group}`),
   }));
 
-  const handleSave = () => {
-    // no panel API yet; confirm the action so the button is not a dead end
-    Toast.show({ type: 'success', text1: t('common.configurationSaved') });
+  const handleSave = async () => {
+    try {
+      await save();
+      Toast.show({ type: 'success', text1: t('common.configurationSaved') });
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: t('common.configurationFailed'),
+        text2: err?.message,
+      });
+    }
   };
 
   return (
@@ -48,7 +56,12 @@ export function SpecialNotifyScreen() {
         background={colors.backgroundSubtle}
         contentContainerStyle={{ gap: spacing.md }}
         footer={
-          <Button title={t('common.saveConfiguration')} onPress={handleSave} />
+          <Button
+            title={t('common.saveConfiguration')}
+            onPress={handleSave}
+            loading={saving}
+            disabled={saving}
+          />
         }
       >
         <Typography

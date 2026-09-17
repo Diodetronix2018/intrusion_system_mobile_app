@@ -24,7 +24,7 @@ import {
 export function RepeatScreen() {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
-  const { settings, set } = useRepeatSettings();
+  const { settings, set, save, saving } = useRepeatSettings();
 
   // "1 Time" / "2 Times" — i18next picks the plural form per language
   const options: ChipOption<RepeatCount>[] = REPEAT_COUNTS.map(count => ({
@@ -43,9 +43,17 @@ export function RepeatScreen() {
     { key: 'admin', icon: <UsersIcon size={20} color={colors.onPrimary} /> },
   ];
 
-  const handleSave = () => {
-    // no panel API yet; confirm the action so the button is not a dead end
-    Toast.show({ type: 'success', text1: t('common.configurationSaved') });
+  const handleSave = async () => {
+    try {
+      await save();
+      Toast.show({ type: 'success', text1: t('common.configurationSaved') });
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: t('common.configurationFailed'),
+        text2: err?.message,
+      });
+    }
   };
 
   return (
@@ -60,7 +68,12 @@ export function RepeatScreen() {
         background={colors.backgroundSubtle}
         contentContainerStyle={{ gap: spacing.md }}
         footer={
-          <Button title={t('common.saveConfiguration')} onPress={handleSave} />
+          <Button
+            title={t('common.saveConfiguration')}
+            onPress={handleSave}
+            loading={saving}
+            disabled={saving}
+          />
         }
       >
         {cards.map(card => (

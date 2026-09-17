@@ -6,16 +6,12 @@ import Toast from 'react-native-toast-message';
 import { Button, Screen, ScreenHeader } from '../../../../components';
 import { useTheme } from '../../../../theme';
 import { ToggleRow, ZoneToggleCard } from './ZoneToggleCard';
-import { useToggleList } from './useToggleList';
-
-/** Eight zones plus the tamper line. */
-const LINE_COUNT = 9;
-const TAMPER_INDEX = 8;
+import { TAMPER_INDEX, usePartSetting } from './usePartSetting';
 
 export function PartSettingScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const { values, toggle } = useToggleList(LINE_COUNT);
+  const { values, toggle, save, saving } = usePartSetting();
 
   const rows: ToggleRow[] = values.map((enabled, index) => ({
     key: String(index),
@@ -28,9 +24,17 @@ export function PartSettingScreen() {
     onChange: next => toggle(index, next),
   }));
 
-  const handleSave = () => {
-    // no panel API yet; confirm the action so the button is not a dead end
-    Toast.show({ type: 'success', text1: t('common.configurationSaved') });
+  const handleSave = async () => {
+    try {
+      await save();
+      Toast.show({ type: 'success', text1: t('common.configurationSaved') });
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: t('common.configurationFailed'),
+        text2: err?.message,
+      });
+    }
   };
 
   return (
@@ -47,6 +51,8 @@ export function PartSettingScreen() {
           <Button
             title={t('common.saveConfiguration')}
             onPress={handleSave}
+            loading={saving}
+            disabled={saving}
           />
         }
       >

@@ -33,12 +33,15 @@ const DEFAULTS: DialerEntryInput = {
 export function DialerEntrySheet({
   visible,
   initialValue,
+  saving = false,
   onSubmit,
   onClose,
 }: {
   visible: boolean;
   /** Prefilled when editing; omit when adding */
   initialValue?: DialerEntryInput;
+  /** True while the publish `onSubmit` kicked off is in flight. */
+  saving?: boolean;
   onSubmit: (values: DialerEntryInput) => void;
   onClose: () => void;
 }) {
@@ -62,13 +65,18 @@ export function DialerEntrySheet({
   }, [visible, initialValue]);
 
   const handleSubmit = () => {
+    if (saving) {
+      return;
+    }
     const next = validateIndianMobile(values.phone);
     setError(next);
     if (next) {
       return;
     }
+    // The caller owns closing: it awaits the publish and only calls onClose
+    // once it lands, so a failed save leaves the sheet open (with a toast)
+    // instead of silently discarding what the user typed.
     onSubmit({ ...values, phone: normalizeIndianMobile(values.phone) });
-    onClose();
   };
 
   const section = (title: string, content: React.ReactNode) => (
@@ -192,11 +200,14 @@ export function DialerEntrySheet({
                 title={t('common.cancel')}
                 variant="outline"
                 onPress={onClose}
+                disabled={saving}
                 style={styles.action}
               />
               <Button
                 title={t('common.save')}
                 onPress={handleSubmit}
+                loading={saving}
+                disabled={saving}
                 style={styles.action}
               />
             </View>

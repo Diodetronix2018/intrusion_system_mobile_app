@@ -13,7 +13,8 @@ export type DialerEntryInput = {
 };
 
 export type DialerEntry = DialerEntryInput & {
-  id: string;
+  /** The device's 0-14 dial-out slot this contact occupies. */
+  slot: number;
 };
 
 /** Panels accept at most fifteen dial-out numbers. */

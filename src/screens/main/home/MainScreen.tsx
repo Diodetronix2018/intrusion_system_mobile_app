@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import Toast from 'react-native-toast-message';
 
 import { Screen } from '../../../components';
 import { useTheme } from '../../../theme';
@@ -18,23 +19,70 @@ import {
 import { StatusCard } from './StatusCard';
 import { SystemStatusCard } from './SystemStatusCard';
 import { LatestActivityCard } from './LatestActivityCard';
+import { useMainControls } from './useMainControls';
+import { useMainStatus } from './useMainStatus';
 import { ZoneStatusCard } from './ZoneStatusCard';
 
-type ArmMode = 'stay' | 'away';
-
-const QUICK_ACTIONS = [
-  { key: 'all', glyph: AllGlyph },
-  { key: 'part', glyph: PartGlyph },
-  { key: 'mute', glyph: MuteGlyph },
-  { key: 'reset', glyph: ResetGlyph },
-] as const;
+/** "just now" under a minute, otherwise "{{count}}m ago" — from the device's reported `ts`. */
+function formatAgo(t: (key: string, opts?: any) => string, ts: string): string {
+  const minutes = Math.max(0, Math.round((Date.now() - Date.parse(ts)) / 60000));
+  return minutes < 1
+    ? t('main.status.justNow')
+    : t('main.status.minutesAgo', { count: minutes });
+}
 
 export function MainScreen() {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
   const { gutter } = useResponsive();
   const navigation = useNavigation();
-  const [mode, setMode] = useState<ArmMode>('stay');
+  const {
+    armMode,
+    setArmMode,
+    setArmModeFromDevice,
+    partitionMode,
+    setPartitionMode,
+    mute,
+    reset,
+    pendingAction,
+    saving,
+  } = useMainControls();
+  const {
+    connected,
+    armMode: reportedArmMode,
+    timestamp,
+    statuses,
+  } = useMainStatus();
+
+  // Prepopulate the Stay/Away selection from the device's own reported
+  // status, once — after that, the user's own taps (already reflected
+  // optimistically by useMainControls) stay authoritative.
+  const seededArmMode = useRef(false);
+  useEffect(() => {
+    if (!seededArmMode.current && reportedArmMode) {
+      setArmModeFromDevice(reportedArmMode);
+      seededArmMode.current = true;
+    }
+  }, [reportedArmMode, setArmModeFromDevice]);
+
+  const summary = timestamp
+    ? t('main.status.summary', { ago: formatAgo(t, timestamp) })
+    : t('main.status.connecting');
+
+  const reportError = (err: unknown) => {
+    Toast.show({
+      type: 'error',
+      text1: t('common.configurationFailed'),
+      text2: (err as any)?.message,
+    });
+  };
+
+  const reportSent = () => {
+    Toast.show({ type: 'success', text1: t('common.commandSent') });
+  };
+
+  const runCommand = (action: () => Promise<void>) =>
+    action().then(reportSent).catch(reportError);
 
   return (
     <Screen
@@ -53,12 +101,7 @@ export function MainScreen() {
           },
         ]}
       >
-        <StatusCard
-          title={t('main.status.title')}
-          summary={t('main.status.summary', {
-            ago: t('main.status.minutesAgo', { count: 2 }),
-          })}
-        />
+        <StatusCard mode={armMode} summary={summary} online={connected} />
       </View>
 
       <View
@@ -73,14 +116,18 @@ export function MainScreen() {
       >
         <ModeCard
           label={t('main.modes.stay')}
-          active={mode === 'stay'}
-          onPress={() => setMode('stay')}
+          active={armMode === 'stay'}
+          loading={pendingAction === 'arm' && armMode !== 'stay'}
+          disabled={saving}
+          onPress={() => runCommand(() => setArmMode('stay'))}
           glyph={HomeGlyph}
         />
         <ModeCard
           label={t('main.modes.away')}
-          active={mode === 'away'}
-          onPress={() => setMode('away')}
+          active={armMode === 'away'}
+          loading={pendingAction === 'arm' && armMode !== 'away'}
+          disabled={saving}
+          onPress={() => runCommand(() => setArmMode('away'))}
           glyph={HomeAwayGlyph}
         />
       </View>
@@ -95,21 +142,40 @@ export function MainScreen() {
           },
         ]}
       >
-        {QUICK_ACTIONS.map(action => (
-          <QuickActionCard
-            key={action.key}
-            label={t(`main.actions.${action.key}`)}
-            glyph={action.glyph}
-            onPress={() => console.log('quick action', action.key)}
-          />
-        ))}
+        <QuickActionCard
+          label={t('main.actions.all')}
+          glyph={AllGlyph}
+          active={partitionMode === 'all'}
+          loading={pendingAction === 'mode' && partitionMode !== 'all'}
+          disabled={saving}
+          onPress={() => runCommand(() => setPartitionMode('all'))}
+        />
+        <QuickActionCard
+          label={t('main.actions.part')}
+          glyph={PartGlyph}
+          active={partitionMode === 'part'}
+          loading={pendingAction === 'mode' && partitionMode !== 'part'}
+          disabled={saving}
+          onPress={() => runCommand(() => setPartitionMode('part'))}
+        />
+        <QuickActionCard
+          label={t('main.actions.mute')}
+          glyph={MuteGlyph}
+          loading={pendingAction === 'mute'}
+          disabled={saving}
+          onPress={() => runCommand(mute)}
+        />
+        <QuickActionCard
+          label={t('main.actions.reset')}
+          glyph={ResetGlyph}
+          loading={pendingAction === 'reset'}
+          disabled={saving}
+          onPress={() => runCommand(reset)}
+        />
       </View>
 
       <View style={{ paddingHorizontal: gutter, paddingTop: spacing.xl }}>
-        {/* statuses come from the panel once the API lands */}
-        <SystemStatusCard
-          statuses={{ battery: 'warning', tamper: 'failed' }}
-        />
+        <SystemStatusCard statuses={statuses} />
       </View>
 
       <View style={{ paddingHorizontal: gutter, paddingTop: spacing.lg }}>

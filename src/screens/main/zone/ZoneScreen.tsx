@@ -6,9 +6,12 @@ import Toast from 'react-native-toast-message';
 import {
   Button,
   Icon,
+  Input,
   NumberInput,
   Screen,
   SectionLabel,
+  Slider,
+  ToggleSwitch,
   Typography,
 } from '../../../components';
 import {
@@ -26,7 +29,10 @@ import { ZoneSelector } from './ZoneSelector';
 import {
   DELAY_MAX,
   DELAY_MIN,
-  ZONE_LOCATION_KEYS,
+  DETECTION_COUNT_MAX,
+  DETECTION_COUNT_MIN,
+  WAIT_TIME_MAX,
+  WAIT_TIME_MIN,
   useZoneConfig,
 } from './useZoneConfig';
 
@@ -91,11 +97,126 @@ function DelayRow({
   );
 }
 
+/** Same boxed row as `DelayRow`, but a switch on the right instead of a number field. */
+function ToggleRow({
+  theme,
+  label,
+  description,
+  value,
+  onChange,
+}: {
+  theme: Theme;
+  label: string;
+  description: string;
+  value: boolean;
+  onChange: (next: boolean) => void;
+}) {
+  const { colors, radius, spacing } = theme;
+  return (
+    <View
+      style={[
+        styles.delayBox,
+        {
+          gap: spacing.md,
+          borderRadius: radius.lg,
+          borderColor: colors.border,
+          backgroundColor: colors.card,
+          paddingHorizontal: spacing.lg,
+          paddingVertical: spacing.sm,
+        },
+      ]}
+    >
+      <View style={styles.delayLabel}>
+        <Typography
+          variant="caption"
+          size={14}
+          align="left"
+          color={colors.primary}
+          numberOfLines={1}
+        >
+          {label}
+        </Typography>
+        <Typography
+          variant="caption"
+          size={12}
+          align="left"
+          color={colors.textSecondary}
+          style={styles.toggleDescription}
+        >
+          {description}
+        </Typography>
+      </View>
+
+      <ToggleSwitch
+        value={value}
+        onValueChange={onChange}
+        accessibilityLabel={label}
+      />
+    </View>
+  );
+}
+
+/** Boxed row with a label on top and a full-width slider below — a slider
+ *  needs the whole row's width to be usable, unlike the number/switch rows. */
+function SliderRow({
+  theme,
+  label,
+  range,
+  min,
+  max,
+  value,
+  onChange,
+}: {
+  theme: Theme;
+  label: string;
+  range: string;
+  min: number;
+  max: number;
+  value: number;
+  onChange: (next: number) => void;
+}) {
+  const { colors, radius, spacing } = theme;
+  return (
+    <View
+      style={[
+        styles.delayBox,
+        styles.sliderBox,
+        {
+          gap: spacing.xs,
+          borderRadius: radius.lg,
+          borderColor: colors.border,
+          backgroundColor: colors.card,
+          paddingHorizontal: spacing.lg,
+          paddingVertical: spacing.md,
+        },
+      ]}
+    >
+      <Typography
+        variant="caption"
+        size={14}
+        align="left"
+        color={colors.primary}
+        numberOfLines={1}
+      >
+        {`${label} ${range}`}
+      </Typography>
+
+      <Slider
+        min={min}
+        max={max}
+        value={value}
+        onChange={onChange}
+        accessibilityLabel={label}
+      />
+    </View>
+  );
+}
+
 export function ZoneScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { colors, radius, spacing } = theme;
-  const { index, config, previous, next, update } = useZoneConfig();
+  const { colors, spacing } = theme;
+  const { index, config, previous, next, update, save, saving } = useZoneConfig();
 
   // the third pair uses the icon as a radio indicator: whichever card is
   // selected shows the ticked circle, the other an empty one
@@ -107,9 +228,22 @@ export function ZoneScreen() {
     max: DELAY_MAX,
   });
 
-  const handleSave = () => {
-    // no panel API yet; confirm the action so the button is not a dead end
-    Toast.show({ type: 'success', text1: t('common.configurationSaved') });
+  const detectionCountRange = t('zone.countRange', {
+    min: DETECTION_COUNT_MIN,
+    max: DETECTION_COUNT_MAX,
+  });
+
+  const handleSave = async () => {
+    try {
+      await save();
+      Toast.show({ type: 'success', text1: t('common.configurationSaved') });
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: t('common.configurationFailed'),
+        text2: err?.message,
+      });
+    }
   };
 
   return (
@@ -193,32 +327,50 @@ export function ZoneScreen() {
         </View>
       </View>
 
+      <View style={{ marginTop: spacing.lg, gap: spacing.md }}>
+        <ToggleRow
+          theme={theme}
+          label={t('zone.smartCheck.title')}
+          description={t('zone.smartCheck.description')}
+          value={config.smartCheck}
+          onChange={smartCheck => update({ smartCheck })}
+        />
+
+        {config.smartCheck && (
+          <>
+            <DelayRow
+              theme={theme}
+              label={t('zone.waitTime')}
+              range={t('zone.delayRange', {
+                min: WAIT_TIME_MIN,
+                max: WAIT_TIME_MAX,
+              })}
+              value={config.waitTime}
+              onChange={waitTime => update({ waitTime })}
+              unit={t('common.seconds')}
+            />
+            <SliderRow
+              theme={theme}
+              label={t('zone.detectionCount')}
+              range={detectionCountRange}
+              min={DETECTION_COUNT_MIN}
+              max={DETECTION_COUNT_MAX}
+              value={config.detectionCount}
+              onChange={detectionCount => update({ detectionCount })}
+            />
+          </>
+        )}
+      </View>
+
       <View style={{ marginTop: spacing.lg }}>
         <SectionLabel>{t('zone.locationEntry')}</SectionLabel>
-        <View
-          style={[
-            styles.locationCard,
-            {
-              gap: spacing.md,
-              paddingHorizontal: spacing.lg,
-              borderRadius: radius.lg,
-              borderColor: colors.border,
-              backgroundColor: colors.card,
-            },
-          ]}
-        >
-          <DoorOpenIcon size={20} color={colors.primary} />
-          <Typography
-            variant="captionBold"
-            size={16}
-            align="left"
-            color={colors.primary}
-            numberOfLines={1}
-            style={styles.locationLabel}
-          >
-            {t(`zone.locations.${ZONE_LOCATION_KEYS[index]}`)}
-          </Typography>
-        </View>
+        <Input
+          value={config.location}
+          onChangeText={location => update({ location })}
+          placeholder={t('zone.locationPlaceholder')}
+          leftIcon={<DoorOpenIcon size={20} color={colors.primary} />}
+          accessibilityLabel={t('zone.locationEntry')}
+        />
       </View>
 
       {/* scrolls with the content: a pinned footer moves with the keyboard,
@@ -226,6 +378,8 @@ export function ZoneScreen() {
       <Button
         title={t('common.saveConfiguration')}
         onPress={handleSave}
+        loading={saving}
+        disabled={saving}
         style={{ marginTop: spacing['2xl'] }}
       />
     </Screen>
@@ -244,13 +398,13 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  locationCard: {
-    minHeight: 56,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+  toggleDescription: {
+    marginTop: 2,
   },
-  locationLabel: {
-    flexShrink: 1,
+  sliderBox: {
+    minHeight: 0,
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    justifyContent: 'flex-start',
   },
 });

@@ -184,6 +184,8 @@
     "off": "அணை",
     "saveConfiguration": "உள்ளமைவைச் சேமி",
     "configurationSaved": "உள்ளமைவு சேமிக்கப்பட்டது",
+    "configurationFailed": "உள்ளமைவைச் சேமிக்க முடியவில்லை",
+    "commandSent": "கட்டளை அனுப்பப்பட்டது",
     "seconds": "வி",
     "viewAll": "அனைத்தையும் காண்க"
   },
@@ -306,7 +308,8 @@
     },
     "timer": {
       "title": "அமைதி நேரம்",
-      "description": "அலாரம் நிறைவடைவதற்கு முந்தைய கால அளவு"
+      "faultDescription": "கோளாறு அமைதி முடிவதற்கு முந்தைய கால அளவு",
+      "alarmDescription": "அலாரம் நிறைவடைவதற்கு முந்தைய கால அளவு"
     }
   },
   "zone": {
@@ -320,7 +323,14 @@
     "delays": "தாமதங்கள்",
     "exitDelay": "வெளியேறும் தாமதம்",
     "entryDelay": "நுழைவு தாமதம்",
+    "smartCheck": {
+      "title": "ஸ்மார்ட் செக்",
+      "description": "எச்சரிப்பதற்கு முன் இரண்டாவது தூண்டலுக்காக காத்திருக்கும்"
+    },
+    "waitTime": "காத்திருப்பு நேரம்",
+    "detectionCount": "கண்டறிதல் எண்ணிக்கை",
     "locationEntry": "இட நுழைவு",
+    "locationPlaceholder": "எ.கா., முன் கதவு",
     "locations": {
       "mainDoor": "முதன்மை கதவு",
       "backDoor": "பின் கதவு",
@@ -331,13 +341,17 @@
       "kitchen": "சமையலறை",
       "bedroom": "படுக்கையறை"
     },
-    "delayRange": "({{min}} - {{max}} வி)"
+    "delayRange": "({{min}} - {{max}} வி)",
+    "countRange": "({{min}} - {{max}})"
   },
   "main": {
     "status": {
-      "title": "ஸ்டே பயன்முறை இயக்கத்தில்",
+      "titleStay": "ஸ்டே பயன்முறை இயக்கத்தில்",
+      "titleAway": "அவே பயன்முறை இயக்கத்தில்",
       "summary": "அனைத்து துணை அமைப்புகளும் இயக்கத்தில் • கடைசி ஒத்திசைவு {{ago}}",
-      "minutesAgo": "{{count}} நிமிடம் முன்பு"
+      "minutesAgo": "{{count}} நிமிடம் முன்பு",
+      "justNow": "இப்போது",
+      "connecting": "சாதனத்துடன் இணைக்கிறது…"
     },
     "modes": {
       "stay": "ஸ்டே",

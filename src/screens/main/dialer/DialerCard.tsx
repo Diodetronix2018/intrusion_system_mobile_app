@@ -16,6 +16,7 @@ import {
 export function DialerCard({
   entry,
   index,
+  disabled = false,
   onEdit,
   onDelete,
   onMethodChange,
@@ -24,6 +25,8 @@ export function DialerCard({
   entry: DialerEntry;
   /** 1-based position, shown in the circle */
   index: number;
+  /** True while a publish for this list is in flight — blocks further edits until it lands. */
+  disabled?: boolean;
   onEdit: () => void;
   onDelete: () => void;
   onMethodChange: (method: ContactMethod) => void;
@@ -84,48 +87,57 @@ export function DialerCard({
 
         <Pressable
           onPress={onEdit}
+          disabled={disabled}
           hitSlop={sizing.hitSlop}
           accessibilityRole="button"
           accessibilityLabel={t('dialer.editNumber')}
+          style={disabled ? styles.disabled : undefined}
         >
           <EditIcon size={18} color={colors.textSecondary} />
         </Pressable>
 
         <Pressable
           onPress={onDelete}
+          disabled={disabled}
           hitSlop={sizing.hitSlop}
           accessibilityRole="button"
           accessibilityLabel={t('dialer.deleteNumber')}
+          style={disabled ? styles.disabled : undefined}
         >
           <TrashIcon size={18} color={colors.error} />
         </Pressable>
       </View>
 
-      {section(
-        t('dialer.type'),
-        <ChipGroup<ContactMethod>
-          accessibilityLabel={t('dialer.type')}
-          selected={entry.method}
-          onSelect={onMethodChange}
-          options={CONTACT_METHODS.map(item => ({
-            value: item.value,
-            label: t(item.labelKey),
-          }))}
-        />,
-      )}
+      <View
+        pointerEvents={disabled ? 'none' : 'auto'}
+        style={disabled ? styles.disabled : undefined}
+      >
+        {section(
+          t('dialer.type'),
+          <ChipGroup<ContactMethod>
+            accessibilityLabel={t('dialer.type')}
+            selected={entry.method}
+            onSelect={onMethodChange}
+            options={CONTACT_METHODS.map(item => ({
+              value: item.value,
+              label: t(item.labelKey),
+            }))}
+          />,
+        )}
 
-      {section(
-        t('dialer.alert'),
-        <ChipGroup<AlertKind>
-          accessibilityLabel={t('dialer.alert')}
-          selected={entry.alert}
-          onSelect={onAlertChange}
-          options={ALERT_KINDS.map(item => ({
-            value: item.value,
-            label: t(item.labelKey),
-          }))}
-        />,
-      )}
+        {section(
+          t('dialer.alert'),
+          <ChipGroup<AlertKind>
+            accessibilityLabel={t('dialer.alert')}
+            selected={entry.alert}
+            onSelect={onAlertChange}
+            options={ALERT_KINDS.map(item => ({
+              value: item.value,
+              label: t(item.labelKey),
+            }))}
+          />,
+        )}
+      </View>
     </View>
   );
 }
@@ -148,5 +160,8 @@ const styles = StyleSheet.create({
   phone: {
     flex: 1,
     minWidth: 0,
+  },
+  disabled: {
+    opacity: 0.5,
   },
 });

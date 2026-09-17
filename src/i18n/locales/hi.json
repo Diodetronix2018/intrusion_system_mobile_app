@@ -184,6 +184,8 @@
     "off": "बंद",
     "saveConfiguration": "कॉन्फ़िगरेशन सहेजें",
     "configurationSaved": "कॉन्फ़िगरेशन सहेजा गया",
+    "configurationFailed": "कॉन्फ़िगरेशन सहेज नहीं सका",
+    "commandSent": "कमांड भेजा गया",
     "seconds": "सेकंड",
     "viewAll": "सभी देखें"
   },
@@ -306,7 +308,8 @@
     },
     "timer": {
       "title": "साइलेंस टाइमर",
-      "description": "अलार्म समाप्त होने से पहले की अवधि"
+      "faultDescription": "फ़ॉल्ट साइलेंस समाप्त होने से पहले की अवधि",
+      "alarmDescription": "अलार्म समाप्त होने से पहले की अवधि"
     }
   },
   "zone": {
@@ -320,7 +323,14 @@
     "delays": "विलंब",
     "exitDelay": "निकास विलंब",
     "entryDelay": "प्रवेश विलंब",
+    "smartCheck": {
+      "title": "स्मार्ट चेक",
+      "description": "अलर्ट करने से पहले दूसरी ट्रिप का इंतज़ार करें"
+    },
+    "waitTime": "प्रतीक्षा समय",
+    "detectionCount": "डिटेक्शन गिनती",
     "locationEntry": "स्थान प्रविष्टि",
+    "locationPlaceholder": "जैसे, सामने का दरवाज़ा",
     "locations": {
       "mainDoor": "मुख्य द्वार",
       "backDoor": "पिछला द्वार",
@@ -331,13 +341,17 @@
       "kitchen": "रसोई",
       "bedroom": "शयनकक्ष"
     },
-    "delayRange": "({{min}} - {{max}} सेकंड)"
+    "delayRange": "({{min}} - {{max}} सेकंड)",
+    "countRange": "({{min}} - {{max}})"
   },
   "main": {
     "status": {
-      "title": "स्टे मोड सक्रिय",
+      "titleStay": "स्टे मोड सक्रिय",
+      "titleAway": "अवे मोड सक्रिय",
       "summary": "सभी सबसिस्टम ऑनलाइन • अंतिम सिंक {{ago}}",
-      "minutesAgo": "{{count}} मिनट पहले"
+      "minutesAgo": "{{count}} मिनट पहले",
+      "justNow": "अभी",
+      "connecting": "डिवाइस से कनेक्ट हो रहा है…"
     },
     "modes": {
       "stay": "स्टे",

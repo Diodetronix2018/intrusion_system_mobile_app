@@ -8,6 +8,9 @@ module.exports = {
     '\\.svg$': '<rootDir>/__mocks__/svgMock.js',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(?:@react-native|react-native|@react-navigation|@react-native-vector-icons|react-native-svg|react-native-keyboard-controller|react-native-reanimated|react-native-worklets|react-native-toast-message|react-native-mmkv|react-native-nitro-modules)/)',
+    // mqtt resolves to its ESM build (dist/mqtt.esm.js) under the "react-native"
+    // export condition the RN preset sets, so it needs the same babel pass as
+    // the RN packages below rather than being skipped like a plain CJS module.
+    'node_modules/(?!(?:@react-native|react-native|@react-navigation|@react-native-vector-icons|react-native-svg|react-native-keyboard-controller|react-native-reanimated|react-native-worklets|react-native-toast-message|react-native-mmkv|react-native-nitro-modules|mqtt)/)',
   ],
 };

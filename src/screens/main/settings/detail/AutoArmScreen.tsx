@@ -11,6 +11,7 @@ import {
   Screen,
   ScreenHeader,
   TimePicker,
+  ToggleSwitch,
   Typography,
 } from '../../../../components';
 import { InfoIcon } from '../../../../icons';
@@ -20,11 +21,19 @@ import { useAutoArm } from './useAutoArm';
 export function AutoArmScreen() {
   const { t } = useTranslation();
   const { colors, radius, spacing, softShadow } = useTheme();
-  const { time, setTime } = useAutoArm();
+  const { enabled, setEnabled, time, setTime, save, saving } = useAutoArm();
 
-  const handleSave = () => {
-    // no panel API yet; confirm the action so the button is not a dead end
-    Toast.show({ type: 'success', text1: t('common.configurationSaved') });
+  const handleSave = async () => {
+    try {
+      await save();
+      Toast.show({ type: 'success', text1: t('common.configurationSaved') });
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: t('common.configurationFailed'),
+        text2: err?.message,
+      });
+    }
   };
 
   const card = (children: React.ReactNode) => (
@@ -57,7 +66,12 @@ export function AutoArmScreen() {
         background={colors.backgroundSubtle}
         contentContainerStyle={{ gap: spacing.md }}
         footer={
-          <Button title={t('common.saveConfiguration')} onPress={handleSave} />
+          <Button
+            title={t('common.saveConfiguration')}
+            onPress={handleSave}
+            loading={saving}
+            disabled={saving}
+          />
         }
       >
         <Typography
@@ -75,9 +89,16 @@ export function AutoArmScreen() {
           icon={<Icon name="time-outline" size={20} color={colors.onPrimary} />}
           title={t('autoArm.title')}
           description={t('autoArm.description')}
+          trailing={
+            <ToggleSwitch
+              value={enabled}
+              onValueChange={setEnabled}
+              accessibilityLabel={t('autoArm.title')}
+            />
+          }
         />
 
-        {card(
+        {enabled && card(
           <>
             <Typography
               variant="captionBold"

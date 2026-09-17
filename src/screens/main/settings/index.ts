@@ -30,6 +30,7 @@ export {
   useSilenceSettings,
 } from './detail/useSilenceSettings';
 export type {
+  SilenceMode,
+  SilenceSection,
   SilenceSettings,
-  SilenceToggle,
 } from './detail/useSilenceSettings';

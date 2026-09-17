@@ -21,6 +21,7 @@ export { ScreenHeader } from './ScreenHeader';
 export { SectionLabel, SettingsCard, SettingsRow } from './SettingsList';
 export type { SettingsRowProps } from './SettingsList';
 export type { ScreenProps } from './Screen';
+export { Slider } from './Slider';
 export { formatTime, TimePicker } from './TimePicker';
 export type { Time } from './TimePicker';
 export { ToggleSwitch } from './ToggleSwitch';

@@ -6,27 +6,33 @@ import Toast from 'react-native-toast-message';
 import { Button, Screen, ScreenHeader, Typography } from '../../../../components';
 import { useTheme } from '../../../../theme';
 import { ToggleRow, ZoneToggleCard } from './ZoneToggleCard';
-import { useToggleList } from './useToggleList';
-
-/** Relay assignment covers the eight zones; there is no tamper line. */
-const ZONE_COUNT = 8;
+import { useRelaySettings } from './useRelaySettings';
 
 export function RelayScreen() {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
-  const { values, toggle, setAll, allEnabled } = useToggleList(ZONE_COUNT);
+  const { values, toggleZone, selectAll, isAllSelected, save, saving } =
+    useRelaySettings();
 
   const rows: ToggleRow[] = values.map((enabled, index) => ({
     key: String(index),
     badge: String(index + 1),
     label: t('partSetting.zone', { number: index + 1 }),
     enabled,
-    onChange: (next: boolean) => toggle(index, next),
+    onChange: (next: boolean) => toggleZone(index + 1, next),
   }));
 
-  const handleSave = () => {
-    // no panel API yet; confirm the action so the button is not a dead end
-    Toast.show({ type: 'success', text1: t('common.configurationSaved') });
+  const handleSave = async () => {
+    try {
+      await save();
+      Toast.show({ type: 'success', text1: t('common.configurationSaved') });
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: t('common.configurationFailed'),
+        text2: err?.message,
+      });
+    }
   };
 
   return (
@@ -40,7 +46,12 @@ export function RelayScreen() {
         edges={['left', 'right']}
         background={colors.backgroundSoft}
         footer={
-          <Button title={t('common.saveConfiguration')} onPress={handleSave} />
+          <Button
+            title={t('common.saveConfiguration')}
+            onPress={handleSave}
+            loading={saving}
+            disabled={saving}
+          />
         }
       >
         <View style={[styles.header, { marginBottom: spacing.md }]}>
@@ -49,15 +60,15 @@ export function RelayScreen() {
           </Typography>
 
           <Pressable
-            onPress={() => setAll(!allEnabled)}
+            onPress={selectAll}
             accessibilityRole="button"
             // reads as selected only while every zone is on
-            accessibilityState={{ selected: allEnabled }}
+            accessibilityState={{ selected: isAllSelected }}
             style={({ pressed }) => [
               styles.pill,
               {
                 paddingHorizontal: spacing.md,
-                backgroundColor: allEnabled
+                backgroundColor: isAllSelected
                   ? colors.primary
                   : colors.chipBackground,
                 borderColor: colors.primary,
@@ -69,7 +80,7 @@ export function RelayScreen() {
               variant="cardSubtitle"
               size={12}
               weight="700"
-              color={allEnabled ? colors.onPrimary : colors.primary}
+              color={isAllSelected ? colors.onPrimary : colors.primary}
               numberOfLines={1}
             >
               {t('relay.allZones')}

@@ -75,11 +75,19 @@ export function SilenceScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
   const { colors, spacing } = theme;
-  const { settings, setToggle, setTimer } = useSilenceSettings();
+  const { settings, setMode, setTimer, save, saving } = useSilenceSettings();
 
-  const handleSave = () => {
-    // no panel API yet; confirm the action so the button is not a dead end
-    Toast.show({ type: 'success', text1: t('common.configurationSaved') });
+  const handleSave = async () => {
+    try {
+      await save();
+      Toast.show({ type: 'success', text1: t('common.configurationSaved') });
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: t('common.configurationFailed'),
+        text2: err?.message,
+      });
+    }
   };
 
   return (
@@ -94,7 +102,12 @@ export function SilenceScreen() {
         background={colors.backgroundSubtle}
         contentContainerStyle={{ gap: spacing.md }}
         footer={
-          <Button title={t('common.saveConfiguration')} onPress={handleSave} />
+          <Button
+            title={t('common.saveConfiguration')}
+            onPress={handleSave}
+            loading={saving}
+            disabled={saving}
+          />
         }
       >
         <FeatureCard
@@ -108,8 +121,8 @@ export function SilenceScreen() {
             description={t('silence.fault.manualDescription')}
             trailing={
               <ToggleSwitch
-                value={settings.faultManual}
-                onValueChange={next => setToggle('faultManual', next)}
+                value={settings.faultMode === 'manual'}
+                onValueChange={next => setMode('fault', next ? 'manual' : 'auto')}
                 accessibilityLabel={`${t('silence.fault.title')} ${t('silence.manual')}`}
               />
             }
@@ -123,9 +136,27 @@ export function SilenceScreen() {
             description={t('silence.fault.autoDescription')}
             trailing={
               <ToggleSwitch
-                value={settings.faultAuto}
-                onValueChange={next => setToggle('faultAuto', next)}
+                value={settings.faultMode === 'auto'}
+                onValueChange={next => setMode('fault', next ? 'auto' : 'manual')}
                 accessibilityLabel={`${t('silence.fault.title')} ${t('silence.auto')}`}
+              />
+            }
+          />
+
+          <Divider theme={theme} />
+
+          <SilenceRow
+            theme={theme}
+            title={t('silence.timer.title')}
+            description={t('silence.timer.faultDescription')}
+            trailing={
+              <NumberInput
+                value={settings.faultTimerSeconds}
+                onChange={next => setTimer('fault', next)}
+                min={SILENCE_TIMER_MIN}
+                max={SILENCE_TIMER_MAX}
+                unit={t('common.seconds')}
+                accessibilityLabel={`${t('silence.fault.title')} ${t('silence.timer.title')}`}
               />
             }
           />
@@ -142,8 +173,8 @@ export function SilenceScreen() {
             description={t('silence.alarm.manualDescription')}
             trailing={
               <ToggleSwitch
-                value={settings.alarmManual}
-                onValueChange={next => setToggle('alarmManual', next)}
+                value={settings.alarmMode === 'manual'}
+                onValueChange={next => setMode('alarm', next ? 'manual' : 'auto')}
                 accessibilityLabel={`${t('silence.alarm.title')} ${t('silence.manual')}`}
               />
             }
@@ -157,8 +188,8 @@ export function SilenceScreen() {
             description={t('silence.alarm.autoDescription')}
             trailing={
               <ToggleSwitch
-                value={settings.alarmAuto}
-                onValueChange={next => setToggle('alarmAuto', next)}
+                value={settings.alarmMode === 'auto'}
+                onValueChange={next => setMode('alarm', next ? 'auto' : 'manual')}
                 accessibilityLabel={`${t('silence.alarm.title')} ${t('silence.auto')}`}
               />
             }
@@ -169,15 +200,15 @@ export function SilenceScreen() {
           <SilenceRow
             theme={theme}
             title={t('silence.timer.title')}
-            description={t('silence.timer.description')}
+            description={t('silence.timer.alarmDescription')}
             trailing={
               <NumberInput
-                value={settings.timerSeconds}
-                onChange={setTimer}
+                value={settings.alarmTimerSeconds}
+                onChange={next => setTimer('alarm', next)}
                 min={SILENCE_TIMER_MIN}
                 max={SILENCE_TIMER_MAX}
                 unit={t('common.seconds')}
-                accessibilityLabel={t('silence.timer.title')}
+                accessibilityLabel={`${t('silence.alarm.title')} ${t('silence.timer.title')}`}
               />
             }
           />

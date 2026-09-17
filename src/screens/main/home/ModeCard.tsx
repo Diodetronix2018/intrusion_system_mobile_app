@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet } from 'react-native';
 
 import { Typography } from '../../../components';
 import { useTheme } from '../../../theme';
@@ -12,6 +12,8 @@ export function ModeCard({
   label,
   glyph: Glyph,
   active,
+  loading = false,
+  disabled = false,
   onPress,
 }: {
   label: string;
@@ -21,6 +23,10 @@ export function ModeCard({
    */
   glyph: React.ComponentType<{ size: number; color: string }>;
   active: boolean;
+  /** True while this card's own publish is in flight — swaps the glyph for a spinner. */
+  loading?: boolean;
+  /** True while any control on the screen is publishing — blocks a second tap mid-flight. */
+  disabled?: boolean;
   onPress: () => void;
 }) {
   const { colors, spacing } = useTheme();
@@ -30,19 +36,24 @@ export function ModeCard({
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled}
       accessibilityRole="radio"
-      accessibilityState={{ selected: active }}
+      accessibilityState={{ selected: active, disabled, busy: loading }}
       accessibilityLabel={label}
       style={({ pressed }) => [
         styles.card,
         {
           gap: spacing.xs,
           backgroundColor: active ? colors.primary : colors.accentWell,
-          opacity: pressed ? 0.85 : 1,
+          opacity: disabled && !loading ? 0.6 : pressed ? 0.85 : 1,
         },
       ]}
     >
-      <Glyph size={GLYPH_HEIGHT} color={content} />
+      {loading ? (
+        <ActivityIndicator color={content} size="small" />
+      ) : (
+        <Glyph size={GLYPH_HEIGHT} color={content} />
+      )}
 
       <Typography
         variant="captionBold"

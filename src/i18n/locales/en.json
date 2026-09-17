@@ -184,6 +184,8 @@
     "off": "OFF",
     "saveConfiguration": "Save Configuration",
     "configurationSaved": "Configuration saved",
+    "configurationFailed": "Could not save configuration",
+    "commandSent": "Command sent",
     "seconds": "sec",
     "viewAll": "View all"
   },
@@ -306,7 +308,8 @@
     },
     "timer": {
       "title": "Silence Timer",
-      "description": "Duration before alarm terminates"
+      "faultDescription": "Duration before fault silence ends",
+      "alarmDescription": "Duration before alarm terminates"
     }
   },
   "zone": {
@@ -320,7 +323,14 @@
     "delays": "Delays",
     "exitDelay": "Exit Delay",
     "entryDelay": "Entry Delay",
+    "smartCheck": {
+      "title": "Smart Check",
+      "description": "Wait for a second trip before alerting"
+    },
+    "waitTime": "Wait Time",
+    "detectionCount": "Detection Count",
     "locationEntry": "Location Entry",
+    "locationPlaceholder": "e.g. Front Door",
     "locations": {
       "mainDoor": "Main Door",
       "backDoor": "Back Door",
@@ -331,13 +341,17 @@
       "kitchen": "Kitchen",
       "bedroom": "Bedroom"
     },
-    "delayRange": "({{min}} - {{max}} Sec)"
+    "delayRange": "({{min}} - {{max}} Sec)",
+    "countRange": "({{min}} - {{max}})"
   },
   "main": {
     "status": {
-      "title": "Stay Mode Active",
+      "titleStay": "Stay Mode Active",
+      "titleAway": "Away Mode Active",
       "summary": "All subsystems online • Last sync {{ago}}",
-      "minutesAgo": "{{count}}m ago"
+      "minutesAgo": "{{count}}m ago",
+      "justNow": "just now",
+      "connecting": "Connecting to device…"
     },
     "modes": {
       "stay": "Stay",
