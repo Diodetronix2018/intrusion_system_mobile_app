@@ -168,6 +168,10 @@
       "hooterNotify": {
         "title": "Hooter Notify Configuration",
         "subtitle": "Enable or disable the hooter alert"
+      },
+      "recordPlay": {
+        "title": "Record & Play Configuration",
+        "subtitle": "Record or play a voice message to a number"
       }
     }
   },
@@ -281,6 +285,10 @@
   "hooterNotify": {
     "title": "Hooter Notify",
     "description": "Sound the external hooter when an alarm is triggered"
+  },
+  "recordPlay": {
+    "record": "Record",
+    "play": "Play"
   },
   "specialNotify": {
     "acFail": {

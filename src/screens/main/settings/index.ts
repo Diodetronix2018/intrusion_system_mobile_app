@@ -19,6 +19,9 @@ export { AutoArmScreen } from './detail/AutoArmScreen';
 export { useAutoArm } from './detail/useAutoArm';
 export { HooterNotifyScreen } from './detail/HooterNotifyScreen';
 export { useHooterNotify } from './detail/useHooterNotify';
+export { RecordPlayScreen } from './detail/RecordPlayScreen';
+export { useRecordPlay } from './detail/useRecordPlay';
+export type { RecordPlayAction } from './detail/useRecordPlay';
 export { SpecialNotifyScreen } from './detail/SpecialNotifyScreen';
 export { USER_GROUPS, useSpecialNotify } from './detail/useSpecialNotify';
 export type {

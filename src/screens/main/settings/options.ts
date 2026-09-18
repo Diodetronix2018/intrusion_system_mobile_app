@@ -11,7 +11,8 @@ export type SettingsOptionId =
   | 'repeat'
   | 'autoArm'
   | 'relay'
-  | 'hooterNotify';
+  | 'hooterNotify'
+  | 'recordPlay';
 
 export type SettingsOption = {
   id: SettingsOptionId;
@@ -35,6 +36,7 @@ export const SETTINGS_OPTIONS: SettingsOption[] = [
   { id: 'autoArm', icon: 'time-outline', family: 'ionicons' },
   { id: 'relay', icon: 'toggle-switch-off-outline', family: 'material' },
   { id: 'hooterNotify', icon: 'megaphone-outline', family: 'ionicons' },
+  { id: 'recordPlay', icon: 'mic-outline', family: 'ionicons' },
 ];
 
 export const findSettingsOption = (id: SettingsOptionId) =>
