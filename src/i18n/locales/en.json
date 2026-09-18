@@ -252,6 +252,44 @@
     "maxReached": "You can add up to {{count}} numbers.",
     "phoneHint": "{{count}}-digit mobile number, without +91"
   },
+  "events": {
+    "title": "Events",
+    "searchPlaceholder": "Search events",
+    "empty": "No events yet",
+    "categories": {
+      "all": "All",
+      "alarm": "Alarm",
+      "mode": "Mode",
+      "powerFail": "Power fail",
+      "battery": "Battery",
+      "hooterFail": "Hooter fail",
+      "heartBeat": "Heart Beat",
+      "zoneStatus": "Zone status",
+      "zoneMode": "Zone mode",
+      "zoneLocation": "Zone location"
+    },
+    "mode": {
+      "stay": "Stay mode",
+      "away": "Away mode"
+    },
+    "power": {
+      "acNormal": "AC Normal",
+      "acFail": "AC Fail",
+      "chargeNormal": "Charge Normal",
+      "chargeFail": "Charge Fail"
+    },
+    "battery": {
+      "normal": "Battery Normal",
+      "fail": "Battery Fail"
+    },
+    "hooter": {
+      "normal": "Hooter Normal",
+      "fail": "Hooter Fail"
+    },
+    "alarm": {
+      "zoneTitle": "Zone {{number}} Alarm"
+    }
+  },
   "partSetting": {
     "zone": "Zone {{number}}",
     "tamper": "Tamper"
@@ -398,8 +436,7 @@
       "fault": "Alarm"
     },
     "zoneDetails": {
-      "title": "Zone Details",
-      "modeLine": "Mode: {{mode}}"
+      "title": "Zone Details"
     },
     "activity": {
       "title": "Latest Activity",

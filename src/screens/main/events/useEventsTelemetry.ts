@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 
-import { COGNITO, TELEMETRY_TABLE } from '../../config/awsConfig';
-import { getCredentials } from '../../session/cognito';
-import { useSession } from '../../session/SessionProvider';
-import { queryTelemetry, type TelemetryRow } from '../../utils/dynamoDb';
-import { resolveThingName } from '../../utils/thingName';
+import { COGNITO, TELEMETRY_TABLE } from '../../../config/awsConfig';
+import { getCredentials } from '../../../session/cognito';
+import { useSession } from '../../../session/SessionProvider';
+import { queryTelemetry, type TelemetryRow } from '../../../utils/dynamoDb';
+import { resolveThingName } from '../../../utils/thingName';
 
 const log = (...args: any[]) => console.log('[Events]', ...args);
 const logWarn = (...args: any[]) => console.warn('[Events]', ...args);
@@ -13,10 +13,9 @@ const logWarn = (...args: any[]) => console.warn('[Events]', ...args);
 const PAGE_SIZE = 50;
 
 /**
- * Diagnostic-only: fetches the device's event/telemetry history from
- * `dtx_tngrama_telemetry` and logs the raw rows to the console, tagged
- * `[Events]`, so the actual row shape can be inspected before any UI gets
- * built on top of it. Nothing renders this data yet.
+ * Fetches the device's event/telemetry history from `dtx_tngrama_telemetry`
+ * for the Events tab, logging the raw rows to the console (tagged
+ * `[Events]`) for debugging alongside what actually renders.
  */
 export function useEventsTelemetry() {
   const { session, getFreshIdToken } = useSession();

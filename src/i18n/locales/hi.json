@@ -252,6 +252,44 @@
     "maxReached": "आप अधिकतम {{count}} नंबर जोड़ सकते हैं।",
     "phoneHint": "{{count}} अंकों का मोबाइल नंबर, +91 के बिना"
   },
+  "events": {
+    "title": "इवेंट्स",
+    "searchPlaceholder": "इवेंट्स खोजें",
+    "empty": "अभी तक कोई इवेंट नहीं",
+    "categories": {
+      "all": "सभी",
+      "alarm": "अलार्म",
+      "mode": "मोड",
+      "powerFail": "पावर फेल",
+      "battery": "बैटरी",
+      "hooterFail": "हूटर फेल",
+      "heartBeat": "हार्ट बीट",
+      "zoneStatus": "ज़ोन स्थिति",
+      "zoneMode": "ज़ोन मोड",
+      "zoneLocation": "ज़ोन लोकेशन"
+    },
+    "mode": {
+      "stay": "स्टे मोड",
+      "away": "अवे मोड"
+    },
+    "power": {
+      "acNormal": "एसी सामान्य",
+      "acFail": "एसी फेल",
+      "chargeNormal": "चार्ज सामान्य",
+      "chargeFail": "चार्ज फेल"
+    },
+    "battery": {
+      "normal": "बैटरी सामान्य",
+      "fail": "बैटरी फेल"
+    },
+    "hooter": {
+      "normal": "हूटर सामान्य",
+      "fail": "हूटर फेल"
+    },
+    "alarm": {
+      "zoneTitle": "ज़ोन {{number}} अलार्म"
+    }
+  },
   "partSetting": {
     "zone": "ज़ोन {{number}}",
     "tamper": "टैम्पर"
@@ -398,8 +436,7 @@
       "fault": "अलार्म"
     },
     "zoneDetails": {
-      "title": "ज़ोन विवरण",
-      "modeLine": "मोड: {{mode}}"
+      "title": "ज़ोन विवरण"
     },
     "activity": {
       "title": "नवीनतम गतिविधि",

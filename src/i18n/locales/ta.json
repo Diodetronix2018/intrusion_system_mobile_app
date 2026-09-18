@@ -252,6 +252,44 @@
     "maxReached": "அதிகபட்சம் {{count}} எண்கள் சேர்க்கலாம்.",
     "phoneHint": "+91 இல்லாமல் {{count}} இலக்க மொபைல் எண்"
   },
+  "events": {
+    "title": "நிகழ்வுகள்",
+    "searchPlaceholder": "நிகழ்வுகளைத் தேடு",
+    "empty": "இதுவரை நிகழ்வுகள் இல்லை",
+    "categories": {
+      "all": "அனைத்தும்",
+      "alarm": "அலாரம்",
+      "mode": "முறை",
+      "powerFail": "மின் தடை",
+      "battery": "பேட்டரி",
+      "hooterFail": "ஹூட்டர் தோல்வி",
+      "heartBeat": "ஹார்ட் பீட்",
+      "zoneStatus": "மண்டல நிலை",
+      "zoneMode": "மண்டல முறை",
+      "zoneLocation": "மண்டல இடம்"
+    },
+    "mode": {
+      "stay": "ஸ்டே முறை",
+      "away": "அவே முறை"
+    },
+    "power": {
+      "acNormal": "ஏசி சாதாரணம்",
+      "acFail": "ஏசி தோல்வி",
+      "chargeNormal": "சார்ஜ் சாதாரணம்",
+      "chargeFail": "சார்ஜ் தோல்வி"
+    },
+    "battery": {
+      "normal": "பேட்டரி சாதாரணம்",
+      "fail": "பேட்டரி தோல்வி"
+    },
+    "hooter": {
+      "normal": "ஹூட்டர் சாதாரணம்",
+      "fail": "ஹூட்டர் தோல்வி"
+    },
+    "alarm": {
+      "zoneTitle": "மண்டலம் {{number}} அலாரம்"
+    }
+  },
   "partSetting": {
     "zone": "மண்டலம் {{number}}",
     "tamper": "டேம்பர்"
@@ -398,8 +436,7 @@
       "fault": "அலாரம்"
     },
     "zoneDetails": {
-      "title": "மண்டல விவரங்கள்",
-      "modeLine": "முறை: {{mode}}"
+      "title": "மண்டல விவரங்கள்"
     },
     "activity": {
       "title": "சமீபத்திய செயல்பாடு",

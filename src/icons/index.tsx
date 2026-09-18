@@ -70,6 +70,13 @@ export const LockIcon = (props: IconProps) => (
   </Outline>
 );
 
+export const UnlockIcon = (props: IconProps) => (
+  <Outline {...props}>
+    <Rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+    <Path d="M7 11V7a5 5 0 0 1 9.9-1" />
+  </Outline>
+);
+
 export const UserIcon = (props: IconProps) => (
   <Outline {...props}>
     <Path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />

@@ -47,6 +47,27 @@ function ZoneDetailsCard({ zone }: { zone: MainZoneEntry }) {
       shadow="soft"
       icon={<Glyph size={20} color={colors.onPrimary} />}
       title={title}
+      titleTrailing={
+        modeLabel && (
+          <View
+            style={[
+              styles.modeBadge,
+              {
+                gap: spacing.xs / 2,
+                borderRadius: radius.pill,
+                backgroundColor: colors.backgroundSoft,
+                paddingHorizontal: spacing.sm,
+              },
+              styles.modeBadgePadding,
+            ]}
+          >
+            <ModeIcon size={12} color={colors.textSecondary} />
+            <Typography variant="caption" size={11} color={colors.textSecondary} numberOfLines={1}>
+              {modeLabel}
+            </Typography>
+          </View>
+        )
+      }
       description={location}
       trailing={
         <View
@@ -66,16 +87,7 @@ function ZoneDetailsCard({ zone }: { zone: MainZoneEntry }) {
           </Typography>
         </View>
       }
-    >
-      {modeLabel && (
-        <View style={[styles.modeRow, { gap: spacing.xs }]}>
-          <ModeIcon size={14} color={colors.textSecondary} />
-          <Typography variant="caption" size={12} color={colors.textSecondary}>
-            {t('main.zoneDetails.modeLine', { mode: modeLabel })}
-          </Typography>
-        </View>
-      )}
-    </FeatureCard>
+    />
   );
 }
 
@@ -118,8 +130,11 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
   },
-  modeRow: {
+  modeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  modeBadgePadding: {
+    paddingVertical: 2,
   },
 });

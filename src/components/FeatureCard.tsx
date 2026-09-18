@@ -14,6 +14,7 @@ import { Typography } from './Typography';
 export function FeatureCard({
   icon,
   title,
+  titleTrailing,
   description,
   trailing,
   children,
@@ -21,6 +22,8 @@ export function FeatureCard({
 }: {
   icon: React.ReactNode;
   title: string;
+  /** Sits right after the title, on the same line, e.g. a small mode badge */
+  titleTrailing?: React.ReactNode;
   /** Omit for a title-only header, e.g. the silence cards */
   description?: string;
   /** Sits at the end of the header row, e.g. a switch */
@@ -52,15 +55,19 @@ export function FeatureCard({
         </View>
 
         <View style={styles.text}>
-          <Typography
-            variant="captionBold"
-            size={16}
-            align="left"
-            color={colors.primary}
-            numberOfLines={1}
-          >
-            {title}
-          </Typography>
+          <View style={[styles.titleRow, { gap: spacing.sm }]}>
+            <Typography
+              variant="captionBold"
+              size={16}
+              align="left"
+              color={colors.primary}
+              numberOfLines={1}
+              style={styles.titleText}
+            >
+              {title}
+            </Typography>
+            {titleTrailing}
+          </View>
           {!!description && (
             <Typography
               variant="caption"
@@ -101,5 +108,12 @@ const styles = StyleSheet.create({
   text: {
     flex: 1,
     minWidth: 0,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  titleText: {
+    flexShrink: 1,
   },
 });
