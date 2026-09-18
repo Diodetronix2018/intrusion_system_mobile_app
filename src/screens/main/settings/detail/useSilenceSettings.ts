@@ -1,7 +1,9 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 
 import { SBA_CONFIG_SHADOW } from '../../../../config/awsConfig';
 import { useIotShadowPublish } from '../../../../utils/useIotShadowPublish';
+import { usePrepopulatedState } from '../../../../utils/usePrepopulatedState';
+import { useConfigStatus } from '../../useConfigStatus';
 
 export const SILENCE_TIMER_MIN = 0;
 export const SILENCE_TIMER_MAX = 255;
@@ -43,6 +45,19 @@ export function buildSlnValue(settings: SilenceSettings): string {
   ].join(',');
 }
 
+/** Parses the device's saved `sln` value back into `SilenceSettings`. */
+export function parseSlnValue(raw: string): SilenceSettings | undefined {
+  const parts = raw.split(',').map(Number);
+  if (parts.length !== 4 || parts.some(Number.isNaN)) return undefined;
+  const [faultMode, faultTimer, alarmMode, alarmTimer] = parts;
+  return {
+    faultMode: faultMode === 1 ? 'manual' : 'auto',
+    faultTimerSeconds: faultTimer,
+    alarmMode: alarmMode === 1 ? 'manual' : 'auto',
+    alarmTimerSeconds: alarmTimer,
+  };
+}
+
 /**
  * Silence state, published to the device's `sba_config_v01` shadow as
  * `{"state":{"desired":{"sln":"<...>"}}}` on save.
@@ -50,12 +65,17 @@ export function buildSlnValue(settings: SilenceSettings): string {
  * Fault and Alarm each carry a single Auto/Manual mode (the device only has
  * one bit per section) plus their own timer, so `setMode` always leaves
  * exactly one of Auto/Manual selected for that section.
+ *
+ * Prepopulated from the device's already-saved value the first time it
+ * arrives, so reopening the app shows what was last saved.
  */
 export function useSilenceSettings(initial?: Partial<SilenceSettings>) {
-  const [settings, setSettings] = useState<SilenceSettings>({
-    ...DEFAULTS,
-    ...initial,
-  });
+  const { reported } = useConfigStatus();
+  const [settings, setSettings] = usePrepopulatedState<string, SilenceSettings>(
+    reported?.sln,
+    parseSlnValue,
+    { ...DEFAULTS, ...initial },
+  );
   const { publish, publishing } = useIotShadowPublish(SBA_CONFIG_SHADOW);
 
   const setMode = useCallback(
@@ -64,7 +84,7 @@ export function useSilenceSettings(initial?: Partial<SilenceSettings>) {
         ...prev,
         [section === 'fault' ? 'faultMode' : 'alarmMode']: mode,
       })),
-    [],
+    [setSettings],
   );
 
   const setTimer = useCallback(
@@ -73,7 +93,7 @@ export function useSilenceSettings(initial?: Partial<SilenceSettings>) {
         ...prev,
         [section === 'fault' ? 'faultTimerSeconds' : 'alarmTimerSeconds']: timerSeconds,
       })),
-    [],
+    [setSettings],
   );
 
   const save = useCallback(

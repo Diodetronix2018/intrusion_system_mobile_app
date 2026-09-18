@@ -11,13 +11,13 @@ import i18n, { LANGUAGES, LanguageCode } from '../src/i18n';
 import { BottomTabs } from '../src/navigation/BottomTabs';
 import {
   ForgotPasswordScreen,
-  MainStatusProvider,
   SettingsScreen,
   SignInScreen,
   SignUpScreen,
 } from '../src/screens';
 import { SessionProvider } from '../src/session/SessionProvider';
 import { ThemeMode, ThemeProvider } from '../src/theme';
+import { IotConnectionProvider } from '../src/utils/IotConnection';
 
 const METRICS = {
   frame: { x: 0, y: 0, width: 390, height: 844 },
@@ -34,11 +34,11 @@ const FORGOT_PROPS = {
  * next language change and warn about updates outside act().
  *
  * The screens read the session and the navigation object, so both providers
- * wrap every tree here the way the app wraps them. `MainStatusProvider`
- * matches `RootNavigator`, which mounts it once around the whole
- * signed-in app rather than inside `MainScreen` itself — anything that
- * reads `useMainStatus()` (Main, and this suite's `BottomTabs`) needs it
- * present too.
+ * wrap every tree here the way the app wraps them. `IotConnectionProvider`
+ * matches `RootNavigator`, which mounts it once around the whole signed-in
+ * app rather than inside any individual screen — anything that reads
+ * `useMainStatus()`/`useConfigStatus()`/`useIotShadowPublish()` (Main, and
+ * this suite's `BottomTabs`) needs it present too.
  */
 async function render(node: React.ReactElement, mode: ThemeMode = 'light') {
   let tree: ReactTestRenderer.ReactTestRenderer | undefined;
@@ -46,11 +46,11 @@ async function render(node: React.ReactElement, mode: ThemeMode = 'light') {
     tree = ReactTestRenderer.create(
       <ThemeProvider initialMode={mode}>
         <SessionProvider>
-          <MainStatusProvider>
+          <IotConnectionProvider>
             <SafeAreaProvider initialMetrics={METRICS}>
               <NavigationContainer>{node}</NavigationContainer>
             </SafeAreaProvider>
-          </MainStatusProvider>
+          </IotConnectionProvider>
         </SessionProvider>
       </ThemeProvider>,
     );

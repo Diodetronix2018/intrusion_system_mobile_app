@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 
 import { SBA_CONFIG_SHADOW } from '../../../config/awsConfig';
 import { useIotShadowPublish } from '../../../utils/useIotShadowPublish';
+import { usePrepopulatedState } from '../../../utils/usePrepopulatedState';
+import { useConfigStatus } from '../useConfigStatus';
 
 export const ZONE_COUNT = 8;
 
@@ -35,6 +37,9 @@ export const WAIT_TIME_MAX = 255;
 
 export const DETECTION_COUNT_MIN = 1;
 export const DETECTION_COUNT_MAX = 10;
+
+export const LOCATION_MIN_LENGTH = 1;
+export const LOCATION_MAX_LENGTH = 16;
 
 /**
  * Entry-point name per zone, in order. Only used to seed a sensible starting
@@ -95,21 +100,90 @@ export function buildZonValue(zoneIndex: number, config: ZoneConfig): string {
 }
 
 /**
+ * Parses one zone's chunk of the device's saved `zon` value — the same 10
+ * fields `buildZonValue` writes, in the same order. Returns the location
+ * exactly as trimmed (which may be the empty string, or the device's
+ * "Empty" placeholder trimmed down to `""`) — the caller fills in a
+ * sensible default for that case, since a pure parser has no `t()` to reach for.
+ */
+function parseZoneChunk(chunk: string | undefined): ZoneConfig | undefined {
+  const parts = chunk?.split(',');
+  if (!parts || parts.length < 10) return undefined;
+  const [
+    ,
+    stateRaw,
+    scheduleRaw,
+    contactRaw,
+    exitDelayRaw,
+    entryDelayRaw,
+    smartCheckRaw,
+    waitTimeRaw,
+    detectionCountRaw,
+    ...locationParts
+  ] = parts;
+  const rawLocation = locationParts.join(',').trim();
+  return {
+    state: Number(stateRaw) === 1 ? 'on' : 'off',
+    schedule: Number(scheduleRaw) === 1 ? 'always' : 'night',
+    contact: Number(contactRaw) === 1 ? 'no' : 'nc',
+    exitDelay: Number(exitDelayRaw) || 0,
+    entryDelay: Number(entryDelayRaw) || 0,
+    smartCheck: Number(smartCheckRaw) === 1,
+    waitTime: Number(waitTimeRaw) || 0,
+    detectionCount: Number(detectionCountRaw) || DETECTION_COUNT_MIN,
+    // "" (including the device's "Empty" placeholder, trimmed) means "not
+    // configured yet" — the caller substitutes a localized default for it.
+    location: rawLocation.toLowerCase() === 'empty' ? '' : rawLocation,
+  };
+}
+
+/**
+ * Parses the device's saved `zon` value — zone chunks 1-8 (index 0-7)
+ * joined with `;`; the 9th (tamper) chunk isn't part of this screen's
+ * `ZONE_COUNT` and is ignored here.
+ */
+export function parseZonValue(raw: string): ZoneConfig[] | undefined {
+  const chunks = raw.split(';');
+  const zones: ZoneConfig[] = [];
+  for (let i = 0; i < ZONE_COUNT; i++) {
+    const zone = parseZoneChunk(chunks[i]);
+    if (!zone) return undefined;
+    zones.push(zone);
+  }
+  return zones;
+}
+
+/**
  * Per-zone configuration, plus which zone is on screen. Every zone carries
  * its own copy of the settings; `save` publishes only the zone currently on
  * screen to the device's `sba_config_v01` shadow as
  * `{"state":{"desired":{"zon":"<...>"}}}`.
+ *
+ * Prepopulated from the device's already-saved value the first time it
+ * arrives, so reopening the app shows what was last saved rather than the
+ * defaults below — a zone the device reports as "Empty" still gets its
+ * localized default location name, e.g. "Main Door", the same starting
+ * label as before this field became editable.
  */
 export function useZoneConfig(initial?: ZoneConfig[]) {
   const { t } = useTranslation();
-  // Seeds each zone's (now free-text, editable) location with its localized
-  // default name, e.g. "Main Door" — same starting labels as before this
-  // field became editable. Lazy initializer, so this only runs once; editing
-  // it (or switching app language afterwards) never overwrites what the
-  // user typed.
-  const [zones, setZones] = useState<ZoneConfig[]>(
-    () =>
-      initial ??
+  const { reported } = useConfigStatus();
+
+  const parseWithLocalizedDefaults = useCallback(
+    (raw: string): ZoneConfig[] | undefined => {
+      const zones = parseZonValue(raw);
+      return zones?.map((zone, i) => ({
+        ...zone,
+        location: zone.location || t(`zone.locations.${ZONE_LOCATION_KEYS[i]}`),
+      }));
+    },
+    [t],
+  );
+
+  const [zones, setZones] = usePrepopulatedState<string, ZoneConfig[]>(
+    reported?.zon,
+    parseWithLocalizedDefaults,
+    initial ??
       ZONE_LOCATION_KEYS.map(key => ({
         ...DEFAULT_CONFIG,
         location: t(`zone.locations.${key}`),
@@ -135,7 +209,7 @@ export function useZoneConfig(initial?: ZoneConfig[]) {
           position === index ? { ...zone, ...patch } : zone,
         ),
       ),
-    [index],
+    [index, setZones],
   );
 
   const save = useCallback(

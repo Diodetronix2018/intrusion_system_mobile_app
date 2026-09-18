@@ -1,7 +1,9 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { SBA_CONFIG_SHADOW } from '../../../../config/awsConfig';
 import { useIotShadowPublish } from '../../../../utils/useIotShadowPublish';
+import { usePrepopulatedState } from '../../../../utils/usePrepopulatedState';
+import { useConfigStatus } from '../../useConfigStatus';
 
 /** Relay assignment covers the eight zones; there is no tamper line. */
 export const ZONE_COUNT = 8;
@@ -17,6 +19,14 @@ const DEFAULT_SELECTION: RelaySelection = 'all';
  */
 export function buildRlyValue(selection: RelaySelection): string {
   return selection === 'all' ? '0' : String(selection);
+}
+
+/** Parses the device's saved `rly` value back into a `RelaySelection`. */
+export function parseRlyValue(raw: string): RelaySelection | undefined {
+  if (raw.trim() === '') return undefined;
+  const n = Number(raw);
+  if (Number.isNaN(n)) return undefined;
+  return n <= 0 ? 'all' : n;
 }
 
 /**
@@ -37,7 +47,12 @@ export function buildRlyValue(selection: RelaySelection): string {
  * `{"state":{"desired":{"rly":"<...>"}}}` on save.
  */
 export function useRelaySettings(initial: RelaySelection = DEFAULT_SELECTION) {
-  const [selection, setSelection] = useState<RelaySelection>(initial);
+  const { reported } = useConfigStatus();
+  const [selection, setSelection] = usePrepopulatedState(
+    reported?.rly,
+    parseRlyValue,
+    initial,
+  );
   const { publish, publishing } = useIotShadowPublish(SBA_CONFIG_SHADOW);
 
   /** Per-zone on/off, derived from `selection`, for the toggle-row UI. */
@@ -50,18 +65,21 @@ export function useRelaySettings(initial: RelaySelection = DEFAULT_SELECTION) {
     [selection],
   );
 
-  const selectAll = useCallback(() => setSelection('all'), []);
+  const selectAll = useCallback(() => setSelection('all'), [setSelection]);
 
-  const toggleZone = useCallback((zoneNumber: number, next: boolean) => {
-    setSelection(prev => {
-      // Turning a zone's switch on always exclusively selects it.
-      if (next) return zoneNumber;
-      // Turning it off: only revert to "All Zones" if this zone was the
-      // one actually selected — otherwise (e.g. tapping a zone while "All
-      // Zones" is active) isolate it instead.
-      return prev === zoneNumber ? 'all' : zoneNumber;
-    });
-  }, []);
+  const toggleZone = useCallback(
+    (zoneNumber: number, next: boolean) => {
+      setSelection(prev => {
+        // Turning a zone's switch on always exclusively selects it.
+        if (next) return zoneNumber;
+        // Turning it off: only revert to "All Zones" if this zone was the
+        // one actually selected — otherwise (e.g. tapping a zone while "All
+        // Zones" is active) isolate it instead.
+        return prev === zoneNumber ? 'all' : zoneNumber;
+      });
+    },
+    [setSelection],
+  );
 
   const save = useCallback(
     () => publish({ rly: buildRlyValue(selection) }),

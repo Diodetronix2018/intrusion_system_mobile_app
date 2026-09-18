@@ -12,16 +12,16 @@ export {
   DialerScreen,
   EventsScreen,
   MainScreen,
-  MainStatusProvider,
   PlaceholderScreen,
   SETTINGS_OPTIONS,
   SettingsDetailScreen,
   SettingsOptionCard,
   SettingsScreen,
+  useConfigStatus,
   ZoneDetailsScreen,
   ZoneScreen,
 } from './main';
-export type { SettingsOption, SettingsOptionId } from './main';
+export type { ConfigReported, SettingsOption, SettingsOptionId } from './main';
 export {
   ChoiceCard,
   ChoiceRow,

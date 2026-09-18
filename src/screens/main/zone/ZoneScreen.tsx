@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
@@ -31,6 +31,8 @@ import {
   DELAY_MIN,
   DETECTION_COUNT_MAX,
   DETECTION_COUNT_MIN,
+  LOCATION_MAX_LENGTH,
+  LOCATION_MIN_LENGTH,
   WAIT_TIME_MAX,
   WAIT_TIME_MIN,
   useZoneConfig,
@@ -217,6 +219,7 @@ export function ZoneScreen() {
   const theme = useTheme();
   const { colors, spacing } = theme;
   const { index, config, previous, next, update, save, saving } = useZoneConfig();
+  const [locationError, setLocationError] = useState<string | undefined>();
 
   // the third pair uses the icon as a radio indicator: whichever card is
   // selected shows the ticked circle, the other an empty one
@@ -234,6 +237,12 @@ export function ZoneScreen() {
   });
 
   const handleSave = async () => {
+    if (config.location.trim().length < LOCATION_MIN_LENGTH) {
+      setLocationError(t('zone.locationRequired'));
+      return;
+    }
+    setLocationError(undefined);
+
     try {
       await save();
       Toast.show({ type: 'success', text1: t('common.configurationSaved') });
@@ -366,10 +375,15 @@ export function ZoneScreen() {
         <SectionLabel>{t('zone.locationEntry')}</SectionLabel>
         <Input
           value={config.location}
-          onChangeText={location => update({ location })}
+          onChangeText={location => {
+            update({ location });
+            setLocationError(undefined);
+          }}
           placeholder={t('zone.locationPlaceholder')}
           leftIcon={<DoorOpenIcon size={20} color={colors.primary} />}
           accessibilityLabel={t('zone.locationEntry')}
+          maxLength={LOCATION_MAX_LENGTH}
+          error={locationError}
         />
       </View>
 

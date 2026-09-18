@@ -349,6 +349,7 @@
     "detectionCount": "கண்டறிதல் எண்ணிக்கை",
     "locationEntry": "இட நுழைவு",
     "locationPlaceholder": "எ.கா., முன் கதவு",
+    "locationRequired": "இட பெயர் தேவை",
     "locations": {
       "mainDoor": "முதன்மை கதவு",
       "backDoor": "பின் கதவு",

@@ -1,7 +1,9 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 
 import { SBA_CONFIG_SHADOW } from '../../../../config/awsConfig';
 import { useIotShadowPublish } from '../../../../utils/useIotShadowPublish';
+import { usePrepopulatedState } from '../../../../utils/usePrepopulatedState';
+import { useConfigStatus } from '../../useConfigStatus';
 
 /** Which group of users gets the notification. */
 export type UserGroup = 'admin' | 'upTo3' | 'upTo5' | 'all';
@@ -41,26 +43,43 @@ export function buildNtyValue(settings: SpecialNotifySettings): string {
   ].join(',');
 }
 
+/** Parses the device's saved `nty` value back into `SpecialNotifySettings`. */
+export function parseNtyValue(raw: string): SpecialNotifySettings | undefined {
+  const parts = raw.split(',').map(Number);
+  if (parts.length !== 3 || parts.some(Number.isNaN)) return undefined;
+  const [acFail, batteryFail, groupIndex] = parts;
+  return {
+    acFail: acFail === 1,
+    batteryFail: batteryFail === 1,
+    userGroup: USER_GROUPS[groupIndex] ?? 'admin',
+  };
+}
+
 /**
  * Special-notify state. `save` publishes it to the device's
  * `sba_config_v01` shadow as `{"state":{"desired":{"nty":"<...>"}}}`.
+ * Prepopulated from the device's already-saved value the first time it
+ * arrives (see `usePrepopulatedState`), so reopening the app shows what
+ * was last saved rather than always starting from the default.
  */
 export function useSpecialNotify(initial?: Partial<SpecialNotifySettings>) {
-  const [settings, setSettings] = useState<SpecialNotifySettings>({
-    ...DEFAULTS,
-    ...initial,
-  });
+  const { reported } = useConfigStatus();
+  const [settings, setSettings] = usePrepopulatedState<string, SpecialNotifySettings>(
+    reported?.nty,
+    parseNtyValue,
+    { ...DEFAULTS, ...initial },
+  );
   const { publish, publishing } = useIotShadowPublish(SBA_CONFIG_SHADOW);
 
   const setAlert = useCallback(
     (key: 'acFail' | 'batteryFail', enabled: boolean) =>
       setSettings(prev => ({ ...prev, [key]: enabled })),
-    [],
+    [setSettings],
   );
 
   const setUserGroup = useCallback(
     (userGroup: UserGroup) => setSettings(prev => ({ ...prev, userGroup })),
-    [],
+    [setSettings],
   );
 
   const save = useCallback(

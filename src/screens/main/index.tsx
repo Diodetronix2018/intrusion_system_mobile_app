@@ -6,6 +6,9 @@ import { useTheme } from '../../theme';
 import { PlaceholderScreen } from './PlaceholderScreen';
 import { useEventsTelemetry } from './useEventsTelemetry';
 
+export { useConfigStatus } from './useConfigStatus';
+export type { ConfigReported } from './useConfigStatus';
+
 function useTabScreen(key: string) {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -31,12 +34,7 @@ export function EventsScreen() {
   );
 }
 
-export {
-  MainScreen,
-  MainStatusProvider,
-  StatusCard,
-  ZoneDetailsScreen,
-} from './home';
+export { MainScreen, StatusCard, ZoneDetailsScreen } from './home';
 export { DialerScreen } from './dialer';
 export { ZoneScreen } from './zone';
 export {

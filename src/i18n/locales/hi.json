@@ -349,6 +349,7 @@
     "detectionCount": "डिटेक्शन गिनती",
     "locationEntry": "स्थान प्रविष्टि",
     "locationPlaceholder": "जैसे, सामने का दरवाज़ा",
+    "locationRequired": "स्थान का नाम आवश्यक है",
     "locations": {
       "mainDoor": "मुख्य द्वार",
       "backDoor": "पिछला द्वार",

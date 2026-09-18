@@ -13,7 +13,6 @@ import {
   ConfirmSignUpScreen,
   ForgotPasswordScreen,
   HelpSupportScreen,
-  MainStatusProvider,
   ProfileScreen,
   ResetPasswordScreen,
   SettingsDetailScreen,
@@ -23,6 +22,7 @@ import {
 } from '../screens';
 import { useSession } from '../session/SessionProvider';
 import { useTheme } from '../theme';
+import { IotConnectionProvider } from '../utils/IotConnection';
 import { BottomTabs } from './BottomTabs';
 import type { RootStackParamList } from './types';
 
@@ -115,12 +115,15 @@ export function RootNavigator() {
     </NavigationContainer>
   );
 
-  // One shared live-status subscription for every screen that reads it
-  // (Main, Zone Details, …) — mounted here rather than inside those screens
-  // so switching between them never opens a second MQTT connection. Only
-  // mounted once there's a claimed device to actually subscribe to.
+  // The app's one shared MQTT connection — subscribed to both the control
+  // and config shadows, and reused for every publish too. Mounted here
+  // rather than inside individual screens so navigating between them (or
+  // firing a command) never opens a second connection: AWS IoT allows only
+  // one live connection per clientId, so a second one would evict this one
+  // and vice versa. Only mounted once there's a claimed device to actually
+  // talk to.
   return appReady ? (
-    <MainStatusProvider>{navigator}</MainStatusProvider>
+    <IotConnectionProvider>{navigator}</IotConnectionProvider>
   ) : (
     navigator
   );

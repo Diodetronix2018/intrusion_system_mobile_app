@@ -14,7 +14,7 @@ export { SystemStatusCard } from './SystemStatusCard';
 export type { SubsystemKey } from './SystemStatusCard';
 export { useMainControls } from './useMainControls';
 export type { ArmMode, PartitionMode, PendingAction } from './useMainControls';
-export { MainStatusProvider, useMainStatus } from './useMainStatus';
+export { useMainStatus } from './useMainStatus';
 export type { MainReportedStatus, MainZoneEntry, ZoneMode } from './useMainStatus';
 export { ZoneDetailsScreen } from './ZoneDetailsScreen';
 export { ZoneStatusCard } from './ZoneStatusCard';

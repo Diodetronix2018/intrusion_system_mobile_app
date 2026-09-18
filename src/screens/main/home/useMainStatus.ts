@@ -1,7 +1,6 @@
-import React, { createContext, useContext, useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
-import { SBA_CONTROL_SHADOW } from '../../../config/awsConfig';
-import { useShadowSubscription } from '../../../utils/useShadowSubscription';
+import { useIotConnection } from '../../../utils/IotConnection';
 import type { SubsystemKey } from './SystemStatusCard';
 import type { SubsystemStatus } from './StatusTile';
 import type { ArmMode } from './useMainControls';
@@ -99,37 +98,21 @@ function normalizeZoneLocation(raw?: string): { location: string; configured: bo
   return { location, configured };
 }
 
-interface MainStatusValue {
-  connected: boolean;
-  armMode: ArmMode | null;
-  timestamp?: string;
-  statuses: Partial<Record<SubsystemKey, SubsystemStatus>>;
-  zones: MainZoneEntry[];
-}
-
-const MainStatusContext = createContext<MainStatusValue | undefined>(undefined);
-
 /**
- * Subscribes once, for the whole signed-in app, to `sba_control_v01`'s
- * reported shadow, and derives the Main screen's status tiles and 9-line
- * zone breakdown from it.
- *
- * Mounted once near the navigation root (see `RootNavigator`) rather than
- * inside `MainScreen` itself, so navigating to a screen that also reads
- * this (Zone Details) never opens a second MQTT connection — AWS IoT
- * allows only one live connection per clientId, so a second subscription
- * would evict this one (and vice versa) on every navigation.
+ * Live status for the Main screen and Zone Details, derived from
+ * `sba_control_v01`'s reported shadow — read off the app's one shared MQTT
+ * connection (`IotConnectionProvider`, mounted at the navigation root)
+ * rather than opening a subscription of its own.
  */
-export function MainStatusProvider({ children }: { children: React.ReactNode }) {
-  const { reported, connected, status } = useShadowSubscription<MainReportedStatus>(
-    SBA_CONTROL_SHADOW,
-  );
+export function useMainStatus() {
+  const { controlReported, connected, status } = useIotConnection();
+  const reported = controlReported as MainReportedStatus | null;
 
   useEffect(() => {
     log('CONNECTION STATUS →', status, connected ? '(connected)' : '(not connected)');
   }, [status, connected]);
 
-  const value = useMemo<MainStatusValue>(() => {
+  const result = useMemo(() => {
     const armMode: ArmMode | null =
       reported?.status == null ? null : reported.status === 1 ? 'stay' : 'away';
 
@@ -164,20 +147,9 @@ export function MainStatusProvider({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     if (!reported) return;
     log('REPORTED →', reported);
-    log('DERIVED STATUS → arm:', value.armMode, 'ts:', value.timestamp);
-    log('DERIVED TILES →', value.statuses);
-  }, [reported, value.armMode, value.timestamp, value.statuses]);
+    log('DERIVED STATUS → arm:', result.armMode, 'ts:', result.timestamp);
+    log('DERIVED TILES →', result.statuses);
+  }, [reported, result.armMode, result.timestamp, result.statuses]);
 
-  return (
-    <MainStatusContext.Provider value={value}>{children}</MainStatusContext.Provider>
-  );
-}
-
-/** Reads the shared live status `MainStatusProvider` subscribes to. */
-export function useMainStatus(): MainStatusValue {
-  const ctx = useContext(MainStatusContext);
-  if (!ctx) {
-    throw new Error('useMainStatus must be used within a MainStatusProvider');
-  }
-  return ctx;
+  return result;
 }

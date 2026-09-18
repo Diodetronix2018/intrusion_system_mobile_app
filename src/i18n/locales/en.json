@@ -349,6 +349,7 @@
     "detectionCount": "Detection Count",
     "locationEntry": "Location Entry",
     "locationPlaceholder": "e.g. Front Door",
+    "locationRequired": "Location name is required",
     "locations": {
       "mainDoor": "Main Door",
       "backDoor": "Back Door",

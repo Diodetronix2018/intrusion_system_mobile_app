@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
 import { fontFor, useTheme } from '../theme';
@@ -28,6 +28,16 @@ export function NumberInput({
 }) {
   const { colors, radius, spacing } = useTheme();
   const [text, setText] = useState(String(value));
+
+  // `value` is a controlled prop, so the field must track it even when it
+  // changes for a reason other than the user typing here — e.g. switching
+  // to a different zone that reuses the same component instance, or the
+  // device's saved config arriving after this already mounted with a
+  // default. Without this, the displayed text just freezes at whatever was
+  // last typed/mounted with, regardless of which record is actually shown.
+  useEffect(() => {
+    setText(String(value));
+  }, [value]);
 
   const maxLength = String(max).length;
 
