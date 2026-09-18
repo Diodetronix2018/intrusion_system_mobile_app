@@ -42,6 +42,11 @@ export const SBA_CONTROL_SHADOW = 'sba_control_v01';
 // its row here.
 export const CLAIMS_TABLE = 'dtx_device_claims';
 
+// DynamoDB table holding each device's event/telemetry history, read for the
+// Events tab (partition key assumed to be `thingName`, matching every other
+// table in this app — confirm once real rows come back).
+export const TELEMETRY_TABLE = 'dtx_tngrama_telemetry';
+
 // Cognito custom attribute that holds the claimed Thing for a user. Written by
 // the claim step, read back from the ID token on every login.
 export const THING_ATTRIBUTE = 'custom:thingName';

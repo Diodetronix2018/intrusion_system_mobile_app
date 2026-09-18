@@ -27,14 +27,16 @@ import type { AwsCredentials } from '../session/cognito';
 // Low-level SigV4 helpers (crypto-js)
 // ---------------------------------------------------------------------------
 
-const sha256Hex = (msg: string): string =>
+// Exported so `./dynamoDb` (a different AWS JSON-protocol service, same
+// SigV4 mechanics) can reuse them instead of re-deriving the signing math.
+export const sha256Hex = (msg: string): string =>
   CryptoJS.SHA256(msg).toString(CryptoJS.enc.Hex);
 
-const hmac = (key: CryptoJS.lib.WordArray | string, msg: string) =>
+export const hmac = (key: CryptoJS.lib.WordArray | string, msg: string) =>
   CryptoJS.HmacSHA256(msg, key);
 
 /** Derive the SigV4 signing key for a given date/region/service. */
-function getSigningKey(
+export function getSigningKey(
   secretKey: string,
   dateStamp: string,
   region: string,
@@ -55,7 +57,7 @@ function uriEncode(str: string): string {
 }
 
 /** Returns { amzDate: 'YYYYMMDDTHHMMSSZ', dateStamp: 'YYYYMMDD' }. */
-function amzDates(date: Date): { amzDate: string; dateStamp: string } {
+export function amzDates(date: Date): { amzDate: string; dateStamp: string } {
   const amzDate = date.toISOString().replace(/[:-]|\.\d{3}/g, '');
   return { amzDate, dateStamp: amzDate.slice(0, 8) };
 }
