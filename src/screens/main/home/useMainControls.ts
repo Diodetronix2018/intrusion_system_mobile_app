@@ -3,6 +3,8 @@ import { useCallback, useState } from 'react';
 import { SBA_CONTROL_SHADOW } from '../../../config/awsConfig';
 import { useIotShadowPublish } from '../../../utils/useIotShadowPublish';
 
+const log = (...args: any[]) => console.log('[Main]', ...args);
+
 export type ArmMode = 'stay' | 'away';
 export type PartitionMode = 'all' | 'part';
 
@@ -33,10 +35,15 @@ export function useMainControls() {
 
   const setArmMode = useCallback(
     async (mode: ArmMode) => {
+      log(`COMMAND arm → ${mode} (arm: ${ARM_CODE[mode]})`);
       setPendingAction('arm');
       try {
         await publish({ arm: ARM_CODE[mode] });
+        log(`COMMAND arm OK → ${mode}`);
         setArmModeState(mode);
+      } catch (e: any) {
+        log(`COMMAND arm FAILED → ${mode}:`, e?.message);
+        throw e;
       } finally {
         setPendingAction(null);
       }
@@ -55,10 +62,15 @@ export function useMainControls() {
 
   const setPartitionMode = useCallback(
     async (mode: PartitionMode) => {
+      log(`COMMAND mode → ${mode} (mod: ${PARTITION_CODE[mode]})`);
       setPendingAction('mode');
       try {
         await publish({ mod: PARTITION_CODE[mode] });
+        log(`COMMAND mode OK → ${mode}`);
         setPartitionModeState(mode);
+      } catch (e: any) {
+        log(`COMMAND mode FAILED → ${mode}:`, e?.message);
+        throw e;
       } finally {
         setPendingAction(null);
       }
@@ -67,18 +79,28 @@ export function useMainControls() {
   );
 
   const mute = useCallback(async () => {
+    log('COMMAND mute (sil: 1)');
     setPendingAction('mute');
     try {
       await publish({ sil: 1 });
+      log('COMMAND mute OK');
+    } catch (e: any) {
+      log('COMMAND mute FAILED:', e?.message);
+      throw e;
     } finally {
       setPendingAction(null);
     }
   }, [publish]);
 
   const reset = useCallback(async () => {
+    log('COMMAND reset (rst: 1)');
     setPendingAction('reset');
     try {
       await publish({ rst: 1 });
+      log('COMMAND reset OK');
+    } catch (e: any) {
+      log('COMMAND reset FAILED:', e?.message);
+      throw e;
     } finally {
       setPendingAction(null);
     }

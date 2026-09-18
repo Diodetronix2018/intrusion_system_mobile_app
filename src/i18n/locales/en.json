@@ -187,6 +187,7 @@
     "configurationFailed": "Could not save configuration",
     "commandSent": "Command sent",
     "seconds": "sec",
+    "minutes": "min",
     "viewAll": "View all"
   },
   "profile": {

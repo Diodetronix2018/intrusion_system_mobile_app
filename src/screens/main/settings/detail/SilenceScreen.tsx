@@ -143,23 +143,27 @@ export function SilenceScreen() {
             }
           />
 
-          <Divider theme={theme} />
+          {settings.faultMode === 'auto' && (
+            <>
+              <Divider theme={theme} />
 
-          <SilenceRow
-            theme={theme}
-            title={t('silence.timer.title')}
-            description={t('silence.timer.faultDescription')}
-            trailing={
-              <NumberInput
-                value={settings.faultTimerSeconds}
-                onChange={next => setTimer('fault', next)}
-                min={SILENCE_TIMER_MIN}
-                max={SILENCE_TIMER_MAX}
-                unit={t('common.seconds')}
-                accessibilityLabel={`${t('silence.fault.title')} ${t('silence.timer.title')}`}
+              <SilenceRow
+                theme={theme}
+                title={t('silence.timer.title')}
+                description={t('silence.timer.faultDescription')}
+                trailing={
+                  <NumberInput
+                    value={settings.faultTimerSeconds}
+                    onChange={next => setTimer('fault', next)}
+                    min={SILENCE_TIMER_MIN}
+                    max={SILENCE_TIMER_MAX}
+                    unit={t('common.minutes')}
+                    accessibilityLabel={`${t('silence.fault.title')} ${t('silence.timer.title')}`}
+                  />
+                }
               />
-            }
-          />
+            </>
+          )}
         </FeatureCard>
 
         <FeatureCard
@@ -195,23 +199,27 @@ export function SilenceScreen() {
             }
           />
 
-          <Divider theme={theme} />
+          {settings.alarmMode === 'auto' && (
+            <>
+              <Divider theme={theme} />
 
-          <SilenceRow
-            theme={theme}
-            title={t('silence.timer.title')}
-            description={t('silence.timer.alarmDescription')}
-            trailing={
-              <NumberInput
-                value={settings.alarmTimerSeconds}
-                onChange={next => setTimer('alarm', next)}
-                min={SILENCE_TIMER_MIN}
-                max={SILENCE_TIMER_MAX}
-                unit={t('common.seconds')}
-                accessibilityLabel={`${t('silence.alarm.title')} ${t('silence.timer.title')}`}
+              <SilenceRow
+                theme={theme}
+                title={t('silence.timer.title')}
+                description={t('silence.timer.alarmDescription')}
+                trailing={
+                  <NumberInput
+                    value={settings.alarmTimerSeconds}
+                    onChange={next => setTimer('alarm', next)}
+                    min={SILENCE_TIMER_MIN}
+                    max={SILENCE_TIMER_MAX}
+                    unit={t('common.minutes')}
+                    accessibilityLabel={`${t('silence.alarm.title')} ${t('silence.timer.title')}`}
+                  />
+                }
               />
-            }
-          />
+            </>
+          )}
         </FeatureCard>
       </Screen>
     </View>

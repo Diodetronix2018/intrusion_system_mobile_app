@@ -13,10 +13,10 @@ export type SilenceSection = 'fault' | 'alarm';
 
 export type SilenceSettings = {
   faultMode: SilenceMode;
-  /** Seconds before fault silence ends. */
+  /** Minutes before fault silence ends (field name predates the unit switching from sec to min). */
   faultTimerSeconds: number;
   alarmMode: SilenceMode;
-  /** Seconds before the alarm terminates. */
+  /** Minutes before the alarm terminates (field name predates the unit switching from sec to min). */
   alarmTimerSeconds: number;
 };
 
@@ -30,13 +30,16 @@ const DEFAULTS: SilenceSettings = {
 /**
  * Builds the device's `sln` shadow value:
  * `"<faultMode 0|1>,<faultTimer>,<alarmMode 0|1>,<alarmTimer>"`, e.g. `"0,5,0,3"`.
+ *
+ * The timer only means anything in Auto mode, so a section in Manual mode
+ * always sends `0` for its timer, regardless of the value last dialed in.
  */
 export function buildSlnValue(settings: SilenceSettings): string {
   return [
     settings.faultMode === 'manual' ? 1 : 0,
-    settings.faultTimerSeconds,
+    settings.faultMode === 'manual' ? 0 : settings.faultTimerSeconds,
     settings.alarmMode === 'manual' ? 1 : 0,
-    settings.alarmTimerSeconds,
+    settings.alarmMode === 'manual' ? 0 : settings.alarmTimerSeconds,
   ].join(',');
 }
 

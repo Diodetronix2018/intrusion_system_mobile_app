@@ -20,13 +20,6 @@ const logWarn = (...args: any[]) => console.warn('[IoT publish]', ...args);
 /** Give up if the broker hasn't acked the publish within this long. */
 const PUBLISH_TIMEOUT_MS = 15000;
 
-// Every publish opens its own short-lived connection, so each needs a
-// clientId distinct from any other publish in flight AND from the app's
-// persistent shadow-subscription connection (`useShadowSubscription`) —
-// AWS IoT drops whichever connection already holds a clientId when a new
-// one connects with the same id.
-let publishClientSeq = 0;
-
 /**
  * One-shot AWS IoT device-shadow publish: exchanges the caller's Cognito ID
  * token for temporary AWS credentials, opens a short-lived MQTT-over-WebSocket
@@ -48,9 +41,10 @@ export function useIotShadowPublish(shadowName: string) {
     async (desired: Record<string, unknown>): Promise<void> => {
       const thingName = resolveThingName(session?.thingName);
 
+      log('COMMAND —', desired, '→ shadow', shadowName, 'thing', thingName);
       setPublishing(true);
       try {
-        log('CONNECT flow start — thing', thingName, 'shadow', shadowName);
+        log('CONNECTING…');
         const idToken = await getFreshIdToken();
         const { identityId, credentials } = await getCredentials(COGNITO, idToken);
         log('CREDENTIALS ok — identityId', identityId);
@@ -68,11 +62,17 @@ export function useIotShadowPublish(shadowName: string) {
         const url = presignIotWssUrl(COGNITO.region, IOT_ENDPOINT, credentials);
         const topic = namedShadowTopics(thingName, shadowName).update;
         const payload = desiredStatePayload(desired);
+        log('PAYLOAD →', topic, payload);
 
         await new Promise<void>((resolve, reject) => {
           const streamBuilder = createRNWebSocketStreamBuilder(url);
           const client = new mqtt.MqttClient(streamBuilder, {
-            clientId: `${identityId}-pub-${++publishClientSeq}`,
+            // Must match the reference app's `identityId` exactly (no
+            // suffix) — the attached IoT policy's `iot:Connect` resource is
+            // scoped to `client/${cognito-identity.amazonaws.com:sub}`, so
+            // any other clientId gets silently denied at the MQTT CONNECT
+            // step (the WebSocket opens fine, but `connect` never fires).
+            clientId: identityId,
             clean: true,
             keepalive: 60,
             connectTimeout: 15000,
@@ -109,10 +109,12 @@ export function useIotShadowPublish(shadowName: string) {
                 finish(error);
                 return;
               }
-              log('PUBLISH OK — acked by broker');
+              log('PUBLISH OK — acked by broker for', topic);
               finish();
             });
           });
+
+          client.on('close', () => log('CLOSE — connection closed'));
 
           client.on('error', (error: Error) => {
             logWarn('CONNECTION ERROR:', error.message);

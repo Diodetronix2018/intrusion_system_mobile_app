@@ -23,8 +23,15 @@ export function buildRlyValue(selection: RelaySelection): string {
  * Relay zone assignment: either every zone, or exactly one zone. Selecting
  * a zone deselects every other zone (and "All Zones") — there is no
  * partial-selection state, since the device only accepts a single number.
- * Turning a zone's switch off falls back to "All Zones", the only other
- * valid state.
+ *
+ * Every zone's switch shows ON while "All Zones" is selected, so tapping
+ * any one specific zone's switch is, from that switch's own point of view,
+ * a "turn off" gesture — yet the intent is "select just this zone", not
+ * "turn everything off". `toggleZone` disambiguates using the *previous*
+ * selection: turning a switch off only falls back to "All Zones" when it
+ * was the sole selected zone; from "All Zones" (or any other zone), turning
+ * a zone's switch "off" instead isolates it, since that's the only gesture
+ * available to move from all-on to a single selection.
  *
  * Published to the device's `sba_config_v01` shadow as
  * `{"state":{"desired":{"rly":"<...>"}}}` on save.
@@ -46,7 +53,14 @@ export function useRelaySettings(initial: RelaySelection = DEFAULT_SELECTION) {
   const selectAll = useCallback(() => setSelection('all'), []);
 
   const toggleZone = useCallback((zoneNumber: number, next: boolean) => {
-    setSelection(next ? zoneNumber : 'all');
+    setSelection(prev => {
+      // Turning a zone's switch on always exclusively selects it.
+      if (next) return zoneNumber;
+      // Turning it off: only revert to "All Zones" if this zone was the
+      // one actually selected — otherwise (e.g. tapping a zone while "All
+      // Zones" is active) isolate it instead.
+      return prev === zoneNumber ? 'all' : zoneNumber;
+    });
   }, []);
 
   const save = useCallback(

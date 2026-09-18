@@ -1,10 +1,12 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { SBA_CONTROL_SHADOW } from '../../../config/awsConfig';
 import { useShadowSubscription } from '../../../utils/useShadowSubscription';
 import type { SubsystemKey } from './SystemStatusCard';
 import type { SubsystemStatus } from './StatusTile';
 import type { ArmMode } from './useMainControls';
+
+const log = (...args: any[]) => console.log('[Main]', ...args);
 
 /** Shape of `sba_control_v01`'s reported shadow document — only the fields this screen reads. */
 export interface MainReportedStatus {
@@ -52,11 +54,15 @@ function signalStatus(signal?: number): SubsystemStatus {
  * `.../update/accepted`) rather than published by this app.
  */
 export function useMainStatus() {
-  const { reported, connected } = useShadowSubscription<MainReportedStatus>(
+  const { reported, connected, status } = useShadowSubscription<MainReportedStatus>(
     SBA_CONTROL_SHADOW,
   );
 
-  return useMemo(() => {
+  useEffect(() => {
+    log('CONNECTION STATUS →', status, connected ? '(connected)' : '(not connected)');
+  }, [status, connected]);
+
+  const result = useMemo(() => {
     const armMode: ArmMode | null =
       reported?.status == null ? null : reported.status === 1 ? 'stay' : 'away';
 
@@ -72,4 +78,13 @@ export function useMainStatus() {
 
     return { connected, armMode, timestamp: reported?.ts, statuses };
   }, [reported, connected]);
+
+  useEffect(() => {
+    if (!reported) return;
+    log('REPORTED →', reported);
+    log('DERIVED STATUS → arm:', result.armMode, 'ts:', result.timestamp);
+    log('DERIVED TILES →', result.statuses);
+  }, [reported, result.armMode, result.timestamp, result.statuses]);
+
+  return result;
 }
