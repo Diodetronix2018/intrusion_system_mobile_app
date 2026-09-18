@@ -3,45 +3,27 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Typography } from '../../../components';
+import { eventStatusColor, formatEventTimestamp } from '../events';
+import type { EventItem } from '../events';
 import { useTheme } from '../../../theme';
 
-export type ActivitySeverity = 'alarm' | 'warning' | 'info';
-
-export type ActivityEntry = {
-  id: string;
-  /** Local time, already formatted, e.g. "18:12:11" */
-  time: string;
-  /** Translation key under `main.activity.events` */
-  eventKey: string;
-  /** 1-based zone number */
-  zoneNumber: number;
-  /** Translation key under `zone.locations` */
-  locationKey: string;
-  severity: ActivitySeverity;
-};
-
 /**
- * Event log preview: a header with "View all", then one row per entry.
+ * Event log preview: a header with "View all", then one row per entry
+ * showing just the status and timestamp — the full detail (icon, subtitle)
+ * lives on the Events tab itself.
  *
  * The card grows with however many rows it is given; the design shows a
- * single-row preview with the rest behind "View all".
+ * two-row preview with the rest behind "View all".
  */
 export function LatestActivityCard({
   entries,
   onViewAll,
 }: {
-  entries: ActivityEntry[];
+  entries: EventItem[];
   onViewAll?: () => void;
 }) {
   const { t } = useTranslation();
   const { colors, radius, spacing, softShadow } = useTheme();
-
-  const severityColor = (severity: ActivitySeverity) =>
-    severity === 'alarm'
-      ? colors.failed
-      : severity === 'warning'
-      ? colors.warning
-      : colors.success;
 
   return (
     <View
@@ -89,49 +71,69 @@ export function LatestActivityCard({
         </Pressable>
       </View>
 
-      {entries.map(entry => {
-        const tint = severityColor(entry.severity);
-        return (
-          <View
-            key={entry.id}
-            style={[
-              styles.row,
-              {
-                gap: spacing.sm,
-                borderRadius: radius.sm,
-                backgroundColor: colors.backgroundSubtle,
-                paddingVertical: spacing.xs + 2,
-                paddingHorizontal: spacing.sm,
-              },
-            ]}
-          >
-            <View
-              style={[
-                styles.dot,
-                {
-                  backgroundColor: tint,
-                  boxShadow: `0px 0px 8px 0px ${tint}33`,
-                },
-              ]}
-            />
+      {entries.length > 0 && (
+        <View
+          style={[
+            styles.list,
+            {
+              borderRadius: radius.sm,
+              backgroundColor: colors.backgroundSubtle,
+            },
+          ]}
+        >
+          {entries.map((entry, index) => {
+            const tint = eventStatusColor(entry.status, colors);
+            return (
+              <View
+                key={entry.id}
+                style={[
+                  styles.row,
+                  {
+                    gap: spacing.sm,
+                    paddingVertical: spacing.xs + 2,
+                    paddingHorizontal: spacing.sm,
+                  },
+                  index > 0 && {
+                    borderTopWidth: StyleSheet.hairlineWidth,
+                    borderTopColor: colors.border,
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.dot,
+                    {
+                      backgroundColor: tint,
+                      boxShadow: `0px 0px 8px 0px ${tint}33`,
+                    },
+                  ]}
+                />
 
-            <Typography
-              variant="captionBold"
-              size={13}
-              align="left"
-              color={colors.text}
-              numberOfLines={1}
-              style={styles.entryLabel}
-            >
-              {`${entry.time} - ${t(
-                `main.activity.events.${entry.eventKey}`,
-              )} - ${t('zone.label', { number: entry.zoneNumber })}, ${t(
-                `zone.locations.${entry.locationKey}`,
-              )}`}
-            </Typography>
-          </View>
-        );
-      })}
+                <Typography
+                  variant="captionBold"
+                  size={13}
+                  align="left"
+                  color={colors.text}
+                  numberOfLines={1}
+                  style={styles.entryLabel}
+                >
+                  {entry.title}
+                </Typography>
+
+                <Typography
+                  variant="caption"
+                  size={11}
+                  align="right"
+                  color={colors.textSecondary}
+                  numberOfLines={1}
+                >
+                  {formatEventTimestamp(entry.datetime)}
+                </Typography>
+              </View>
+            );
+          })}
+        </View>
+      )}
     </View>
   );
 }
@@ -147,6 +149,9 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flexShrink: 1,
+  },
+  list: {
+    overflow: 'hidden',
   },
   row: {
     minHeight: 30,

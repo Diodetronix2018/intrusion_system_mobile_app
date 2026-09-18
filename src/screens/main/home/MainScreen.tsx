@@ -7,6 +7,7 @@ import Toast from 'react-native-toast-message';
 import { Screen } from '../../../components';
 import { useTheme } from '../../../theme';
 import { useResponsive } from '../../../utils/responsive';
+import { useEvents } from '../events';
 import { HomeAwayGlyph, HomeGlyph } from './ModeGlyphs';
 import { ModeCard } from './ModeCard';
 import { QuickActionCard } from './QuickActionCard';
@@ -54,6 +55,7 @@ export function MainScreen() {
     statuses,
     zones,
   } = useMainStatus();
+  const { events: latestEvents } = useEvents();
 
   // Prepopulate the Stay/Away selection from the device's own reported
   // status, once — after that, the user's own taps (already reflected
@@ -202,16 +204,7 @@ export function MainScreen() {
       <View style={{ paddingHorizontal: gutter, paddingTop: spacing.lg }}>
         {/* a preview; the full log lives on the Events tab */}
         <LatestActivityCard
-          entries={[
-            {
-              id: '1',
-              time: '18:12:11',
-              eventKey: 'alarm',
-              zoneNumber: 1,
-              locationKey: 'mainDoor',
-              severity: 'alarm',
-            },
-          ]}
+          entries={latestEvents.slice(0, 2)}
           onViewAll={() => navigation.navigate('Tabs', { screen: 'Events' })}
         />
       </View>

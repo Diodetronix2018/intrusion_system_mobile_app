@@ -439,14 +439,7 @@
       "title": "Zone Details"
     },
     "activity": {
-      "title": "Latest Activity",
-      "events": {
-        "alarm": "Alarm",
-        "fault": "Fault",
-        "tamper": "Tamper",
-        "armed": "Armed",
-        "disarmed": "Disarmed"
-      }
+      "title": "Latest Activity"
     }
   }
 }

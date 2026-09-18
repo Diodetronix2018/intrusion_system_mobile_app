@@ -3,6 +3,7 @@ export { EventFilterChips } from './EventFilterChips';
 export { buildEventItems } from './buildEventItems';
 export type { EventItem, EventStatus } from './buildEventItems';
 export { categoryFromTriggerType, EVENT_CATEGORIES } from './eventCategories';
+export { eventStatusColor, formatEventTimestamp } from './eventDisplay';
 export type { EventCategoryId } from './eventCategories';
 export { EventsScreen } from './EventsScreen';
 export { useEvents } from './useEvents';

@@ -3,37 +3,16 @@ import { StyleSheet, View } from 'react-native';
 
 import { Typography } from '../../../components';
 import { useTheme } from '../../../theme';
-import type { EventItem, EventStatus } from './buildEventItems';
+import type { EventItem } from './buildEventItems';
+import { eventStatusColor, formatEventTimestamp } from './eventDisplay';
 
 const ICON_CIRCLE = 36;
-
-/**
- * `"YYYY-MM-DD HH:mm:ss"` (device-local, no timezone marker) -> a
- * user-readable `"<time> · <date>"`, e.g. `"6:56 PM · 18 Sep 2026"`.
- */
-function formatEventTimestamp(datetime?: string): string {
-  if (!datetime) return '';
-  // `new Date()` needs a `T` separator to parse this reliably across engines.
-  const parsed = new Date(datetime.replace(' ', 'T'));
-  if (Number.isNaN(parsed.getTime())) return datetime;
-
-  const time = parsed.toLocaleTimeString(undefined, {
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-  const date = parsed.toLocaleDateString(undefined, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-  return `${time} · ${date}`;
-}
 
 /** One event row: status-tinted icon ring, title, optional subtitle, and a readable timestamp. */
 export function EventCard({ event }: { event: EventItem }) {
   const { colors, radius, spacing, layeredShadow } = useTheme();
   const Glyph = event.icon;
-  const tint = statusColor(event.status, colors);
+  const tint = eventStatusColor(event.status, colors);
 
   return (
     <View
@@ -96,22 +75,6 @@ export function EventCard({ event }: { event: EventItem }) {
       </View>
     </View>
   );
-}
-
-function statusColor(
-  status: EventStatus,
-  colors: { success: string; warning: string; failed: string; primary: string },
-): string {
-  switch (status) {
-    case 'success':
-      return colors.success;
-    case 'warning':
-      return colors.warning;
-    case 'failed':
-      return colors.failed;
-    default:
-      return colors.primary;
-  }
 }
 
 const styles = StyleSheet.create({

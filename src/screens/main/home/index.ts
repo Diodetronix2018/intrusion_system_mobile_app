@@ -1,8 +1,4 @@
 export { LatestActivityCard } from './LatestActivityCard';
-export type {
-  ActivityEntry,
-  ActivitySeverity,
-} from './LatestActivityCard';
 export { MainScreen } from './MainScreen';
 export { ModeCard } from './ModeCard';
 export { HomeAwayGlyph, HomeGlyph } from './ModeGlyphs';
