@@ -17,6 +17,8 @@ export type {
 } from './detail/useRepeatSettings';
 export { AutoArmScreen } from './detail/AutoArmScreen';
 export { useAutoArm } from './detail/useAutoArm';
+export { HooterNotifyScreen } from './detail/HooterNotifyScreen';
+export { useHooterNotify } from './detail/useHooterNotify';
 export { SpecialNotifyScreen } from './detail/SpecialNotifyScreen';
 export { USER_GROUPS, useSpecialNotify } from './detail/useSpecialNotify';
 export type {

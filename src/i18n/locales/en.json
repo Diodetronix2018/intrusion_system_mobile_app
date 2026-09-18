@@ -164,6 +164,10 @@
       "relay": {
         "title": "Relay Configuration",
         "subtitle": "Zone relay assignments"
+      },
+      "hooterNotify": {
+        "title": "Hooter Notify Configuration",
+        "subtitle": "Enable or disable the hooter alert"
       }
     }
   },
@@ -273,6 +277,10 @@
     "description": "Automatically arm the system at a scheduled time",
     "setTime": "Set ARM Time",
     "info": "Auto ARM will activate at {{time}} daily"
+  },
+  "hooterNotify": {
+    "title": "Hooter Notify",
+    "description": "Sound the external hooter when an alarm is triggered"
   },
   "specialNotify": {
     "acFail": {

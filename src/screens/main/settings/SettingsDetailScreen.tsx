@@ -9,12 +9,13 @@ import { findSettingsOption, SettingsOption } from './options';
 import { PartSettingScreen } from './detail/PartSettingScreen';
 import { RelayScreen } from './detail/RelayScreen';
 import { AutoArmScreen } from './detail/AutoArmScreen';
+import { HooterNotifyScreen } from './detail/HooterNotifyScreen';
 import { SilenceScreen } from './detail/SilenceScreen';
 import { SpecialNotifyScreen } from './detail/SpecialNotifyScreen';
 import { RepeatScreen } from './detail/RepeatScreen';
 
 /**
- * Shared body for the six configuration screens until each gets its own
+ * Shared body for the seven configuration screens until each gets its own
  * implementation — the route already carries which option was tapped.
  */
 export function SettingsDetailScreen({
@@ -36,6 +37,10 @@ export function SettingsDetailScreen({
 
   if (option.id === 'autoArm') {
     return <AutoArmScreen />;
+  }
+
+  if (option.id === 'hooterNotify') {
+    return <HooterNotifyScreen />;
   }
 
   if (option.id === 'specialNotify') {
