@@ -52,6 +52,7 @@ export function MainScreen() {
     armMode: reportedArmMode,
     timestamp,
     statuses,
+    zones,
   } = useMainStatus();
 
   // Prepopulate the Stay/Away selection from the device's own reported
@@ -179,10 +180,22 @@ export function MainScreen() {
       </View>
 
       <View style={{ paddingHorizontal: gutter, paddingTop: spacing.lg }}>
-        {/* a preview; the full list lives on the Zone tab */}
+        {/* a preview of zone 1 only; the full 9-line breakdown is "View all" */}
         <ZoneStatusCard
-          zones={[{ number: 1, locationKey: 'mainDoor', condition: 'normal' }]}
-          onViewAll={() => navigation.navigate('Tabs', { screen: 'Zone' })}
+          zones={
+            zones[0]?.number
+              ? [
+                  {
+                    number: zones[0].number,
+                    location: zones[0].configured
+                      ? zones[0].location
+                      : t('zone.notConfigured'),
+                    condition: zones[0].status,
+                  },
+                ]
+              : []
+          }
+          onViewAll={() => navigation.navigate('ZoneDetails')}
         />
       </View>
 

@@ -10,8 +10,8 @@ export type ZoneCondition = 'normal' | 'warning' | 'fault';
 export type ZoneStatusEntry = {
   /** 1-based zone number, rendered as Z01, Z02… */
   number: number;
-  /** Translation key under `zone.locations` */
-  locationKey: string;
+  /** The device's own `zloc` text for this zone, shown as-is (not a translation key). */
+  location: string;
   condition: ZoneCondition;
 };
 
@@ -109,9 +109,7 @@ export function ZoneStatusCard({
               numberOfLines={1}
               style={styles.zoneLabel}
             >
-              {`Z${String(zone.number).padStart(2, '0')} - ${t(
-                `zone.locations.${zone.locationKey}`,
-              )}`}
+              {`Z${String(zone.number).padStart(2, '0')} - ${zone.location || '—'}`}
             </Typography>
 
             <Typography

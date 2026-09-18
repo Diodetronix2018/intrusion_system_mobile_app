@@ -337,6 +337,7 @@
     "night": "Night",
     "nc": "NC",
     "no": "NO",
+    "notConfigured": "Not Configured",
     "delays": "Delays",
     "exitDelay": "Exit Delay",
     "entryDelay": "Entry Delay",
@@ -392,8 +393,12 @@
     "zoneStatus": {
       "title": "Zone Status",
       "normal": "Normal",
-      "warning": "Warning",
-      "fault": "Fault"
+      "warning": "Entry/Exit Delay",
+      "fault": "Alarm"
+    },
+    "zoneDetails": {
+      "title": "Zone Details",
+      "modeLine": "Mode: {{mode}}"
     },
     "activity": {
       "title": "Latest Activity",

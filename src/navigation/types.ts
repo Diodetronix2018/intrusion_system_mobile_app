@@ -23,6 +23,7 @@ export type RootStackParamList = {
   Profile: undefined;
   Help: undefined;
   SettingsDetail: { optionId: SettingsOptionId };
+  ZoneDetails: undefined;
 };
 
 /** Tabs inside the `Tabs` route. */

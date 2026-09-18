@@ -337,6 +337,7 @@
     "night": "இரவு",
     "nc": "NC",
     "no": "NO",
+    "notConfigured": "உள்ளமைக்கப்படவில்லை",
     "delays": "தாமதங்கள்",
     "exitDelay": "வெளியேறும் தாமதம்",
     "entryDelay": "நுழைவு தாமதம்",
@@ -392,8 +393,12 @@
     "zoneStatus": {
       "title": "மண்டல நிலை",
       "normal": "இயல்பு",
-      "warning": "எச்சரிக்கை",
-      "fault": "கோளாறு"
+      "warning": "நுழைவு/வெளியேறு தாமதம்",
+      "fault": "அலாரம்"
+    },
+    "zoneDetails": {
+      "title": "மண்டல விவரங்கள்",
+      "modeLine": "முறை: {{mode}}"
     },
     "activity": {
       "title": "சமீபத்திய செயல்பாடு",

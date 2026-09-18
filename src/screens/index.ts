@@ -12,11 +12,13 @@ export {
   DialerScreen,
   EventsScreen,
   MainScreen,
+  MainStatusProvider,
   PlaceholderScreen,
   SETTINGS_OPTIONS,
   SettingsDetailScreen,
   SettingsOptionCard,
   SettingsScreen,
+  ZoneDetailsScreen,
   ZoneScreen,
 } from './main';
 export type { SettingsOption, SettingsOptionId } from './main';

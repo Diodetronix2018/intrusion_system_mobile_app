@@ -337,6 +337,7 @@
     "night": "रात",
     "nc": "NC",
     "no": "NO",
+    "notConfigured": "कॉन्फ़िगर नहीं किया गया",
     "delays": "विलंब",
     "exitDelay": "निकास विलंब",
     "entryDelay": "प्रवेश विलंब",
@@ -392,8 +393,12 @@
     "zoneStatus": {
       "title": "ज़ोन स्थिति",
       "normal": "सामान्य",
-      "warning": "चेतावनी",
-      "fault": "खराबी"
+      "warning": "एंट्री/एग्ज़िट विलंब",
+      "fault": "अलार्म"
+    },
+    "zoneDetails": {
+      "title": "ज़ोन विवरण",
+      "modeLine": "मोड: {{mode}}"
     },
     "activity": {
       "title": "नवीनतम गतिविधि",

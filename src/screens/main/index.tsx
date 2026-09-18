@@ -31,7 +31,12 @@ export function EventsScreen() {
   );
 }
 
-export { MainScreen, StatusCard } from './home';
+export {
+  MainScreen,
+  MainStatusProvider,
+  StatusCard,
+  ZoneDetailsScreen,
+} from './home';
 export { DialerScreen } from './dialer';
 export { ZoneScreen } from './zone';
 export {

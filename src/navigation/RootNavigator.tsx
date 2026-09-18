@@ -13,11 +13,13 @@ import {
   ConfirmSignUpScreen,
   ForgotPasswordScreen,
   HelpSupportScreen,
+  MainStatusProvider,
   ProfileScreen,
   ResetPasswordScreen,
   SettingsDetailScreen,
   SignInScreen,
   SignUpScreen,
+  ZoneDetailsScreen,
 } from '../screens';
 import { useSession } from '../session/SessionProvider';
 import { useTheme } from '../theme';
@@ -66,7 +68,9 @@ export function RootNavigator() {
     );
   }
 
-  return (
+  const appReady = isAuthenticated && hasDevice;
+
+  const navigator = (
     <NavigationContainer theme={navigationTheme}>
       <Stack.Navigator
         screenOptions={{
@@ -104,10 +108,21 @@ export function RootNavigator() {
               name="SettingsDetail"
               component={SettingsDetailScreen}
             />
+            <Stack.Screen name="ZoneDetails" component={ZoneDetailsScreen} />
           </Stack.Group>
         )}
       </Stack.Navigator>
     </NavigationContainer>
+  );
+
+  // One shared live-status subscription for every screen that reads it
+  // (Main, Zone Details, …) — mounted here rather than inside those screens
+  // so switching between them never opens a second MQTT connection. Only
+  // mounted once there's a claimed device to actually subscribe to.
+  return appReady ? (
+    <MainStatusProvider>{navigator}</MainStatusProvider>
+  ) : (
+    navigator
   );
 }
 
