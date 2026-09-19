@@ -438,13 +438,27 @@
       "ac": "एसी",
       "hooter": "हूटर",
       "tamper": "टैम्पर",
-      "signal": "सिग्नल"
+      "signal": "सिग्नल",
+      "zoneChip": {
+        "success": "सामान्य",
+        "warning": "चेतावनी",
+        "failed": "अलार्म"
+      }
     },
     "zoneStatus": {
       "title": "ज़ोन स्थिति",
       "normal": "सामान्य",
       "warning": "एंट्री/एग्ज़िट विलंब",
-      "fault": "अलार्म"
+      "fault": "अलार्म",
+      "codes": {
+        "normal": "सामान्य",
+        "delay": "विलंब",
+        "alarm": "अलार्म",
+        "bypass": "बायपास",
+        "warning": "चेतावनी",
+        "isolate": "आइसोलेट",
+        "fire": "फायर"
+      }
     },
     "zoneDetails": {
       "title": "ज़ोन विवरण"

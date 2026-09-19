@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Typography } from '../../../components';
 import { useTheme } from '../../../theme';
+import { StatusChip } from './StatusChip';
 import { StatusTile, SubsystemStatus } from './StatusTile';
 import {
   AcGlyph,
@@ -51,6 +52,8 @@ export function SystemStatusCard({
     (_, row) => SUBSYSTEMS.slice(row * COLUMNS, row * COLUMNS + COLUMNS),
   );
 
+  const zoneStatus = statuses?.zone ?? 'success';
+
   return (
     <View
       style={[
@@ -63,14 +66,20 @@ export function SystemStatusCard({
         },
       ]}
     >
-      <Typography
-        variant="captionBold"
-        size={14}
-        align="left"
-        color={colors.primary}
-      >
-        {t('main.system.title')}
-      </Typography>
+      <View style={styles.titleRow}>
+        <Typography
+          variant="captionBold"
+          size={14}
+          align="left"
+          color={colors.primary}
+        >
+          {t('main.system.title')}
+        </Typography>
+
+        {zoneStatus !== 'success' && (
+          <StatusChip status={zoneStatus} label={t(`main.system.zoneChip.${zoneStatus}`)} />
+        )}
+      </View>
 
       <View style={{ gap: spacing.sm }}>
         {rows.map((row, index) => (
@@ -96,6 +105,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     boxShadow:
       '0px 2px 10px 0px #0000000A, 0px 14px 28px -10px #00000012',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   row: {
     flexDirection: 'row',

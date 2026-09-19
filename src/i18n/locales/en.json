@@ -438,13 +438,27 @@
       "ac": "AC",
       "hooter": "Hooter",
       "tamper": "Tamper",
-      "signal": "Signal"
+      "signal": "Signal",
+      "zoneChip": {
+        "success": "Normal",
+        "warning": "Warning",
+        "failed": "Alarm"
+      }
     },
     "zoneStatus": {
       "title": "Zone Status",
       "normal": "Normal",
       "warning": "Entry/Exit Delay",
-      "fault": "Alarm"
+      "fault": "Alarm",
+      "codes": {
+        "normal": "Normal",
+        "delay": "Delay",
+        "alarm": "Alarm",
+        "bypass": "Bypass",
+        "warning": "Warning",
+        "isolate": "Isolate",
+        "fire": "Fire"
+      }
     },
     "zoneDetails": {
       "title": "Zone Details"

@@ -6,7 +6,7 @@ import { FeatureCard, Icon, Screen, ScreenHeader, Typography } from '../../../co
 import { DoorOpenIcon, MoonIcon } from '../../../icons';
 import type { IconProps } from '../../../icons';
 import { useTheme } from '../../../theme';
-import { useMainStatus } from './useMainStatus';
+import { useMainStatus, zoneCodeLabelKey } from './useMainStatus';
 import type { MainZoneEntry } from './useMainStatus';
 import type { ZoneCondition } from './ZoneStatusCard';
 
@@ -41,6 +41,11 @@ function ZoneDetailsCard({ zone }: { zone: MainZoneEntry }) {
   const location = zone.configured ? zone.location : t('zone.notConfigured');
   const ModeIcon = zone.mode === 'always' ? AlwaysIcon : MoonIcon;
   const modeLabel = zone.mode ? t(`zone.${zone.mode}`) : undefined;
+  // The tamper line is a plain binary flag, not one of the zones' eight
+  // specific codes — it keeps the generic normal/warning/fault label.
+  const statusLabel = zone.isTamper
+    ? t(`main.zoneStatus.${zone.status}`)
+    : t(`main.zoneStatus.codes.${zoneCodeLabelKey(zone.rawValue)}`);
 
   return (
     <FeatureCard
@@ -83,7 +88,7 @@ function ZoneDetailsCard({ zone }: { zone: MainZoneEntry }) {
         >
           <View style={[styles.statusDot, { backgroundColor: tint }]} />
           <Typography variant="captionBold" size={12} color={tint} numberOfLines={1}>
-            {t(`main.zoneStatus.${zone.status}`)}
+            {statusLabel}
           </Typography>
         </View>
       }

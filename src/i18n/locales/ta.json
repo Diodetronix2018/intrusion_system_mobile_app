@@ -438,13 +438,27 @@
       "ac": "ஏசி",
       "hooter": "ஹூட்டர்",
       "tamper": "டேம்பர்",
-      "signal": "சிக்னல்"
+      "signal": "சிக்னல்",
+      "zoneChip": {
+        "success": "இயல்பு",
+        "warning": "எச்சரிக்கை",
+        "failed": "அலாரம்"
+      }
     },
     "zoneStatus": {
       "title": "மண்டல நிலை",
       "normal": "இயல்பு",
       "warning": "நுழைவு/வெளியேறு தாமதம்",
-      "fault": "அலாரம்"
+      "fault": "அலாரம்",
+      "codes": {
+        "normal": "இயல்பு",
+        "delay": "தாமதம்",
+        "alarm": "அலாரம்",
+        "bypass": "பைபாஸ்",
+        "warning": "எச்சரிக்கை",
+        "isolate": "தனிமைப்படுத்து",
+        "fire": "தீ"
+      }
     },
     "zoneDetails": {
       "title": "மண்டல விவரங்கள்"
