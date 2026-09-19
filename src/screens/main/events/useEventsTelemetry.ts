@@ -25,7 +25,7 @@ export function useEventsTelemetry() {
 
   useEffect(() => {
     let cancelled = false;
-    const thingName = resolveThingName(session?.thingName);
+    const thingName = resolveThingName(session?.activeThingName);
 
     async function load() {
       setLoading(true);
@@ -59,7 +59,7 @@ export function useEventsTelemetry() {
     return () => {
       cancelled = true;
     };
-  }, [session?.thingName, getFreshIdToken]);
+  }, [session?.activeThingName, getFreshIdToken]);
 
   return { rows, loading, error };
 }

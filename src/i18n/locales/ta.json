@@ -214,7 +214,14 @@
     "profileSubtitle": "உங்கள் கணக்கு விவரங்கள்",
     "selectTheme": "தீமைத் தேர்ந்தெடுக்கவும்",
     "selectLanguage": "மொழியைத் தேர்ந்தெடுக்கவும்",
-    "preferences": "விருப்பங்கள்"
+    "preferences": "விருப்பங்கள்",
+    "devices": "சாதனங்கள்",
+    "addDevice": {
+      "title": "மற்றொரு சாதனத்தைச் சேர்க்கவும்",
+      "subtitle": "QR குறியீட்டுடன் மற்றொரு பேனலைக் கோரவும்",
+      "count_one": "{{count}} சாதனம்",
+      "count_other": "{{count}} சாதனங்கள்"
+    }
   },
   "help": {
     "title": "உதவி மற்றும் ஆதரவு",
@@ -409,6 +416,10 @@
       "minutesAgo": "{{count}} நிமிடம் முன்பு",
       "justNow": "இப்போது",
       "connecting": "சாதனத்துடன் இணைக்கிறது…"
+    },
+    "switchDevice": {
+      "action": "சாதனத்தை மாற்று",
+      "title": "சாதனத்தை மாற்று"
     },
     "modes": {
       "stay": "ஸ்டே",

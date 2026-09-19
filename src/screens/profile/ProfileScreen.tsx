@@ -21,7 +21,7 @@ export function ProfileScreen() {
   const { t } = useTranslation();
   const { colors, radius, spacing, cardShadow } = useTheme();
   const navigation = useNavigation();
-  const { user, signOut } = useSession();
+  const { user, session, signOut } = useSession();
 
   // Logging out revokes the refresh token, so the next launch needs a full
   // sign-in again — worth one tap of confirmation.
@@ -80,6 +80,20 @@ export function ProfileScreen() {
             </Typography>
           </View>
         </View>
+
+        <SectionLabel>{t('profile.devices')}</SectionLabel>
+
+        <PreferenceCard
+          icon="add-circle-outline"
+          title={t('profile.addDevice.title')}
+          subtitle={t('profile.addDevice.subtitle')}
+          value={
+            session?.devices?.length
+              ? t('profile.addDevice.count', { count: session.devices.length })
+              : undefined
+          }
+          onPress={() => navigation.navigate('ClaimDevice')}
+        />
 
         <SectionLabel>{t('profile.preferences')}</SectionLabel>
 

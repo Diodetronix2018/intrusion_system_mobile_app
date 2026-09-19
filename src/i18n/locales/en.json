@@ -214,7 +214,14 @@
     "profileSubtitle": "Your account details",
     "selectTheme": "Select theme",
     "selectLanguage": "Select language",
-    "preferences": "Preferences"
+    "preferences": "Preferences",
+    "devices": "Devices",
+    "addDevice": {
+      "title": "Add another device",
+      "subtitle": "Claim another panel with its QR code",
+      "count_one": "{{count}} device",
+      "count_other": "{{count}} devices"
+    }
   },
   "help": {
     "title": "Help & Support",
@@ -409,6 +416,10 @@
       "minutesAgo": "{{count}}m ago",
       "justNow": "just now",
       "connecting": "Connecting to device…"
+    },
+    "switchDevice": {
+      "action": "Switch device",
+      "title": "Switch device"
     },
     "modes": {
       "stay": "Stay",

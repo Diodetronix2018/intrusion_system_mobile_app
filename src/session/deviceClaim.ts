@@ -1,126 +1,21 @@
 /**
- * Device claiming — ported from the sibling 3-phase app.
+ * Device claiming.
  *
  * A provisioned device ships with a QR code holding its IoT Thing name and a
- * one-time claim code. Claiming is a single conditional write against the
- * DynamoDB claims table, signed with the temporary credentials the Identity
- * Pool hands out, so there is no backend in the path.
+ * per-device claim code, validated against the `dtx_devices` catalog table
+ * (read-only — nothing is ever written back to it). Claiming records
+ * ownership as a new row in `dtx_user_devices` (partition key `owner`, sort
+ * key `thingName`), so many users can claim the same device, and one user
+ * can hold several. Both are direct SigV4-signed DynamoDB calls using the
+ * temporary credentials the Identity Pool hands out, so there is no backend
+ * in the path.
  */
-import CryptoJS from 'crypto-js';
-
+import {
+  ConditionalCheckFailedError,
+  getDynamoItem,
+  putDynamoItem,
+} from '../utils/dynamoDb';
 import type { AwsCredentials } from './cognito';
-
-// ---------------------------------------------------------------------------
-// SigV4 signing (crypto-js)
-// ---------------------------------------------------------------------------
-
-const sha256Hex = (msg: string): string =>
-  CryptoJS.SHA256(msg).toString(CryptoJS.enc.Hex);
-
-const hmac = (key: CryptoJS.lib.WordArray | string, msg: string) =>
-  CryptoJS.HmacSHA256(msg, key);
-
-/** Derive the SigV4 signing key for a given date/region/service. */
-function getSigningKey(
-  secretKey: string,
-  dateStamp: string,
-  region: string,
-  service: string,
-): CryptoJS.lib.WordArray {
-  const kDate = hmac('AWS4' + secretKey, dateStamp);
-  const kRegion = hmac(kDate, region);
-  const kService = hmac(kRegion, service);
-  return hmac(kService, 'aws4_request');
-}
-
-/** Returns { amzDate: 'YYYYMMDDTHHMMSSZ', dateStamp: 'YYYYMMDD' }. */
-function amzDates(date: Date): { amzDate: string; dateStamp: string } {
-  const amzDate = date.toISOString().replace(/[:-]|\.\d{3}/g, '');
-  return { amzDate, dateStamp: amzDate.slice(0, 8) };
-}
-
-/**
- * SigV4-sign and POST a JSON body to an AWS JSON-protocol service (host
- * `<service>.<region>.amazonaws.com`, X-Amz-Target dispatch). Returns the
- * parsed response; throws with the service's `__type`/message on a non-2xx so
- * callers can branch on specific errors (e.g. ConditionalCheckFailedException).
- */
-async function sigV4Post(
-  service: string,
-  region: string,
-  target: string,
-  contentType: string,
-  body: string,
-  creds: AwsCredentials,
-): Promise<any> {
-  const host = `${service}.${region}.amazonaws.com`;
-  const { amzDate, dateStamp } = amzDates(new Date());
-
-  const signedHeaders =
-    'content-type;host;x-amz-date;x-amz-security-token;x-amz-target';
-  const canonicalHeaders =
-    `content-type:${contentType}\n` +
-    `host:${host}\n` +
-    `x-amz-date:${amzDate}\n` +
-    `x-amz-security-token:${creds.sessionToken}\n` +
-    `x-amz-target:${target}\n`;
-
-  const canonicalRequest = [
-    'POST',
-    '/',
-    '',
-    canonicalHeaders,
-    signedHeaders,
-    sha256Hex(body),
-  ].join('\n');
-
-  const scope = `${dateStamp}/${region}/${service}/aws4_request`;
-  const stringToSign = [
-    'AWS4-HMAC-SHA256',
-    amzDate,
-    scope,
-    sha256Hex(canonicalRequest),
-  ].join('\n');
-
-  const signature = hmac(
-    getSigningKey(creds.secretKey, dateStamp, region, service),
-    stringToSign,
-  ).toString(CryptoJS.enc.Hex);
-
-  const authorization =
-    `AWS4-HMAC-SHA256 Credential=${creds.accessKeyId}/${scope}, ` +
-    `SignedHeaders=${signedHeaders}, Signature=${signature}`;
-
-  const res = await fetch(`https://${host}/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': contentType,
-      Host: host,
-      'X-Amz-Date': amzDate,
-      'X-Amz-Security-Token': creds.sessionToken,
-      'X-Amz-Target': target,
-      Authorization: authorization,
-    },
-    body,
-  });
-
-  const text = await res.text();
-  let json: any = {};
-  try {
-    json = text ? JSON.parse(text) : {};
-  } catch {
-    /* leave json empty; handled below */
-  }
-  if (!res.ok) {
-    const type = String(json?.__type || '');
-    const err = new Error(
-      json?.message || json?.Message || type || `HTTP ${res.status}`,
-    );
-    (err as any).awsType = type;
-    throw err;
-  }
-  return json;
-}
 
 // ---------------------------------------------------------------------------
 // The claim QR
@@ -177,64 +72,62 @@ export function parseClaimQr(payload: string): ClaimQr | null {
 // The claim itself
 // ---------------------------------------------------------------------------
 
-/** Raised when the claim code is wrong or the device is already claimed. */
+/** Raised when the claim code is wrong, or the thing name isn't provisioned. */
 export class ClaimRejectedError extends Error {
-  constructor(
-    message = 'This device is already claimed, or the code is incorrect.',
-  ) {
+  constructor(message = 'This device or claim code is incorrect.') {
     super(message);
     this.name = 'ClaimRejectedError';
   }
 }
 
 /**
- * Atomically claim a device directly against the DynamoDB claims table: set
- * `claimed=true` and `owner=<sub>`, but only if it's currently unclaimed and the
- * supplied claim code matches. The single conditional write both checks and
- * flips, so two racing claims can't both win. Throws {@link ClaimRejectedError}
- * when the condition fails.
+ * Claim a device: validate the scanned `claimCode` against the `dtx_devices`
+ * catalog, then record this user's ownership as a new row in
+ * `dtx_user_devices`. Many different users can claim the same device — the
+ * only thing this guards against is the *same* user claiming the *same*
+ * device twice, which is treated as a silent no-op rather than an error.
+ * Throws {@link ClaimRejectedError} when the thing name is unknown or the
+ * code doesn't match it.
  */
 export async function claimDeviceInDynamo(opts: {
   region: string;
-  table: string;
+  devicesTable: string;
+  userDevicesTable: string;
   thingName: string;
   claimCode: string;
   owner: string;
   creds: AwsCredentials;
 }): Promise<void> {
-  const body = JSON.stringify({
-    TableName: opts.table,
-    Key: { thingName: { S: opts.thingName } },
-    // `claimed` and `owner` are (or border on) reserved words — alias all names.
-    UpdateExpression: 'SET #claimed = :true, #owner = :owner',
-    ConditionExpression: '#claimed = :false AND #code = :codeval',
-    ExpressionAttributeNames: {
-      '#claimed': 'claimed',
-      '#owner': 'owner',
-      '#code': 'claimCode',
-    },
-    ExpressionAttributeValues: {
-      ':true': { BOOL: true },
-      ':false': { BOOL: false },
-      ':owner': { S: opts.owner },
-      ':codeval': { S: opts.claimCode },
-    },
-    ReturnValues: 'NONE',
+  const device = await getDynamoItem({
+    region: opts.region,
+    table: opts.devicesTable,
+    key: { thingName: { S: opts.thingName } },
+    creds: opts.creds,
   });
+  if (!device || device.claimCode !== opts.claimCode) {
+    throw new ClaimRejectedError();
+  }
 
   try {
-    await sigV4Post(
-      'dynamodb',
-      opts.region,
-      'DynamoDB_20120810.UpdateItem',
-      'application/x-amz-json-1.0',
-      body,
-      opts.creds,
-    );
-  } catch (err: any) {
-    if (String(err?.awsType).includes('ConditionalCheckFailedException')) {
-      throw new ClaimRejectedError();
+    await putDynamoItem({
+      region: opts.region,
+      table: opts.userDevicesTable,
+      item: {
+        owner: { S: opts.owner },
+        thingName: { S: opts.thingName },
+        claimedAt: { S: new Date().toISOString() },
+      },
+      // Only blocks re-claiming a device this exact user already owns — a
+      // different owner claiming the same thingName is a different item
+      // (different partition key) and always allowed.
+      conditionExpression: 'attribute_not_exists(#owner)',
+      expressionAttributeNames: { '#owner': 'owner' },
+      creds: opts.creds,
+    });
+  } catch (err) {
+    if (!(err instanceof ConditionalCheckFailedError)) {
+      throw err;
     }
-    throw err;
+    // Already claimed by this exact user — nothing to do.
   }
 }

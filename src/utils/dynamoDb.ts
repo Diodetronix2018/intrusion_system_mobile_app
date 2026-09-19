@@ -25,7 +25,7 @@ const log = (...args: any[]) => console.log('[DynamoDB]', ...args);
  * parsed response; throws (with the service's `__type` attached as
  * `.awsType`) on a non-2xx so callers can branch on specific errors.
  */
-async function sigV4Post(
+export async function sigV4Post(
   service: string,
   region: string,
   target: string,
@@ -174,4 +174,105 @@ export async function queryTelemetry(opts: {
     log('FIRST ROW KEYS →', Object.keys(rows[0]));
   }
   return rows;
+}
+
+/** Thrown when a `PutItem`'s `ConditionExpression` wasn't met. */
+export class ConditionalCheckFailedError extends Error {
+  constructor(message = 'Conditional check failed.') {
+    super(message);
+    this.name = 'ConditionalCheckFailedError';
+  }
+}
+
+/**
+ * Fetch a single item by its exact primary key. `key` is already in the
+ * low-level `{ S: '…' }` attribute-value shape DynamoDB's JSON API expects.
+ * Returns `undefined` if no item exists at that key.
+ */
+export async function getDynamoItem(opts: {
+  region: string;
+  table: string;
+  key: Record<string, any>;
+  creds: AwsCredentials;
+}): Promise<Record<string, any> | undefined> {
+  const body = JSON.stringify({ TableName: opts.table, Key: opts.key });
+  const res = await sigV4Post(
+    'dynamodb',
+    opts.region,
+    'DynamoDB_20120810.GetItem',
+    'application/x-amz-json-1.0',
+    body,
+    opts.creds,
+  );
+  return res?.Item ? (unmarshallDynamo({ M: res.Item }) as Record<string, any>) : undefined;
+}
+
+/**
+ * Put a whole item (already in attribute-value shape), optionally guarded by
+ * a `ConditionExpression` — throws {@link ConditionalCheckFailedError} (not
+ * the raw AWS error) when the condition isn't met, so callers can branch on
+ * it without string-matching `awsType` themselves.
+ */
+export async function putDynamoItem(opts: {
+  region: string;
+  table: string;
+  item: Record<string, any>;
+  conditionExpression?: string;
+  expressionAttributeNames?: Record<string, string>;
+  creds: AwsCredentials;
+}): Promise<void> {
+  const body = JSON.stringify({
+    TableName: opts.table,
+    Item: opts.item,
+    ...(opts.conditionExpression ? { ConditionExpression: opts.conditionExpression } : {}),
+    ...(opts.expressionAttributeNames
+      ? { ExpressionAttributeNames: opts.expressionAttributeNames }
+      : {}),
+  });
+  try {
+    await sigV4Post(
+      'dynamodb',
+      opts.region,
+      'DynamoDB_20120810.PutItem',
+      'application/x-amz-json-1.0',
+      body,
+      opts.creds,
+    );
+  } catch (err: any) {
+    if (String(err?.awsType).includes('ConditionalCheckFailedException')) {
+      throw new ConditionalCheckFailedError();
+    }
+    throw err;
+  }
+}
+
+/** One row of `dtx_user_devices` — a device a user has claimed. */
+export type UserDeviceRow = { thingName: string; claimedAt?: string; label?: string };
+
+/**
+ * Query `dtx_user_devices` (partition key `owner`) for every device a user
+ * has claimed — the list the app lets them switch between.
+ */
+export async function queryUserDevices(opts: {
+  region: string;
+  table: string;
+  owner: string;
+  creds: AwsCredentials;
+}): Promise<UserDeviceRow[]> {
+  const body = JSON.stringify({
+    TableName: opts.table,
+    KeyConditionExpression: '#o = :o',
+    ExpressionAttributeNames: { '#o': 'owner' },
+    ExpressionAttributeValues: { ':o': { S: opts.owner } },
+  });
+  const res = await sigV4Post(
+    'dynamodb',
+    opts.region,
+    'DynamoDB_20120810.Query',
+    'application/x-amz-json-1.0',
+    body,
+    opts.creds,
+  );
+  const items: any[] = Array.isArray(res?.Items) ? res.Items : [];
+  return items.map(item => unmarshallDynamo({ M: item }) as UserDeviceRow);
 }

@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
 
@@ -31,6 +32,11 @@ export function ClaimDeviceScreen() {
   const { colors, spacing } = useTheme();
   const { t } = useTranslation();
   const { claimDevice } = useSession();
+  const navigation = useNavigation();
+  // Whether there's somewhere to go back to: false when this is the
+  // mandatory gate for a first-ever claim (nothing before it on the stack),
+  // true when it was opened from Profile to add another device.
+  const canGoBack = navigation.canGoBack();
 
   const [mode, setMode] = useState<Mode>('scan');
   const [deviceId, setDeviceId] = useState('');
@@ -48,13 +54,18 @@ export function ClaimDeviceScreen() {
       setClaiming(true);
       try {
         await claimDevice(thingName, code);
-        // The session now carries the Thing, so the root navigator swaps this
-        // screen out for the app itself.
         Toast.show({
           type: 'success',
           text1: t('claim.successTitle'),
           text2: t('claim.successBody'),
         });
+        // First-ever claim: `hasDevice` flips true and the root navigator
+        // swaps this screen out for the app itself, nothing to do here.
+        // Adding another device on top of one already owned: `hasDevice`
+        // was already true, so that swap doesn't happen — leave explicitly.
+        if (canGoBack) {
+          navigation.goBack();
+        }
       } catch (err: any) {
         const rejected = err instanceof ClaimRejectedError;
         Toast.show({
@@ -69,7 +80,7 @@ export function ClaimDeviceScreen() {
         setClaiming(false);
       }
     },
-    [claimDevice, t],
+    [claimDevice, t, canGoBack, navigation],
   );
 
   const onScanned = useCallback(
@@ -105,8 +116,16 @@ export function ClaimDeviceScreen() {
     <View style={[styles.flex, { backgroundColor: colors.background }]}>
       <ScreenHeader
         title={scanning ? t('claim.title') : t('claim.manualTitle')}
-        // The only way back out of manual entry — this screen is its own stack.
-        onBack={scanning ? undefined : () => setMode('scan')}
+        // In manual entry, back always drops to scan mode first. Scanning
+        // itself only gets a back button when there's somewhere to return to
+        // (opened from Profile) — the mandatory first-claim gate has none.
+        onBack={
+          !scanning
+            ? () => setMode('scan')
+            : canGoBack
+            ? () => navigation.goBack()
+            : undefined
+        }
       />
 
       <Screen

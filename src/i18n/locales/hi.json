@@ -214,7 +214,14 @@
     "profileSubtitle": "आपके खाते का विवरण",
     "selectTheme": "थीम चुनें",
     "selectLanguage": "भाषा चुनें",
-    "preferences": "प्राथमिकताएं"
+    "preferences": "प्राथमिकताएं",
+    "devices": "डिवाइस",
+    "addDevice": {
+      "title": "एक और डिवाइस जोड़ें",
+      "subtitle": "QR कोड से दूसरा पैनल क्लेम करें",
+      "count_one": "{{count}} डिवाइस",
+      "count_other": "{{count}} डिवाइस"
+    }
   },
   "help": {
     "title": "सहायता और समर्थन",
@@ -409,6 +416,10 @@
       "minutesAgo": "{{count}} मिनट पहले",
       "justNow": "अभी",
       "connecting": "डिवाइस से कनेक्ट हो रहा है…"
+    },
+    "switchDevice": {
+      "action": "डिवाइस बदलें",
+      "title": "डिवाइस बदलें"
     },
     "modes": {
       "stay": "स्टे",

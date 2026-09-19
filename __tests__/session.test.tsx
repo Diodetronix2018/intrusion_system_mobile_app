@@ -17,12 +17,39 @@ jest.mock('../src/session/cognito', () => ({
   refreshSession: jest.fn(),
   signInUserPool: jest.fn(),
   globalSignOut: jest.fn(() => Promise.resolve()),
+  getCredentials: jest.fn(() =>
+    Promise.resolve({
+      identityId: 'identity-1',
+      credentials: {
+        accessKeyId: 'AKIA',
+        secretKey: 'secret',
+        sessionToken: 'token',
+      },
+    }),
+  ),
+}));
+
+jest.mock('../src/utils/dynamoDb', () => ({
+  ...jest.requireActual('../src/utils/dynamoDb'),
+  queryUserDevices: jest.fn(() => Promise.resolve([])),
+}));
+
+// The claim itself (validating against `dtx_devices`, writing to
+// `dtx_user_devices`) is exercised directly against real DynamoDB request
+// shapes elsewhere — here it's stubbed so `claimDevice` tests only cover
+// what SessionProvider does with the result.
+jest.mock('../src/session/deviceClaim', () => ({
+  ...jest.requireActual('../src/session/deviceClaim'),
+  claimDeviceInDynamo: jest.fn(() => Promise.resolve()),
 }));
 
 const cognito = require('../src/session/cognito');
+const dynamoDb = require('../src/utils/dynamoDb');
 
 const SESSION_KEY = 'auth_session';
 const HOUR = 60 * 60 * 1000;
+const SUB = 'user-1';
+const THING = 'DTX867409070337741';
 
 /** A JWT the provider can decode — signature is never checked. */
 function fakeIdToken(claims: Record<string, unknown>) {
@@ -34,21 +61,18 @@ function fakeIdToken(claims: Record<string, unknown>) {
   return `header.${payload}.signature`;
 }
 
-const THING = 'DTX867409070337741';
+const claims = { sub: SUB, email: 'ann@example.com', name: 'Ann Lee' };
 
-// `null` means "this account has not claimed a device yet". It cannot be
-// `undefined` — that would fall through to the default parameter.
+// `null` means "this account has not claimed a device yet" as far as the
+// persisted session goes. It cannot be `undefined` — that would fall through
+// to the default parameter.
 function persisted(expiresAt: number, thing: string | null = THING) {
-  const thingName = thing ?? undefined;
-  const claims = {
-    email: 'ann@example.com',
-    name: 'Ann Lee',
-    ...(thingName ? { 'custom:thingName': thingName } : null),
-  };
+  const activeThingName = thing ?? undefined;
   return {
     email: 'ann@example.com',
     name: 'Ann Lee',
-    thingName,
+    devices: activeThingName ? [activeThingName] : [],
+    activeThingName,
     idToken: fakeIdToken(claims),
     accessToken: 'access-token',
     refreshToken: 'refresh-token',
@@ -66,7 +90,8 @@ async function mount() {
     return null;
   }
   let tree: ReactTestRenderer.ReactTestRenderer | undefined;
-  // async so the launch-time refresh settles inside act()
+  // async so the launch-time refresh (and the background device fetch it
+  // triggers) settles inside act()
   await ReactTestRenderer.act(async () => {
     tree = ReactTestRenderer.create(
       <SessionProvider>
@@ -85,6 +110,7 @@ async function mount() {
 beforeEach(() => {
   StorageService.clear();
   jest.clearAllMocks();
+  dynamoDb.queryUserDevices.mockResolvedValue([]);
 });
 
 test('starts signed out with nothing persisted', async () => {
@@ -97,8 +123,9 @@ test('starts signed out with nothing persisted', async () => {
   await unmount();
 });
 
-test('restores a still-valid session without a network round trip', async () => {
+test('restores a still-valid session without a token refresh', async () => {
   StorageService.setString(SESSION_KEY, JSON.stringify(persisted(Date.now() + HOUR)));
+  dynamoDb.queryUserDevices.mockResolvedValue([{ thingName: THING }]);
 
   const { seen, unmount } = await mount();
 
@@ -114,14 +141,11 @@ test('restores a still-valid session without a network round trip', async () => 
 test('refreshes an expired ID token on launch and stays signed in', async () => {
   StorageService.setString(SESSION_KEY, JSON.stringify(persisted(Date.now() - HOUR)));
   cognito.refreshSession.mockResolvedValue({
-    idToken: fakeIdToken({
-      email: 'ann@example.com',
-      name: 'Ann Lee',
-      'custom:thingName': THING,
-    }),
+    idToken: fakeIdToken(claims),
     accessToken: 'new-access-token',
     expiresIn: 3600,
   });
+  dynamoDb.queryUserDevices.mockResolvedValue([{ thingName: THING }]);
 
   const { seen, unmount } = await mount();
 
@@ -134,42 +158,41 @@ test('refreshes an expired ID token on launch and stays signed in', async () => 
   // The refresh token is not rotated, so it must survive the refresh.
   expect(seen.current!.session!.refreshToken).toBe('refresh-token');
   expect(seen.current!.session!.accessToken).toBe('new-access-token');
+  // The device the session already had survives the token refresh too.
+  expect(seen.current!.session!.activeThingName).toBe(THING);
 
   await unmount();
 });
 
-test('re-checks a device-less session and picks up a device claimed elsewhere', async () => {
-  // Valid token, but it predates the claim — the attribute only appears in a
-  // freshly minted one.
+test('picks up a device claimed elsewhere, on a still-valid token', async () => {
+  // Valid token, but no device yet as far as the persisted session knows —
+  // it was claimed from another phone since.
   StorageService.setString(
     SESSION_KEY,
     JSON.stringify(persisted(Date.now() + HOUR, null)),
   );
-  cognito.refreshSession.mockResolvedValue({
-    idToken: fakeIdToken({
-      email: 'ann@example.com',
-      name: 'Ann Lee',
-      'custom:thingName': THING,
-    }),
-    accessToken: 'new-access-token',
-    expiresIn: 3600,
-  });
+  dynamoDb.queryUserDevices.mockResolvedValue([{ thingName: THING }]);
 
   const { seen, unmount } = await mount();
 
-  expect(cognito.refreshSession).toHaveBeenCalled();
+  // A device-list refresh is a plain DynamoDB Query — it never needs to mint
+  // a new ID token to pick up a device claimed elsewhere.
+  expect(cognito.refreshSession).not.toHaveBeenCalled();
+  expect(dynamoDb.queryUserDevices).toHaveBeenCalledWith(
+    expect.objectContaining({ owner: SUB }),
+  );
   expect(seen.current!.hasDevice).toBe(true);
-  expect(seen.current!.session!.thingName).toBe(THING);
+  expect(seen.current!.session!.activeThingName).toBe(THING);
 
   await unmount();
 });
 
-test('keeps a valid device-less session when the launch re-check fails', async () => {
+test('keeps a valid device-less session when the device-list fetch fails', async () => {
   StorageService.setString(
     SESSION_KEY,
     JSON.stringify(persisted(Date.now() + HOUR, null)),
   );
-  cognito.refreshSession.mockRejectedValue(new Error('Network request failed'));
+  dynamoDb.queryUserDevices.mockRejectedValue(new Error('Network request failed'));
 
   const { seen, unmount } = await mount();
 
@@ -206,15 +229,12 @@ test('ignores a corrupt persisted session', async () => {
 
 test('signing in persists the session, and logging out clears it', async () => {
   cognito.signInUserPool.mockResolvedValue({
-    idToken: fakeIdToken({
-      email: 'ann@example.com',
-      name: 'Ann Lee',
-      'custom:thingName': THING,
-    }),
+    idToken: fakeIdToken(claims),
     accessToken: 'access-token',
     refreshToken: 'refresh-token',
     expiresIn: 3600,
   });
+  dynamoDb.queryUserDevices.mockResolvedValue([{ thingName: THING }]);
 
   const { seen, unmount } = await mount();
 
@@ -222,9 +242,9 @@ test('signing in persists the session, and logging out clears it', async () => {
     await seen.current!.signIn('ann@example.com', 'hunter2hunter2');
   });
   expect(seen.current!.isAuthenticated).toBe(true);
-  // The claimed device must come straight off the ID token, or the app strands
-  // the user on the claim screen.
-  expect(seen.current!.session!.thingName).toBe(THING);
+  // The claimed device comes from a `dtx_user_devices` query straight after
+  // sign-in, or the app strands the user on the claim screen.
+  expect(seen.current!.session!.activeThingName).toBe(THING);
   expect(seen.current!.hasDevice).toBe(true);
   expect(StorageService.getString(SESSION_KEY)).toBeTruthy();
 
@@ -238,6 +258,34 @@ test('signing in persists the session, and logging out clears it', async () => {
     expect.anything(),
     'access-token',
   );
+
+  await unmount();
+});
+
+test('claiming a second device adds it without dropping the first, and switchDevice moves between them', async () => {
+  StorageService.setString(SESSION_KEY, JSON.stringify(persisted(Date.now() + HOUR)));
+  dynamoDb.queryUserDevices.mockResolvedValue([{ thingName: THING }]);
+
+  const { seen, unmount } = await mount();
+  expect(seen.current!.session!.devices).toEqual([THING]);
+
+  const SECOND = 'DTX999999999999999';
+  dynamoDb.queryUserDevices.mockResolvedValue([
+    { thingName: THING },
+    { thingName: SECOND },
+  ]);
+
+  await ReactTestRenderer.act(async () => {
+    await seen.current!.claimDevice(SECOND, 'CODE-1234');
+  });
+  expect(seen.current!.session!.devices).toEqual([THING, SECOND]);
+  // Claiming makes the newly claimed device the active one.
+  expect(seen.current!.session!.activeThingName).toBe(SECOND);
+
+  ReactTestRenderer.act(() => {
+    seen.current!.switchDevice(THING);
+  });
+  expect(seen.current!.session!.activeThingName).toBe(THING);
 
   await unmount();
 });

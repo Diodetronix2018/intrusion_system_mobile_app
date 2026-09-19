@@ -8,8 +8,9 @@ import React, {
   useState,
 } from 'react';
 
-import { CLAIMS_TABLE, COGNITO, THING_ATTRIBUTE } from '../config/awsConfig';
+import { COGNITO, DEVICES_TABLE, USER_DEVICES_TABLE } from '../config/awsConfig';
 import { StorageService } from '../storage';
+import { queryUserDevices } from '../utils/dynamoDb';
 import {
   confirmForgotPassword as cognitoConfirmForgotPassword,
   confirmSignUp as cognitoConfirmSignUp,
@@ -21,7 +22,6 @@ import {
   resendConfirmationCode,
   signInUserPool,
   signUp as cognitoSignUp,
-  updateUserAttributes,
 } from './cognito';
 import { claimDeviceInDynamo } from './deviceClaim';
 
@@ -41,11 +41,13 @@ export type AuthSession = {
   /** Full name from the Cognito `name` attribute, if the profile has one. */
   name?: string;
   /**
-   * IoT Thing this user owns, from the `custom:thingName` attribute the claim
-   * step stamps on them. Undefined until they have claimed a device — until
-   * then the app has no panel to show.
+   * Every IoT Thing this user has claimed, from `dtx_user_devices`. Empty
+   * until they have claimed a device — until then the app has no panel to
+   * show.
    */
-  thingName?: string;
+  devices?: string[];
+  /** Which of `devices` is currently on screen — switchable via `switchDevice`. */
+  activeThingName?: string;
   /** User Pool ID token (JWT) — carries the profile claims. */
   idToken: string;
   /** Access token — used for self-service calls (GlobalSignOut…). */
@@ -83,18 +85,36 @@ type SessionContextValue = {
   /** Returns a non-expired ID token, refreshing it first if needed. */
   getFreshIdToken: () => Promise<string>;
   /**
-   * Claim a device from its QR (thing name + code) directly against AWS: flips
-   * the claims row, stamps `custom:thingName` on the user, and refreshes the
-   * session so the app sees the newly-owned Thing. Throws `ClaimRejectedError`
-   * if the code is wrong or the device is already claimed.
+   * Claim a device from its QR (thing name + code) directly against AWS:
+   * validates the code, records ownership in `dtx_user_devices`, and makes
+   * it the active device. Throws `ClaimRejectedError` if the thing name or
+   * code is wrong; claiming a device already owned is a no-op, not an error.
    */
   claimDevice: (thingName: string, claimCode: string) => Promise<void>;
+  /** Switches the active device among the ones this user has already claimed. */
+  switchDevice: (thingName: string) => void;
   signOut: () => void;
 };
 
 const SessionContext = createContext<SessionContextValue | undefined>(
   undefined,
 );
+
+/** Every Thing name the ID token's account has claimed, from `dtx_user_devices`. */
+async function fetchDeviceThingNames(idToken: string): Promise<string[]> {
+  const sub = decodeJwtClaims(idToken).sub;
+  if (!sub) {
+    return [];
+  }
+  const { credentials } = await getCredentials(COGNITO, idToken);
+  const rows = await queryUserDevices({
+    region: COGNITO.region,
+    table: USER_DEVICES_TABLE,
+    owner: sub,
+    creds: credentials,
+  });
+  return rows.map(row => row.thingName).filter(Boolean);
+}
 
 function persist(session: AuthSession | null) {
   if (session) {
@@ -128,7 +148,6 @@ const sessionFromTokens = (
   return {
     email: claims.email || fallbackEmail,
     name: claims.name,
-    thingName: claims[THING_ATTRIBUTE],
     idToken: tokens.idToken,
     accessToken: tokens.accessToken,
     refreshToken: tokens.refreshToken,
@@ -157,15 +176,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   if (!initial.current) {
     const saved = readPersistedSession();
     const tokenFresh = !!saved && Date.now() < saved.expiresAt - EXPIRY_SKEW_MS;
-    // A session with no claimed device is re-checked even when its token is
-    // still valid: the device may have been claimed since (in this app or the
-    // 3-phase one), and `custom:thingName` only lands in a newly minted token.
-    // Without this the app would sit on the claim screen until the token aged
-    // out on its own.
-    const trusted = tokenFresh && !!saved!.thingName;
+    // The device list itself is re-verified separately (see the
+    // `refreshDevices` effect below) regardless of token freshness — a
+    // device claimed elsewhere shows up without waiting on this.
     initial.current = {
       live: tokenFresh ? saved : null,
-      recheck: trusted ? null : saved,
+      recheck: tokenFresh ? null : saved,
     };
   }
 
@@ -186,7 +202,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   // Bring the persisted session up to date on launch.
   useEffect(() => {
-    const { recheck, live } = initial.current;
+    const { recheck } = initial.current;
     if (!recheck) {
       return;
     }
@@ -199,24 +215,19 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
             { ...tokens, refreshToken: recheck.refreshToken },
             recheck.email,
           );
-          // Keep what we already had if this token happens to omit it.
+          // Keep what we already had if this token happens to omit it. The
+          // device list itself is re-verified separately, below.
           applySession({
             ...refreshed,
             name: refreshed.name ?? recheck.name,
-            thingName: refreshed.thingName ?? recheck.thingName,
+            devices: recheck.devices,
+            activeThingName: recheck.activeThingName,
           });
         }
       } catch (err: any) {
-        if (cancelled) {
-          return;
-        }
-        if (live) {
-          // The token in hand is still valid — this was only an opportunistic
-          // check for a device claimed elsewhere. Offline is not a reason to
-          // throw the user out.
-          console.warn('[auth] launch refresh failed, keeping session:', err?.message);
-        } else {
+        if (!cancelled) {
           // Nothing usable and no new token: the refresh token is gone.
+          console.warn('[auth] launch refresh failed:', err?.message);
           applySession(null);
         }
       } finally {
@@ -268,9 +279,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         accessToken: tokens.accessToken,
         email: claims.email || current.email,
         name: claims.name ?? current.name,
-        // Picks up a device claimed since the last token — the attribute only
-        // appears in freshly minted tokens.
-        thingName: claims[THING_ATTRIBUTE] ?? current.thingName,
         expiresAt: Date.now() + tokens.expiresIn * 1000,
       });
       return tokens.idToken;
@@ -281,26 +289,45 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
   }, [applySession]);
 
-  // Mint a fresh token regardless of expiry — used right after claiming a device
-  // so the new `custom:thingName` attribute lands in the session immediately
-  // (the token in hand was minted before the attribute existed).
-  const forceRefresh = useCallback(async (): Promise<void> => {
+  // Independently keeps the device list current: right after sign-in, after
+  // the launch-time token recheck above, and after claiming a device (see
+  // `claimDevice`). Runs once per signed-in account (guarded by sub) rather
+  // than on every token refresh, since a plain refresh never changes
+  // ownership.
+  const devicesFetchedForSub = useRef<string | null>(null);
+  const refreshDevices = useCallback(async (): Promise<void> => {
+    const idToken = await getFreshIdToken();
+    const devices = await fetchDeviceThingNames(idToken);
     const current = sessionRef.current;
     if (!current) {
-      throw new Error('Not signed in.');
+      return;
     }
-    const tokens = await refreshSession(COGNITO, current.refreshToken);
-    const claims = decodeJwtClaims(tokens.idToken);
-    applySession({
-      ...current,
-      idToken: tokens.idToken,
-      accessToken: tokens.accessToken,
-      email: claims.email || current.email,
-      name: claims.name ?? current.name,
-      thingName: claims[THING_ATTRIBUTE] ?? current.thingName,
-      expiresAt: Date.now() + tokens.expiresIn * 1000,
+    const activeThingName =
+      current.activeThingName && devices.includes(current.activeThingName)
+        ? current.activeThingName
+        : devices[0];
+    applySession({ ...current, devices, activeThingName });
+  }, [getFreshIdToken, applySession]);
+
+  useEffect(() => {
+    if (!session) {
+      devicesFetchedForSub.current = null;
+      return;
+    }
+    let sub: string | undefined;
+    try {
+      sub = decodeJwtClaims(session.idToken).sub;
+    } catch {
+      return;
+    }
+    if (!sub || devicesFetchedForSub.current === sub) {
+      return;
+    }
+    devicesFetchedForSub.current = sub;
+    refreshDevices().catch((err: any) => {
+      console.warn('[auth] device list refresh failed:', err?.message);
     });
-  }, [applySession]);
+  }, [session, refreshDevices]);
 
   const claimDevice = useCallback(
     async (thingName: string, claimCode: string): Promise<void> => {
@@ -311,29 +338,28 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       }
 
       const { credentials } = await getCredentials(COGNITO, idToken);
-      // 1. Atomic check-and-claim (throws ClaimRejectedError if already taken).
+      // Validates the code and records ownership — a no-op if this user
+      // already owns this device, never an error for other owners.
       await claimDeviceInDynamo({
         region: COGNITO.region,
-        table: CLAIMS_TABLE,
+        devicesTable: DEVICES_TABLE,
+        userDevicesTable: USER_DEVICES_TABLE,
         thingName,
         claimCode,
         owner,
         creds: credentials,
       });
 
-      // 2. Point this user at the Thing so it rides in every future token.
-      const accessToken = sessionRef.current?.accessToken;
-      if (!accessToken) {
-        throw new Error('Missing access token; please sign in again.');
+      // Refresh the device list so the newly claimed thing shows up, and
+      // switch straight to it.
+      const devices = await fetchDeviceThingNames(idToken);
+      const current = sessionRef.current;
+      if (!current) {
+        throw new Error('Not signed in.');
       }
-      await updateUserAttributes(COGNITO, accessToken, {
-        [THING_ATTRIBUTE]: thingName,
-      });
-
-      // 3. Refresh so `thingName` is in the session now → the app unlocks.
-      await forceRefresh();
+      applySession({ ...current, devices, activeThingName: thingName });
     },
-    [getFreshIdToken, forceRefresh],
+    [getFreshIdToken, applySession],
   );
 
   const signUp = useCallback(
@@ -364,6 +390,17 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const switchDevice = useCallback(
+    (thingName: string) => {
+      const current = sessionRef.current;
+      if (!current || !current.devices?.includes(thingName)) {
+        return;
+      }
+      applySession({ ...current, activeThingName: thingName });
+    },
+    [applySession],
+  );
+
   const user = useMemo<User | null>(
     () =>
       session
@@ -377,7 +414,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       user,
       session,
       isAuthenticated: session !== null,
-      hasDevice: Boolean(session?.thingName),
+      hasDevice: Boolean(session?.activeThingName),
       restoring,
       signIn,
       signUp,
@@ -387,6 +424,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       confirmForgotPassword,
       getFreshIdToken,
       claimDevice,
+      switchDevice,
       signOut,
     }),
     [
@@ -401,6 +439,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       confirmForgotPassword,
       getFreshIdToken,
       claimDevice,
+      switchDevice,
       signOut,
     ],
   );

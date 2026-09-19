@@ -1,8 +1,8 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { Typography } from '../../../components';
+import { Icon, Typography } from '../../../components';
 import { useTheme } from '../../../theme';
 import { HomeAwayGlyph, HomeGlyph } from './ModeGlyphs';
 import type { ArmMode } from './useMainControls';
@@ -23,11 +23,15 @@ export function StatusCard({
   mode,
   summary,
   online = true,
+  onSwitchDevice,
 }: {
   mode: ArmMode;
   summary: string;
   /** Drives the dot colour */
   online?: boolean;
+  /** Shown as a button in place of the balancing spacer, only when the
+   *  signed-in user has more than one device to switch between. */
+  onSwitchDevice?: () => void;
 }) {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
@@ -64,8 +68,21 @@ export function StatusCard({
           {title}
         </Typography>
 
-        {/* balances the icon so the title stays optically centred */}
-        <View style={styles.spacer} />
+        {/* balances the icon so the title stays optically centred, unless
+            there's an actual device to switch to */}
+        {onSwitchDevice ? (
+          <Pressable
+            onPress={onSwitchDevice}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('main.switchDevice.action')}
+            style={styles.spacer}
+          >
+            <Icon name="swap-horizontal-outline" size={22} color={colors.onPrimary} />
+          </Pressable>
+        ) : (
+          <View style={styles.spacer} />
+        )}
       </View>
 
       <View
@@ -120,6 +137,9 @@ const styles = StyleSheet.create({
   },
   spacer: {
     width: ICON_SIZE,
+    height: ICON_SIZE,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     flex: 1,

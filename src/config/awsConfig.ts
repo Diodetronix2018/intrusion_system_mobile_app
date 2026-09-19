@@ -37,16 +37,18 @@ export const SBA_CONFIG_SHADOW = 'sba_config_v01';
 // arm mode, mute, reset, all/part: `$aws/things/<thing>/shadow/name/sba_control_v01/update`.
 export const SBA_CONTROL_SHADOW = 'sba_control_v01';
 
-// DynamoDB table the provisioner writes each device + one-time claim code into
-// (partition key: thingName). The app claims a device by conditionally flipping
-// its row here.
-export const CLAIMS_TABLE = 'dtx_device_claims';
+// DynamoDB table the provisioner writes each device + claim code into
+// (partition key: thingName). Read-only from the app — claiming validates a
+// scanned/typed code against this table but never writes to it.
+export const DEVICES_TABLE = 'dtx_devices';
+
+// DynamoDB table recording which users have claimed which devices (partition
+// key: owner — the Cognito sub; sort key: thingName). Many users can claim
+// the same device, and one user can hold several — this is the list the app
+// lets them switch between.
+export const USER_DEVICES_TABLE = 'dtx_user_devices';
 
 // DynamoDB table holding each device's event/telemetry history, read for the
 // Events tab (partition key assumed to be `thingName`, matching every other
 // table in this app — confirm once real rows come back).
 export const TELEMETRY_TABLE = 'dtx_tngrama_telemetry';
-
-// Cognito custom attribute that holds the claimed Thing for a user. Written by
-// the claim step, read back from the ID token on every login.
-export const THING_ATTRIBUTE = 'custom:thingName';

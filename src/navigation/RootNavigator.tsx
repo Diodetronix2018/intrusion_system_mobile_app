@@ -94,7 +94,7 @@ export function RootNavigator() {
             <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
           </Stack.Group>
         ) : !hasDevice ? (
-          // Signed in but no `custom:thingName` yet — there is nothing to show
+          // Signed in but no claimed device yet — there is nothing to show
           // until a panel is linked, so claiming is the whole app.
           <Stack.Group screenOptions={{ animation: 'fade' }}>
             <Stack.Screen name="ClaimDevice" component={ClaimDeviceScreen} />
@@ -109,6 +109,9 @@ export function RootNavigator() {
               component={SettingsDetailScreen}
             />
             <Stack.Screen name="ZoneDetails" component={ZoneDetailsScreen} />
+            {/* Reachable from Profile ("Add another device") once a device is
+                already claimed — the gate above only covers the very first one. */}
+            <Stack.Screen name="ClaimDevice" component={ClaimDeviceScreen} />
           </Stack.Group>
         )}
       </Stack.Navigator>

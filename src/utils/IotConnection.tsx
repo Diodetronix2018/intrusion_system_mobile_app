@@ -82,7 +82,7 @@ export function IotConnectionProvider({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     let cancelled = false;
-    const thingName = resolveThingName(session?.thingName);
+    const thingName = resolveThingName(session?.activeThingName);
     const controlTopics = namedShadowTopics(thingName, SBA_CONTROL_SHADOW);
     const configTopics = namedShadowTopics(thingName, SBA_CONFIG_SHADOW);
 
@@ -228,7 +228,7 @@ export function IotConnectionProvider({ children }: { children: React.ReactNode 
       clientRef.current = null;
       setConnected(false);
     };
-  }, [session?.thingName, getFreshIdToken]);
+  }, [session?.activeThingName, getFreshIdToken]);
 
   const publish = useCallback(
     (shadowName: string, desired: Record<string, unknown>): Promise<void> => {
@@ -239,7 +239,7 @@ export function IotConnectionProvider({ children }: { children: React.ReactNode 
           return;
         }
 
-        const thingName = resolveThingName(session?.thingName);
+        const thingName = resolveThingName(session?.activeThingName);
         const topic = namedShadowTopics(thingName, shadowName).update;
         const payload = desiredStatePayload(desired);
         log('PUBLISH →', topic, payload);
@@ -266,7 +266,7 @@ export function IotConnectionProvider({ children }: { children: React.ReactNode 
         });
       });
     },
-    [session?.thingName],
+    [session?.activeThingName],
   );
 
   const value = useMemo<IotConnectionValue>(
