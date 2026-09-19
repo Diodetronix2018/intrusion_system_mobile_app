@@ -10,7 +10,7 @@ const log = (...args: any[]) => console.log('[Main]', ...args);
 
 /** Shape of `sba_control_v01`'s reported shadow document — only the fields this screen reads. */
 export interface MainReportedStatus {
-  /** 1 = Stay, 0 = Away — mirrors the `arm` field this screen publishes. */
+  /** 0 = Stay, 1 = Away — mirrors the `arm` field this screen publishes. */
   status?: number;
   /** Per-zone health, 9 entries (zones 1-8 then tamper): 0 normal, 1 warning, 2 alarm. */
   zon?: number[];
@@ -114,7 +114,7 @@ export function useMainStatus() {
 
   const result = useMemo(() => {
     const armMode: ArmMode | null =
-      reported?.status == null ? null : reported.status === 1 ? 'stay' : 'away';
+      reported?.status == null ? null : reported.status === 1 ? 'away' : 'stay';
 
     const statuses: Partial<Record<SubsystemKey, SubsystemStatus>> = {
       zone: zoneAggregateStatus(reported?.zon),

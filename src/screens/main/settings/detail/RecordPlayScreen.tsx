@@ -15,7 +15,6 @@ import { PhoneIcon } from '../../../../icons';
 import { useTheme } from '../../../../theme';
 import {
   INDIAN_MOBILE_LENGTH,
-  normalizeIndianMobile,
   validateIndianMobile,
   ValidationError,
 } from '../../../../utils/validation';
@@ -39,7 +38,8 @@ export function RecordPlayScreen() {
     }
 
     try {
-      await action(normalizeIndianMobile(phone));
+      // `record`/`play` already normalize internally (`buildRecordPlayValue`).
+      await action(phone);
       Toast.show({ type: 'success', text1: t('common.commandSent') });
     } catch (err: any) {
       Toast.show({

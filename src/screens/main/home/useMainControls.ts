@@ -8,7 +8,7 @@ const log = (...args: any[]) => console.log('[Main]', ...args);
 export type ArmMode = 'stay' | 'away';
 export type PartitionMode = 'all' | 'part';
 
-const ARM_CODE: Record<ArmMode, number> = { stay: 1, away: 0 };
+const ARM_CODE: Record<ArmMode, number> = { stay: 0, away: 1 };
 const PARTITION_CODE: Record<PartitionMode, number> = { all: 1, part: 2 };
 
 /** Which single control is currently mid-publish, so only that card shows a spinner. */
@@ -18,7 +18,7 @@ export type PendingAction = 'arm' | 'mode' | 'mute' | 'reset' | null;
  * Main-screen live controls, published immediately on every tap (there is
  * no "Save" step here — unlike the settings screens, which batch edits) to
  * the device's `sba_control_v01` shadow:
- *   - arm mode:       `{"state":{"desired":{"arm": 1|0}}}` (1 = Stay, 0 = Away)
+ *   - arm mode:       `{"state":{"desired":{"arm": 0|1}}}` (0 = Stay, 1 = Away)
  *   - all/part mode:  `{"state":{"desired":{"mod": 1|2}}}` (1 = All, 2 = Part)
  *   - mute:           `{"state":{"desired":{"sil": 1}}}`
  *   - reset:          `{"state":{"desired":{"rst": 1}}}`
