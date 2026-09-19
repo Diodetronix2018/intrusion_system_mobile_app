@@ -8,6 +8,12 @@ import { useConfigStatus } from '../useConfigStatus';
 
 export const ZONE_COUNT = 8;
 
+/** The `zon` value's 9th chunk (index 8) is the tamper line, not a zone. */
+export const TAMPER_INDEX = ZONE_COUNT;
+
+/** Zones 1-8 plus the tamper line — every slot this screen's selector cycles through. */
+const SLOT_COUNT = ZONE_COUNT + 1;
+
 export type ZoneState = 'on' | 'off';
 export type ZoneSchedule = 'always' | 'night';
 export type ZoneContact = 'nc' | 'no';
@@ -138,14 +144,13 @@ function parseZoneChunk(chunk: string | undefined): ZoneConfig | undefined {
 }
 
 /**
- * Parses the device's saved `zon` value — zone chunks 1-8 (index 0-7)
- * joined with `;`; the 9th (tamper) chunk isn't part of this screen's
- * `ZONE_COUNT` and is ignored here.
+ * Parses the device's saved `zon` value — zone chunks 1-8 (index 0-7) plus
+ * the tamper chunk (index 8, `TAMPER_INDEX`), joined with `;`.
  */
 export function parseZonValue(raw: string): ZoneConfig[] | undefined {
   const chunks = raw.split(';');
   const zones: ZoneConfig[] = [];
-  for (let i = 0; i < ZONE_COUNT; i++) {
+  for (let i = 0; i < SLOT_COUNT; i++) {
     const zone = parseZoneChunk(chunks[i]);
     if (!zone) return undefined;
     zones.push(zone);
@@ -169,24 +174,32 @@ export function useZoneConfig(initial?: ZoneConfig[]) {
   const { t } = useTranslation();
   const { reported } = useConfigStatus();
 
+  const defaultLocation = useCallback(
+    (i: number) =>
+      i === TAMPER_INDEX
+        ? t('partSetting.tamper')
+        : t(`zone.locations.${ZONE_LOCATION_KEYS[i]}`),
+    [t],
+  );
+
   const parseWithLocalizedDefaults = useCallback(
     (raw: string): ZoneConfig[] | undefined => {
       const zones = parseZonValue(raw);
       return zones?.map((zone, i) => ({
         ...zone,
-        location: zone.location || t(`zone.locations.${ZONE_LOCATION_KEYS[i]}`),
+        location: zone.location || defaultLocation(i),
       }));
     },
-    [t],
+    [defaultLocation],
   );
 
   const [zones, setZones] = usePrepopulatedState<string, ZoneConfig[]>(
     reported?.zon,
     parseWithLocalizedDefaults,
     initial ??
-      ZONE_LOCATION_KEYS.map(key => ({
+      Array.from({ length: SLOT_COUNT }, (_, i) => ({
         ...DEFAULT_CONFIG,
-        location: t(`zone.locations.${key}`),
+        location: defaultLocation(i),
       })),
   );
   const [index, setIndex] = useState(0);
@@ -195,12 +208,12 @@ export function useZoneConfig(initial?: ZoneConfig[]) {
   const config = zones[index];
 
   const goTo = useCallback(
-    (next: number) => setIndex(wrap(next, ZONE_COUNT)),
+    (next: number) => setIndex(wrap(next, SLOT_COUNT)),
     [],
   );
 
-  const previous = useCallback(() => setIndex(i => wrap(i - 1, ZONE_COUNT)), []);
-  const next = useCallback(() => setIndex(i => wrap(i + 1, ZONE_COUNT)), []);
+  const previous = useCallback(() => setIndex(i => wrap(i - 1, SLOT_COUNT)), []);
+  const next = useCallback(() => setIndex(i => wrap(i + 1, SLOT_COUNT)), []);
 
   const update = useCallback(
     (patch: Partial<ZoneConfig>) =>

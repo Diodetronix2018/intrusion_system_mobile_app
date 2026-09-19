@@ -33,6 +33,7 @@ import {
   DETECTION_COUNT_MIN,
   LOCATION_MAX_LENGTH,
   LOCATION_MIN_LENGTH,
+  TAMPER_INDEX,
   WAIT_TIME_MAX,
   WAIT_TIME_MIN,
   useZoneConfig,
@@ -262,7 +263,11 @@ export function ZoneScreen() {
       contentContainerStyle={{ gap: spacing.md }}
     >
       <ZoneSelector
-        label={t('zone.label', { number: index + 1 })}
+        label={
+          index === TAMPER_INDEX
+            ? t('partSetting.tamper')
+            : t('zone.label', { number: index + 1 })
+        }
         onPrevious={previous}
         onNext={next}
       />
