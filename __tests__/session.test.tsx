@@ -183,6 +183,7 @@ test('picks up a device claimed elsewhere, on a still-valid token', async () => 
   );
   expect(seen.current!.hasDevice).toBe(true);
   expect(seen.current!.session!.activeThingName).toBe(THING);
+  expect(seen.current!.deviceCheckSettled).toBe(true);
 
   await unmount();
 });
@@ -199,6 +200,9 @@ test('keeps a valid device-less session when the device-list fetch fails', async
   // Offline is not a reason to sign someone out of a still-valid session.
   expect(seen.current!.isAuthenticated).toBe(true);
   expect(seen.current!.hasDevice).toBe(false);
+  // A failed check still counts as "checked" — otherwise the UI would spin
+  // on a loader forever instead of falling through to the claim screen.
+  expect(seen.current!.deviceCheckSettled).toBe(true);
 
   await unmount();
 });
@@ -258,6 +262,58 @@ test('signing in persists the session, and logging out clears it', async () => {
     expect.anything(),
     'access-token',
   );
+
+  await unmount();
+});
+
+test('does not settle until the device list resolves, so the UI can hold a loader instead of flashing the claim screen', async () => {
+  cognito.signInUserPool.mockResolvedValue({
+    idToken: fakeIdToken(claims),
+    accessToken: 'access-token',
+    refreshToken: 'refresh-token',
+    expiresIn: 3600,
+  });
+
+  // Controlled by hand, rather than resolving immediately, so the assertions
+  // below can observe the state a real slow network call would leave the
+  // app in — the exact window the reported bug flashed the claim screen in.
+  let resolveDevices!: (rows: { thingName: string }[]) => void;
+  dynamoDb.queryUserDevices.mockReturnValue(
+    new Promise(resolve => {
+      resolveDevices = resolve;
+    }),
+  );
+
+  const { seen, unmount } = await mount();
+
+  let signInSettled = false;
+  ReactTestRenderer.act(() => {
+    seen.current!.signIn('ann@example.com', 'hunter2hunter2').then(() => {
+      signInSettled = true;
+    });
+  });
+  // Let signIn's own microtasks (not the still-pending device query) drain.
+  await ReactTestRenderer.act(async () => {
+    await Promise.resolve();
+  });
+
+  expect(signInSettled).toBe(true);
+  expect(seen.current!.isAuthenticated).toBe(true);
+  // The device list hasn't come back yet: neither "has a device" nor
+  // "confirmed no device" is known — the UI must hold a loader here, not
+  // show the claim screen (which is what `hasDevice: false` alone used to
+  // trigger before `deviceCheckSettled` existed).
+  expect(seen.current!.hasDevice).toBe(false);
+  expect(seen.current!.deviceCheckSettled).toBe(false);
+
+  await ReactTestRenderer.act(async () => {
+    resolveDevices([{ thingName: THING }]);
+    await Promise.resolve();
+  });
+
+  expect(seen.current!.hasDevice).toBe(true);
+  expect(seen.current!.deviceCheckSettled).toBe(true);
+  expect(seen.current!.session!.activeThingName).toBe(THING);
 
   await unmount();
 });

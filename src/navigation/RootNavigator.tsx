@@ -37,7 +37,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
  * after a claim, and no imperative reset to get wrong.
  */
 export function RootNavigator() {
-  const { isAuthenticated, hasDevice, restoring } = useSession();
+  const { isAuthenticated, hasDevice, restoring, deviceCheckSettled } = useSession();
   const { colors, isDark } = useTheme();
 
   // hands React Navigation our palette so its own surfaces (the screen
@@ -58,9 +58,13 @@ export function RootNavigator() {
     };
   }, [isDark, colors]);
 
-  // A session saved by the last launch is being refreshed — hold on a plain
-  // splash rather than flashing sign-in at someone who is already signed in.
-  if (restoring) {
+  // A session saved by the last launch is being refreshed, or a freshly
+  // signed-in / restored account's device list hasn't come back yet and
+  // there's no cached device to show meanwhile — hold on a plain splash
+  // rather than flashing sign-in, or the claim screen, at someone who
+  // already has a device.
+  const waitingOnDevices = isAuthenticated && !hasDevice && !deviceCheckSettled;
+  if (restoring || waitingOnDevices) {
     return (
       <View style={[styles.splash, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />

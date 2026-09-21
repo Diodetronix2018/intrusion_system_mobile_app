@@ -66,6 +66,14 @@ type SessionContextValue = {
   hasDevice: boolean;
   /** True while a stale persisted session is being refreshed on launch. */
   restoring: boolean;
+  /**
+   * False until the device list has been checked at least once for the
+   * current account (right after sign-in, or on launch) — lets the app hold
+   * on a loader instead of flashing the claim screen for whoever already
+   * has a device but whose list hasn't come back from `dtx_user_devices`
+   * yet.
+   */
+  deviceCheckSettled: boolean;
   signIn: (identifier: string, password: string) => Promise<void>;
   signUp: (
     name: string,
@@ -295,6 +303,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   // than on every token refresh, since a plain refresh never changes
   // ownership.
   const devicesFetchedForSub = useRef<string | null>(null);
+  // False from the moment an account signs in / restores until its device
+  // list has been fetched at least once — see `deviceCheckSettled` above.
+  const [deviceCheckSettled, setDeviceCheckSettled] = useState(false);
   const refreshDevices = useCallback(async (): Promise<void> => {
     const idToken = await getFreshIdToken();
     const devices = await fetchDeviceThingNames(idToken);
@@ -312,6 +323,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!session) {
       devicesFetchedForSub.current = null;
+      setDeviceCheckSettled(false);
       return;
     }
     let sub: string | undefined;
@@ -324,9 +336,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     devicesFetchedForSub.current = sub;
-    refreshDevices().catch((err: any) => {
-      console.warn('[auth] device list refresh failed:', err?.message);
-    });
+    refreshDevices()
+      .catch((err: any) => {
+        console.warn('[auth] device list refresh failed:', err?.message);
+      })
+      .finally(() => setDeviceCheckSettled(true));
   }, [session, refreshDevices]);
 
   const claimDevice = useCallback(
@@ -416,6 +430,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       isAuthenticated: session !== null,
       hasDevice: Boolean(session?.activeThingName),
       restoring,
+      deviceCheckSettled,
       signIn,
       signUp,
       confirmSignUp,
@@ -431,6 +446,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       user,
       session,
       restoring,
+      deviceCheckSettled,
       signIn,
       signUp,
       confirmSignUp,
