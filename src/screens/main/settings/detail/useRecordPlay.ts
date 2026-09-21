@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import { SBA_CONFIG_SHADOW } from '../../../../config/awsConfig';
+import { SBA_CONTROL_SHADOW } from '../../../../config/awsConfig';
 import { useIotShadowPublish } from '../../../../utils/useIotShadowPublish';
 import { normalizeIndianMobile } from '../../../../utils/validation';
 
@@ -22,12 +22,12 @@ export function buildRecordPlayValue(phone: string): string {
  * button is currently publishing, and the screen disables both while
  * `saving` is true so a second tap can't overlap the first.
  *
- * Published to the device's `sba_config_v01` shadow as
+ * Published to the device's `sba_control_v01` shadow as
  * `{"state":{"desired":{"rec"|"vmt":"<...>"}}}`.
  */
 export function useRecordPlay() {
   const [pendingAction, setPendingAction] = useState<RecordPlayAction | null>(null);
-  const { publish, publishing } = useIotShadowPublish(SBA_CONFIG_SHADOW);
+  const { publish, publishing } = useIotShadowPublish(SBA_CONTROL_SHADOW);
 
   const record = useCallback(
     async (phone: string) => {

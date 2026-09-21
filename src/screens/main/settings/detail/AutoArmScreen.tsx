@@ -6,7 +6,7 @@ import Toast from 'react-native-toast-message';
 import {
   Button,
   FeatureCard,
-  formatTime,
+  formatTime12,
   Icon,
   Screen,
   ScreenHeader,
@@ -124,7 +124,7 @@ export function AutoArmScreen() {
                 color={colors.textSecondary}
                 style={styles.infoText}
               >
-                {t('autoArm.info', { time: formatTime(time) })}
+                {t('autoArm.info', { time: formatTime12(time) })}
               </Typography>
             </View>
           </>,

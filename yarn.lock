@@ -2103,6 +2103,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native-community/datetimepicker@npm:^9.2.1":
+  version: 9.2.1
+  resolution: "@react-native-community/datetimepicker@npm:9.2.1"
+  dependencies:
+    invariant: "npm:^2.2.4"
+  peerDependencies:
+    expo: ">=52.0.0"
+    react: "*"
+    react-native: "*"
+    react-native-windows: "*"
+  peerDependenciesMeta:
+    expo:
+      optional: true
+    react-native-windows:
+      optional: true
+  checksum: 10c0/6d6c4703506d6c3e8f933461094fcb23227a88481af2de13179004aa54537fd7d74ae4566860f90a784b5636516bbd463b8af844543fb85db5dc9cdfc4c0381e
+  languageName: node
+  linkType: hard
+
 "@react-native-vector-icons/common@npm:^13.0.3":
   version: 13.0.3
   resolution: "@react-native-vector-icons/common@npm:13.0.3"
@@ -4408,6 +4427,7 @@ __metadata:
     "@react-native-community/cli": "npm:20.2.0"
     "@react-native-community/cli-platform-android": "npm:20.2.0"
     "@react-native-community/cli-platform-ios": "npm:20.2.0"
+    "@react-native-community/datetimepicker": "npm:^9.2.1"
     "@react-native-vector-icons/ionicons": "npm:13.1.4"
     "@react-native-vector-icons/material-design-icons": "npm:13.1.4"
     "@react-native/babel-preset": "npm:0.87.1"
