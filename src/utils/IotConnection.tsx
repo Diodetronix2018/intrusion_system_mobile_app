@@ -41,6 +41,15 @@ export type IotConnectionStatus =
 /** Give up if the broker hasn't acked a publish within this long. */
 const PUBLISH_TIMEOUT_MS = 15000;
 
+/**
+ * Wait this long after a publish ack before re-fetching the shadow. The ack
+ * only confirms the *desired* state reached AWS IoT — the panel still has to
+ * notice the delta, apply it, and publish its own `reported` update before a
+ * `get` reflects the change; firing the `get` immediately just re-reads the
+ * still-stale `reported` state sitting next to the new `desired` one.
+ */
+const POST_PUBLISH_GET_DELAY_MS = 2000;
+
 interface IotConnectionValue {
   /** `sba_control_v01`'s most recent reported document. */
   controlReported: Record<string, unknown> | null;
@@ -187,8 +196,15 @@ export function IotConnectionProvider({ children }: { children: React.ReactNode 
             const doc = JSON.parse(raw);
             const reported = doc?.state?.reported;
             if (reported && typeof reported === 'object') {
-              if (isControl) setControlReported(reported);
-              else setConfigReported(reported);
+              // `update/accepted` only echoes whatever fields that specific
+              // update touched — often just the one setting that changed,
+              // not the whole document. Merging (not replacing) means an
+              // unrelated screen's already-loaded fields survive a save
+              // made from a different screen, instead of reverting to their
+              // defaults. `get/accepted` is a full document and merges in
+              // harmlessly the same way.
+              if (isControl) setControlReported(prev => ({ ...prev, ...reported }));
+              else setConfigReported(prev => ({ ...prev, ...reported }));
             }
           } catch (e: any) {
             logWarn('message parse failed:', e?.message, raw);
@@ -240,9 +256,9 @@ export function IotConnectionProvider({ children }: { children: React.ReactNode 
         }
 
         const thingName = resolveThingName(session?.activeThingName);
-        const topic = namedShadowTopics(thingName, shadowName).update;
+        const topics = namedShadowTopics(thingName, shadowName);
         const payload = desiredStatePayload(desired);
-        log('PUBLISH →', topic, payload);
+        log('PUBLISH →', topics.update, payload);
 
         let settled = false;
         const timer = setTimeout(() => {
@@ -252,7 +268,7 @@ export function IotConnectionProvider({ children }: { children: React.ReactNode 
           reject(new Error('Timed out publishing to the device.'));
         }, PUBLISH_TIMEOUT_MS);
 
-        client.publish(topic, payload, { qos: 1 }, (error?: Error) => {
+        client.publish(topics.update, payload, { qos: 1 }, (error?: Error) => {
           if (settled) return;
           settled = true;
           clearTimeout(timer);
@@ -261,7 +277,26 @@ export function IotConnectionProvider({ children }: { children: React.ReactNode 
             reject(error);
             return;
           }
-          log('PUBLISH OK —', topic);
+          log('PUBLISH OK —', topics.update);
+          // A fresh full shadow doc, so every screen reading this shadow —
+          // not just the one that just saved — is back in sync, rather than
+          // relying solely on whatever partial delta the device's own
+          // follow-up report happens to contain. Delayed: right after the
+          // ack, the shadow only has our new `desired` — `reported` hasn't
+          // moved yet because the panel itself hasn't processed the delta,
+          // so a `get` fired immediately would just re-read the stale value.
+          setTimeout(() => {
+            const activeClient = clientRef.current;
+            if (!activeClient || !activeClient.connected) return;
+            log(
+              'GET → publishing {} to',
+              topics.get,
+              `(after ${POST_PUBLISH_GET_DELAY_MS}ms)`,
+            );
+            activeClient.publish(topics.get, '{}', { qos: 0 }, (getErr?: Error) => {
+              if (getErr) logWarn('POST-PUBLISH GET FAILED:', getErr.message);
+            });
+          }, POST_PUBLISH_GET_DELAY_MS);
           resolve();
         });
       });
