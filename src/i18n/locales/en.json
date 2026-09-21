@@ -172,6 +172,10 @@
       "recordPlay": {
         "title": "Record & Play Configuration",
         "subtitle": "Record or play a voice message to a number"
+      },
+      "bankDetails": {
+        "title": "Bank Details",
+        "subtitle": "Branch and manager contact details"
       }
     }
   },
@@ -334,6 +338,37 @@
   "recordPlay": {
     "record": "Record",
     "play": "Play"
+  },
+  "bankDetails": {
+    "branchCode": {
+      "label": "Branch Code",
+      "placeholder": "Enter branch code"
+    },
+    "district": {
+      "label": "District",
+      "placeholder": "Enter district"
+    },
+    "branchName": {
+      "label": "Branch Name",
+      "placeholder": "Enter branch name"
+    },
+    "managerName": {
+      "label": "Manager Name",
+      "placeholder": "Enter manager name"
+    },
+    "mobile": {
+      "label": "Manager Mobile Number"
+    },
+    "email": {
+      "label": "Manager Email",
+      "placeholder": "Enter email"
+    },
+    "reminder": {
+      "title": "Bank Details Missing",
+      "body": "Add your branch and manager contact details so the panel has them on file.",
+      "action": "Add Bank Details",
+      "later": "Later"
+    }
   },
   "specialNotify": {
     "acFail": {

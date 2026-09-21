@@ -7,6 +7,7 @@ import {
 import { useTranslation } from 'react-i18next';
 
 import { AppHeader } from '../components';
+import { BankDetailsReminderModal } from '../screens/main/settings/detail/BankDetailsReminderModal';
 import {
   DialerScreen,
   EventsScreen,
@@ -66,6 +67,8 @@ export function BottomTabs() {
           options={{ title: t('tabs.settings') }}
         />
       </Tab.Navigator>
+
+      <BankDetailsReminderModal />
     </View>
   );
 }

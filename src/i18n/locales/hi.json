@@ -172,6 +172,10 @@
       "recordPlay": {
         "title": "रिकॉर्ड और प्ले कॉन्फ़िगरेशन",
         "subtitle": "किसी नंबर पर वॉइस मैसेज रिकॉर्ड या प्ले करें"
+      },
+      "bankDetails": {
+        "title": "बैंक विवरण",
+        "subtitle": "शाखा और प्रबंधक संपर्क विवरण"
       }
     }
   },
@@ -334,6 +338,37 @@
   "recordPlay": {
     "record": "रिकॉर्ड",
     "play": "प्ले"
+  },
+  "bankDetails": {
+    "branchCode": {
+      "label": "शाखा कोड",
+      "placeholder": "शाखा कोड दर्ज करें"
+    },
+    "district": {
+      "label": "जिला",
+      "placeholder": "जिला दर्ज करें"
+    },
+    "branchName": {
+      "label": "शाखा का नाम",
+      "placeholder": "शाखा का नाम दर्ज करें"
+    },
+    "managerName": {
+      "label": "प्रबंधक का नाम",
+      "placeholder": "प्रबंधक का नाम दर्ज करें"
+    },
+    "mobile": {
+      "label": "प्रबंधक मोबाइल नंबर"
+    },
+    "email": {
+      "label": "प्रबंधक ईमेल",
+      "placeholder": "ईमेल दर्ज करें"
+    },
+    "reminder": {
+      "title": "बैंक विवरण गुम है",
+      "body": "पैनल के रिकॉर्ड के लिए अपनी शाखा और प्रबंधक संपर्क विवरण जोड़ें।",
+      "action": "बैंक विवरण जोड़ें",
+      "later": "बाद में"
+    }
   },
   "specialNotify": {
     "acFail": {

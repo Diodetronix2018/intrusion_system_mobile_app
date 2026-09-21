@@ -80,9 +80,31 @@ const SCHEDULE_CODE: Record<ZoneSchedule, number> = { night: 0, always: 1 };
 const CONTACT_CODE: Record<ZoneContact, number> = { nc: 0, no: 1 };
 
 /**
+ * The tamper line's on/off field uses its own code, unrelated to zones
+ * 1-8's plain `0`/`1` — `6` means on, everything else (the panel may send
+ * a few different "off" values) means off.
+ */
+const TAMPER_STATE_ON_CODE = 6;
+
+function stateCode(zoneIndex: number, state: ZoneState): number {
+  if (zoneIndex === TAMPER_INDEX) {
+    return state === 'on' ? TAMPER_STATE_ON_CODE : 0;
+  }
+  return STATE_CODE[state];
+}
+
+function stateFromCode(zoneIndex: number, raw: string): ZoneState {
+  const value = Number(raw);
+  const on = zoneIndex === TAMPER_INDEX ? value === TAMPER_STATE_ON_CODE : value === 1;
+  return on ? 'on' : 'off';
+}
+
+/**
  * Builds the device's `zon` shadow value for one zone:
  * `"<zone 0-7>,<on/off>,<mode>,<contact>,<exitDelay>,<entryDelay>,<smartCheck>,<waitTime>,<detectionCount>,<location>"`,
- * e.g. `"0,1,0,0,10,30,0,0,0,Front Door"`.
+ * e.g. `"0,1,0,0,10,30,0,0,0,Front Door"`. For the tamper line (index
+ * `TAMPER_INDEX`), the on/off field is `6`/`0` rather than `1`/`0` — see
+ * `stateCode`.
  *
  * Wait time and detection count are only meaningful while smart check is
  * on, so they're always sent as `0` while it's off, regardless of the
@@ -91,7 +113,7 @@ const CONTACT_CODE: Record<ZoneContact, number> = { nc: 0, no: 1 };
 export function buildZonValue(zoneIndex: number, config: ZoneConfig): string {
   return [
     zoneIndex,
-    STATE_CODE[config.state],
+    stateCode(zoneIndex, config.state),
     SCHEDULE_CODE[config.schedule],
     CONTACT_CODE[config.contact],
     config.exitDelay,
@@ -107,12 +129,14 @@ export function buildZonValue(zoneIndex: number, config: ZoneConfig): string {
 
 /**
  * Parses one zone's chunk of the device's saved `zon` value — the same 10
- * fields `buildZonValue` writes, in the same order. Returns the location
- * exactly as trimmed (which may be the empty string, or the device's
- * "Empty" placeholder trimmed down to `""`) — the caller fills in a
- * sensible default for that case, since a pure parser has no `t()` to reach for.
+ * fields `buildZonValue` writes, in the same order. `zoneIndex` picks the
+ * on/off decoding (`stateFromCode`) — the tamper line reads differently
+ * from zones 1-8. Returns the location exactly as trimmed (which may be
+ * the empty string, or the device's "Empty" placeholder trimmed down to
+ * `""`) — the caller fills in a sensible default for that case, since a
+ * pure parser has no `t()` to reach for.
  */
-function parseZoneChunk(chunk: string | undefined): ZoneConfig | undefined {
+function parseZoneChunk(zoneIndex: number, chunk: string | undefined): ZoneConfig | undefined {
   const parts = chunk?.split(',');
   if (!parts || parts.length < 10) return undefined;
   const [
@@ -129,7 +153,7 @@ function parseZoneChunk(chunk: string | undefined): ZoneConfig | undefined {
   ] = parts;
   const rawLocation = locationParts.join(',').trim();
   return {
-    state: Number(stateRaw) === 1 ? 'on' : 'off',
+    state: stateFromCode(zoneIndex, stateRaw),
     schedule: Number(scheduleRaw) === 1 ? 'always' : 'night',
     contact: Number(contactRaw) === 1 ? 'no' : 'nc',
     exitDelay: Number(exitDelayRaw) || 0,
@@ -151,7 +175,7 @@ export function parseZonValue(raw: string): ZoneConfig[] | undefined {
   const chunks = raw.split(';');
   const zones: ZoneConfig[] = [];
   for (let i = 0; i < SLOT_COUNT; i++) {
-    const zone = parseZoneChunk(chunks[i]);
+    const zone = parseZoneChunk(i, chunks[i]);
     if (!zone) return undefined;
     zones.push(zone);
   }

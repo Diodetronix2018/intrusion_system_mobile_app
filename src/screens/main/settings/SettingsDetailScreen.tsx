@@ -6,6 +6,7 @@ import { Icon, Screen, ScreenHeader, Typography } from '../../../components';
 import { useTheme } from '../../../theme';
 import type { RootStackScreenProps } from '../../../navigation/types';
 import { findSettingsOption, SettingsOption } from './options';
+import { BankDetailsScreen } from './detail/BankDetailsScreen';
 import { PartSettingScreen } from './detail/PartSettingScreen';
 import { RelayScreen } from './detail/RelayScreen';
 import { AutoArmScreen } from './detail/AutoArmScreen';
@@ -54,6 +55,10 @@ export function SettingsDetailScreen({
 
   if (option.id === 'silence') {
     return <SilenceScreen />;
+  }
+
+  if (option.id === 'bankDetails') {
+    return <BankDetailsScreen />;
   }
 
   return <SettingsPlaceholder option={option} />;

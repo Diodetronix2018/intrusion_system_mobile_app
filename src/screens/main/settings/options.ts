@@ -12,7 +12,8 @@ export type SettingsOptionId =
   | 'autoArm'
   | 'relay'
   | 'hooterNotify'
-  | 'recordPlay';
+  | 'recordPlay'
+  | 'bankDetails';
 
 export type SettingsOption = {
   id: SettingsOptionId;
@@ -37,6 +38,7 @@ export const SETTINGS_OPTIONS: SettingsOption[] = [
   { id: 'relay', icon: 'toggle-switch-off-outline', family: 'material' },
   { id: 'hooterNotify', icon: 'megaphone-outline', family: 'ionicons' },
   { id: 'recordPlay', icon: 'mic-outline', family: 'ionicons' },
+  { id: 'bankDetails', icon: 'business-outline', family: 'ionicons' },
 ];
 
 export const findSettingsOption = (id: SettingsOptionId) =>

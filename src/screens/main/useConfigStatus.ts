@@ -25,7 +25,7 @@ export interface ConfigReported {
   rly?: string;
   /** Hooter Notify — `"1"` enabled, `"2"` disabled. */
   hnt?: string;
-  /** Not yet surfaced in any screen — kept for completeness/logging. */
+  /** Bank Details — `"<branchCode>,<district>,<branchName>,<managerName>,<mobile>,<email>"`. */
   bnk?: string;
 }
 
