@@ -452,6 +452,13 @@
       "justNow": "अभी",
       "connecting": "डिवाइस से कनेक्ट हो रहा है…"
     },
+    "connection": {
+      "connecting": "कनेक्ट हो रहा है",
+      "connected": "कनेक्टेड",
+      "reconnecting": "पुनः कनेक्ट हो रहा है",
+      "disconnected": "डिस्कनेक्टेड",
+      "error": "कनेक्शन त्रुटि"
+    },
     "switchDevice": {
       "action": "डिवाइस बदलें",
       "title": "डिवाइस बदलें"

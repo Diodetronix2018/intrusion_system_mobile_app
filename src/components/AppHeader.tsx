@@ -7,8 +7,28 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ConnectionStatus from '../icons/svg/connection-status.svg';
 import { UserIcon } from '../icons';
 import { useTheme } from '../theme';
+import { useIotConnection, type IotConnectionStatus } from '../utils/IotConnection';
 import { useResponsive } from '../utils/responsive';
 import { Typography } from './Typography';
+
+/** Maps the shared MQTT connection's status to the header mark's colour. */
+function connectionStatusColor(
+  status: IotConnectionStatus,
+  colors: { success: string; warning: string; failed: string },
+): string {
+  switch (status) {
+    case 'connected':
+      return colors.success;
+    case 'connecting':
+    case 'reconnecting':
+      return colors.warning;
+    case 'disconnected':
+    case 'error':
+      return colors.failed;
+    default:
+      return colors.failed;
+  }
+}
 
 /**
  * Sits above the bottom tabs: app name, connection status, profile.
@@ -21,6 +41,8 @@ export function AppHeader() {
   const { gutter } = useResponsive();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const { status: connectionStatus } = useIotConnection();
+  const connectionColor = connectionStatusColor(connectionStatus, colors);
 
   return (
     <View
@@ -47,8 +69,15 @@ export function AppHeader() {
       </Typography>
 
       <View style={[styles.actions, { gap: spacing.md }]}>
-        {/* the mark ships its own colours, so it is not themed */}
-        <ConnectionStatus width={34} height={34} />
+        {/* Colour follows the live MQTT connection — green once connected,
+            amber while (re)connecting, red once it's actually dropped —
+            rather than the fixed green the mark used to ship with. */}
+        <ConnectionStatus
+          width={34}
+          height={34}
+          color={connectionColor}
+          accessibilityLabel={t(`main.connection.${connectionStatus}`)}
+        />
 
         <Pressable
           onPress={() => navigation.navigate('Profile')}

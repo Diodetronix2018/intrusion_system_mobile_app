@@ -452,6 +452,13 @@
       "justNow": "இப்போது",
       "connecting": "சாதனத்துடன் இணைக்கிறது…"
     },
+    "connection": {
+      "connecting": "இணைக்கிறது",
+      "connected": "இணைக்கப்பட்டது",
+      "reconnecting": "மீண்டும் இணைக்கிறது",
+      "disconnected": "இணைப்பு துண்டிக்கப்பட்டது",
+      "error": "இணைப்பு பிழை"
+    },
     "switchDevice": {
       "action": "சாதனத்தை மாற்று",
       "title": "சாதனத்தை மாற்று"

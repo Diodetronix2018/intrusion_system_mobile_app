@@ -452,6 +452,13 @@
       "justNow": "just now",
       "connecting": "Connecting to device…"
     },
+    "connection": {
+      "connecting": "Connecting",
+      "connected": "Connected",
+      "reconnecting": "Reconnecting",
+      "disconnected": "Disconnected",
+      "error": "Connection error"
+    },
     "switchDevice": {
       "action": "Switch device",
       "title": "Switch device"
