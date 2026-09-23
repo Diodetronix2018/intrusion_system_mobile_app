@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -50,9 +50,9 @@ export function MainScreen() {
     zones,
   } = useMainStatus();
   const {
-    armMode,
     setArmMode,
-    setArmModeFromDevice,
+    armCommandPending,
+    armLoading,
     setPartitionMode,
     partitionCommandPending,
     partitionLoading,
@@ -60,22 +60,11 @@ export function MainScreen() {
     reset,
     pendingAction,
     saving,
-  } = useMainControls(reportedPartitionMode);
+  } = useMainControls(reportedArmMode, reportedPartitionMode);
   const { events: latestEvents } = useEvents();
   const { session, switchDevice } = useSession();
   const [deviceSheetOpen, setDeviceSheetOpen] = useState(false);
   const devices = session?.devices ?? [];
-
-  // Prepopulate the Stay/Away selection from the device's own reported
-  // status, once — after that, the user's own taps (already reflected
-  // optimistically by useMainControls) stay authoritative.
-  const seededArmMode = useRef(false);
-  useEffect(() => {
-    if (!seededArmMode.current && reportedArmMode) {
-      setArmModeFromDevice(reportedArmMode);
-      seededArmMode.current = true;
-    }
-  }, [reportedArmMode, setArmModeFromDevice]);
 
   const summary = timestamp
     ? t('main.status.summary', { ago: formatAgo(t, timestamp) })
@@ -115,7 +104,7 @@ export function MainScreen() {
           ]}
         >
           <StatusCard
-            mode={armMode}
+            mode={reportedArmMode ?? 'stay'}
             summary={summary}
             online={connected}
             onSwitchDevice={
@@ -136,17 +125,19 @@ export function MainScreen() {
         >
           <ModeCard
             label={t('main.modes.stay')}
-            active={armMode === 'stay'}
-            loading={pendingAction === 'arm' && armMode !== 'stay'}
-            disabled={saving}
+            // Only ever the panel's own confirmed state (`status`) — a tap
+            // never flips this immediately, it waits for that to change.
+            active={reportedArmMode === 'stay'}
+            loading={armLoading.stay}
+            disabled={armCommandPending}
             onPress={() => runCommand(() => setArmMode('stay'))}
             glyph={HomeGlyph}
           />
           <ModeCard
             label={t('main.modes.away')}
-            active={armMode === 'away'}
-            loading={pendingAction === 'arm' && armMode !== 'away'}
-            disabled={saving}
+            active={reportedArmMode === 'away'}
+            loading={armLoading.away}
+            disabled={armCommandPending}
             onPress={() => runCommand(() => setArmMode('away'))}
             glyph={HomeAwayGlyph}
           />

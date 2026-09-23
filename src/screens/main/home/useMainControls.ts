@@ -15,9 +15,10 @@ const PARTITION_CODE: Record<PartitionMode, number> = { all: 1, part: 2 };
 export type PendingAction = 'arm' | 'mode' | 'mute' | 'reset' | null;
 
 /**
- * How long to wait for the panel to confirm an All/Part tap (via `zen`)
- * before giving up and letting the user try again.
+ * How long to wait for the panel to confirm an arm or All/Part tap (via
+ * `status`/`zen`) before giving up and letting the user try again.
  */
+const ARM_CONFIRM_TIMEOUT_MS = 15000;
 const PARTITION_CONFIRM_TIMEOUT_MS = 15000;
 
 /**
@@ -29,27 +30,38 @@ const PARTITION_CONFIRM_TIMEOUT_MS = 15000;
  *   - mute:           `{"state":{"desired":{"sil": 1}}}`
  *   - reset:          `{"state":{"desired":{"rst": 1}}}`
  *
- * Local state only changes once the publish is acknowledged, so a failed
- * command leaves the previously-active card highlighted rather than
- * optimistically flipping to a state the device never actually reached.
- *
- * All/Part goes a step further: which card is *highlighted* is never a
- * local guess at all, only ever `reportedPartitionMode` (derived from the
- * panel's own `zen` field, per zone — all 9 ones is All, any zero is Part).
- * Tapping a card doesn't flip it active immediately; it publishes, shows a
- * spinner, and leaves the highlight exactly where it was until `zen`
- * actually confirms the change (or a timeout gives up) — so the UI never
- * shows a mode the panel hasn't actually reached.
+ * Which card is *highlighted*, for both arm mode and All/Part, is never a
+ * local guess — only ever the panel's own reported state
+ * (`reportedArmMode`/`reportedPartitionMode`, from `status`/`zen`). Someone
+ * changing the mode directly on the physical panel has to show up here too,
+ * which a "seed once from the device, then the app owns it" local copy
+ * can't do — it only ever reflects taps made in this app. Tapping a card
+ * doesn't flip it active immediately either; it publishes, shows a spinner,
+ * and leaves the highlight exactly where it was until the panel's reported
+ * state actually confirms the change (or a timeout gives up).
  */
-export function useMainControls(reportedPartitionMode: PartitionMode | null) {
-  const [armMode, setArmModeState] = useState<ArmMode>('stay');
+export function useMainControls(
+  reportedArmMode: ArmMode | null,
+  reportedPartitionMode: PartitionMode | null,
+) {
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const { publish, publishing } = useIotShadowPublish(SBA_CONTROL_SHADOW);
+
+  const [pendingArmMode, setPendingArmMode] = useState<ArmMode | null>(null);
+  const armConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [pendingPartitionMode, setPendingPartitionMode] = useState<PartitionMode | null>(
     null,
   );
   const partitionConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearPendingArmMode = useCallback(() => {
+    if (armConfirmTimer.current) {
+      clearTimeout(armConfirmTimer.current);
+      armConfirmTimer.current = null;
+    }
+    setPendingArmMode(null);
+  }, []);
 
   const clearPendingPartitionMode = useCallback(() => {
     if (partitionConfirmTimer.current) {
@@ -61,6 +73,12 @@ export function useMainControls(reportedPartitionMode: PartitionMode | null) {
 
   // The panel's own reported state caught up — stop waiting.
   useEffect(() => {
+    if (pendingArmMode != null && reportedArmMode === pendingArmMode) {
+      clearPendingArmMode();
+    }
+  }, [reportedArmMode, pendingArmMode, clearPendingArmMode]);
+
+  useEffect(() => {
     if (pendingPartitionMode != null && reportedPartitionMode === pendingPartitionMode) {
       clearPendingPartitionMode();
     }
@@ -68,6 +86,7 @@ export function useMainControls(reportedPartitionMode: PartitionMode | null) {
 
   useEffect(
     () => () => {
+      if (armConfirmTimer.current) clearTimeout(armConfirmTimer.current);
       if (partitionConfirmTimer.current) clearTimeout(partitionConfirmTimer.current);
     },
     [],
@@ -77,28 +96,26 @@ export function useMainControls(reportedPartitionMode: PartitionMode | null) {
     async (mode: ArmMode) => {
       log(`COMMAND arm → ${mode} (arm: ${ARM_CODE[mode]})`);
       setPendingAction('arm');
+      setPendingArmMode(mode);
+      if (armConfirmTimer.current) clearTimeout(armConfirmTimer.current);
+      armConfirmTimer.current = setTimeout(() => {
+        armConfirmTimer.current = null;
+        setPendingArmMode(null);
+      }, ARM_CONFIRM_TIMEOUT_MS);
+
       try {
         await publish({ arm: ARM_CODE[mode] });
-        log(`COMMAND arm OK → ${mode}`);
-        setArmModeState(mode);
+        log(`COMMAND arm OK → ${mode} — waiting for status to confirm`);
       } catch (e: any) {
         log(`COMMAND arm FAILED → ${mode}:`, e?.message);
+        clearPendingArmMode();
         throw e;
       } finally {
         setPendingAction(null);
       }
     },
-    [publish],
+    [publish, clearPendingArmMode],
   );
-
-  /**
-   * Seeds `armMode` from the device's own reported status (`useMainStatus`)
-   * — no publish, so prepopulating from a live report never echoes straight
-   * back to the device as a new desired state.
-   */
-  const setArmModeFromDevice = useCallback((mode: ArmMode) => {
-    setArmModeState(mode);
-  }, []);
 
   const setPartitionMode = useCallback(
     async (mode: PartitionMode) => {
@@ -154,14 +171,18 @@ export function useMainControls(reportedPartitionMode: PartitionMode | null) {
   }, [publish]);
 
   return {
-    armMode,
     setArmMode,
-    setArmModeFromDevice,
-    setPartitionMode,
-    /** True from the tap until `zen` confirms it (or the timeout gives up) —
-     *  locks both All and Part cards, not just the tapped one. */
-    partitionCommandPending: pendingPartitionMode != null,
+    /** True from the tap until `status` confirms it (or the timeout gives
+     *  up) — locks both Stay and Away cards, not just the tapped one. */
+    armCommandPending: pendingArmMode != null,
     /** True only for the direction actually awaiting confirmation, for its spinner. */
+    armLoading: {
+      stay: pendingArmMode === 'stay',
+      away: pendingArmMode === 'away',
+    },
+    setPartitionMode,
+    /** Same guard as `armCommandPending`, for All/Part. */
+    partitionCommandPending: pendingPartitionMode != null,
     partitionLoading: {
       all: pendingPartitionMode === 'all',
       part: pendingPartitionMode === 'part',
