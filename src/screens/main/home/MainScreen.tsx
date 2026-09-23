@@ -42,23 +42,25 @@ export function MainScreen() {
   const { gutter } = useResponsive();
   const navigation = useNavigation();
   const {
-    armMode,
-    setArmMode,
-    setArmModeFromDevice,
-    partitionMode,
-    setPartitionMode,
-    mute,
-    reset,
-    pendingAction,
-    saving,
-  } = useMainControls();
-  const {
     connected,
     armMode: reportedArmMode,
+    partitionMode: reportedPartitionMode,
     timestamp,
     statuses,
     zones,
   } = useMainStatus();
+  const {
+    armMode,
+    setArmMode,
+    setArmModeFromDevice,
+    setPartitionMode,
+    partitionCommandPending,
+    partitionLoading,
+    mute,
+    reset,
+    pendingAction,
+    saving,
+  } = useMainControls(reportedPartitionMode);
   const { events: latestEvents } = useEvents();
   const { session, switchDevice } = useSession();
   const [deviceSheetOpen, setDeviceSheetOpen] = useState(false);
@@ -163,17 +165,19 @@ export function MainScreen() {
           <QuickActionCard
             label={t('main.actions.all')}
             glyph={AllGlyph}
-            active={partitionMode === 'all'}
-            loading={pendingAction === 'mode' && partitionMode !== 'all'}
-            disabled={saving}
+            // Only ever the panel's own confirmed state (`zen`) — a tap
+            // never flips this immediately, it waits for that to change.
+            active={reportedPartitionMode === 'all'}
+            loading={partitionLoading.all}
+            disabled={partitionCommandPending}
             onPress={() => runCommand(() => setPartitionMode('all'))}
           />
           <QuickActionCard
             label={t('main.actions.part')}
             glyph={PartGlyph}
-            active={partitionMode === 'part'}
-            loading={pendingAction === 'mode' && partitionMode !== 'part'}
-            disabled={saving}
+            active={reportedPartitionMode === 'part'}
+            loading={partitionLoading.part}
+            disabled={partitionCommandPending}
             onPress={() => runCommand(() => setPartitionMode('part'))}
           />
           <QuickActionCard

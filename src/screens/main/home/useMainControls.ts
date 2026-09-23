@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { SBA_CONTROL_SHADOW } from '../../../config/awsConfig';
 import { useIotShadowPublish } from '../../../utils/useIotShadowPublish';
@@ -15,6 +15,12 @@ const PARTITION_CODE: Record<PartitionMode, number> = { all: 1, part: 2 };
 export type PendingAction = 'arm' | 'mode' | 'mute' | 'reset' | null;
 
 /**
+ * How long to wait for the panel to confirm an All/Part tap (via `zen`)
+ * before giving up and letting the user try again.
+ */
+const PARTITION_CONFIRM_TIMEOUT_MS = 15000;
+
+/**
  * Main-screen live controls, published immediately on every tap (there is
  * no "Save" step here — unlike the settings screens, which batch edits) to
  * the device's `sba_control_v01` shadow:
@@ -26,12 +32,46 @@ export type PendingAction = 'arm' | 'mode' | 'mute' | 'reset' | null;
  * Local state only changes once the publish is acknowledged, so a failed
  * command leaves the previously-active card highlighted rather than
  * optimistically flipping to a state the device never actually reached.
+ *
+ * All/Part goes a step further: which card is *highlighted* is never a
+ * local guess at all, only ever `reportedPartitionMode` (derived from the
+ * panel's own `zen` field, per zone — all 9 ones is All, any zero is Part).
+ * Tapping a card doesn't flip it active immediately; it publishes, shows a
+ * spinner, and leaves the highlight exactly where it was until `zen`
+ * actually confirms the change (or a timeout gives up) — so the UI never
+ * shows a mode the panel hasn't actually reached.
  */
-export function useMainControls() {
+export function useMainControls(reportedPartitionMode: PartitionMode | null) {
   const [armMode, setArmModeState] = useState<ArmMode>('stay');
-  const [partitionMode, setPartitionModeState] = useState<PartitionMode>('all');
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const { publish, publishing } = useIotShadowPublish(SBA_CONTROL_SHADOW);
+
+  const [pendingPartitionMode, setPendingPartitionMode] = useState<PartitionMode | null>(
+    null,
+  );
+  const partitionConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearPendingPartitionMode = useCallback(() => {
+    if (partitionConfirmTimer.current) {
+      clearTimeout(partitionConfirmTimer.current);
+      partitionConfirmTimer.current = null;
+    }
+    setPendingPartitionMode(null);
+  }, []);
+
+  // The panel's own reported state caught up — stop waiting.
+  useEffect(() => {
+    if (pendingPartitionMode != null && reportedPartitionMode === pendingPartitionMode) {
+      clearPendingPartitionMode();
+    }
+  }, [reportedPartitionMode, pendingPartitionMode, clearPendingPartitionMode]);
+
+  useEffect(
+    () => () => {
+      if (partitionConfirmTimer.current) clearTimeout(partitionConfirmTimer.current);
+    },
+    [],
+  );
 
   const setArmMode = useCallback(
     async (mode: ArmMode) => {
@@ -64,18 +104,25 @@ export function useMainControls() {
     async (mode: PartitionMode) => {
       log(`COMMAND mode → ${mode} (mod: ${PARTITION_CODE[mode]})`);
       setPendingAction('mode');
+      setPendingPartitionMode(mode);
+      if (partitionConfirmTimer.current) clearTimeout(partitionConfirmTimer.current);
+      partitionConfirmTimer.current = setTimeout(() => {
+        partitionConfirmTimer.current = null;
+        setPendingPartitionMode(null);
+      }, PARTITION_CONFIRM_TIMEOUT_MS);
+
       try {
         await publish({ mod: PARTITION_CODE[mode] });
-        log(`COMMAND mode OK → ${mode}`);
-        setPartitionModeState(mode);
+        log(`COMMAND mode OK → ${mode} — waiting for zen to confirm`);
       } catch (e: any) {
         log(`COMMAND mode FAILED → ${mode}:`, e?.message);
+        clearPendingPartitionMode();
         throw e;
       } finally {
         setPendingAction(null);
       }
     },
-    [publish],
+    [publish, clearPendingPartitionMode],
   );
 
   const mute = useCallback(async () => {
@@ -110,8 +157,15 @@ export function useMainControls() {
     armMode,
     setArmMode,
     setArmModeFromDevice,
-    partitionMode,
     setPartitionMode,
+    /** True from the tap until `zen` confirms it (or the timeout gives up) —
+     *  locks both All and Part cards, not just the tapped one. */
+    partitionCommandPending: pendingPartitionMode != null,
+    /** True only for the direction actually awaiting confirmation, for its spinner. */
+    partitionLoading: {
+      all: pendingPartitionMode === 'all',
+      part: pendingPartitionMode === 'part',
+    },
     mute,
     reset,
     pendingAction,

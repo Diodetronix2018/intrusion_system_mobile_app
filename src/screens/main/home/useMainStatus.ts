@@ -3,7 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { useIotConnection } from '../../../utils/IotConnection';
 import type { SubsystemKey } from './SystemStatusCard';
 import type { SubsystemStatus } from './StatusTile';
-import type { ArmMode } from './useMainControls';
+import type { ArmMode, PartitionMode } from './useMainControls';
 import type { ZoneCondition } from './ZoneStatusCard';
 
 const log = (...args: any[]) => console.log('[Main]', ...args);
@@ -12,6 +12,12 @@ const log = (...args: any[]) => console.log('[Main]', ...args);
 export interface MainReportedStatus {
   /** 0 = Stay, 1 = Away — mirrors the `arm` field this screen publishes. */
   status?: number;
+  /**
+   * Per-zone partition inclusion, 9 entries (zones 1-8 then tamper): 1 = in
+   * the All partition, 0 = excluded (Part). Mirrors the `mod` field this
+   * screen publishes, but reported back per-zone rather than as one code.
+   */
+  zen?: number[];
   /** Per-zone health, 9 entries (zones 1-8 then tamper): 0 normal, 1 warning, 2 alarm. */
   zon?: number[];
   /**
@@ -87,6 +93,12 @@ function binaryStatus(failFlag?: number): SubsystemStatus {
 
 function tamperStatus(zon?: number[]): SubsystemStatus {
   return binaryStatus(zon?.[TAMPER_INDEX]);
+}
+
+/** All 9 zones included (all 1s) -> All; any zone excluded (any 0) -> Part. */
+function partitionModeFromZen(zen?: number[]): PartitionMode | null {
+  if (!zen || zen.length === 0) return null;
+  return zen.every(value => value === 1) ? 'all' : 'part';
 }
 
 function signalStatus(signal?: number): SubsystemStatus {
@@ -165,6 +177,7 @@ export function useMainStatus() {
   const result = useMemo(() => {
     const armMode: ArmMode | null =
       reported?.status == null ? null : reported.status === 1 ? 'away' : 'stay';
+    const partitionMode: PartitionMode | null = partitionModeFromZen(reported?.zen);
 
     const statuses: Partial<Record<SubsystemKey, SubsystemStatus>> = {
       zone: zoneAggregateStatus(reported?.zon),
@@ -194,15 +207,22 @@ export function useMainStatus() {
       },
     );
 
-    return { connected, armMode, timestamp: reported?.ts, statuses, zones };
+    return { connected, armMode, partitionMode, timestamp: reported?.ts, statuses, zones };
   }, [reported, connected]);
 
   useEffect(() => {
     if (!reported) return;
     log('REPORTED →', reported);
-    log('DERIVED STATUS → arm:', result.armMode, 'ts:', result.timestamp);
+    log(
+      'DERIVED STATUS → arm:',
+      result.armMode,
+      'partition:',
+      result.partitionMode,
+      'ts:',
+      result.timestamp,
+    );
     log('DERIVED TILES →', result.statuses);
-  }, [reported, result.armMode, result.timestamp, result.statuses]);
+  }, [reported, result.armMode, result.partitionMode, result.timestamp, result.statuses]);
 
   return result;
 }
