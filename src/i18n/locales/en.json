@@ -454,6 +454,10 @@
       "connecting": "Connecting to device…"
     },
     "connection": {
+      "reconnect": "Reconnect",
+      "bannerOffline": "Not connected to the device",
+      "bannerReconnecting": "Reconnecting to the device…",
+      "tapToReconnect": "Tap to reconnect",
       "connecting": "Connecting",
       "connected": "Connected",
       "reconnecting": "Reconnecting",

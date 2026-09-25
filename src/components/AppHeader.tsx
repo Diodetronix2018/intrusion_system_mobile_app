@@ -7,7 +7,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ConnectionStatus from '../icons/svg/connection-status.svg';
 import { UserIcon } from '../icons';
 import { useTheme } from '../theme';
-import { useIotConnection, type IotConnectionStatus } from '../utils/IotConnection';
+import {
+  useIotConnection,
+  type IotConnectionStatus,
+} from '../utils/IotConnection';
 import { useResponsive } from '../utils/responsive';
 import { Typography } from './Typography';
 
@@ -41,7 +44,9 @@ export function AppHeader() {
   const { gutter } = useResponsive();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { status: connectionStatus } = useIotConnection();
+  const { status: connectionStatus, reconnect } = useIotConnection();
+  const canReconnect =
+    connectionStatus === 'disconnected' || connectionStatus === 'error';
   const connectionColor = connectionStatusColor(connectionStatus, colors);
 
   return (
@@ -72,12 +77,20 @@ export function AppHeader() {
         {/* Colour follows the live MQTT connection — green once connected,
             amber while (re)connecting, red once it's actually dropped —
             rather than the fixed green the mark used to ship with. */}
-        <ConnectionStatus
-          width={34}
-          height={34}
-          color={connectionColor}
+        {/* Tappable only while the connection is actually down, to
+            reconnect straight away instead of waiting on the back-off. */}
+        <Pressable
+          onPress={reconnect}
+          disabled={!canReconnect}
+          hitSlop={sizing.hitSlop}
+          accessibilityRole={canReconnect ? 'button' : undefined}
           accessibilityLabel={t(`main.connection.${connectionStatus}`)}
-        />
+          accessibilityHint={
+            canReconnect ? t('main.connection.tapToReconnect') : undefined
+          }
+        >
+          <ConnectionStatus width={34} height={34} color={connectionColor} />
+        </Pressable>
 
         <Pressable
           onPress={() => navigation.navigate('Profile')}

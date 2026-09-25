@@ -454,6 +454,10 @@
       "connecting": "डिवाइस से कनेक्ट हो रहा है…"
     },
     "connection": {
+      "reconnect": "फिर से कनेक्ट करें",
+      "bannerOffline": "डिवाइस से कनेक्ट नहीं है",
+      "bannerReconnecting": "डिवाइस से फिर से कनेक्ट हो रहा है…",
+      "tapToReconnect": "फिर से कनेक्ट करने के लिए टैप करें",
       "connecting": "कनेक्ट हो रहा है",
       "connected": "कनेक्टेड",
       "reconnecting": "पुनः कनेक्ट हो रहा है",

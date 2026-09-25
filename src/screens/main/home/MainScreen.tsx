@@ -7,8 +7,10 @@ import Toast from 'react-native-toast-message';
 import { OptionSheet, Screen } from '../../../components';
 import { useSession } from '../../../session/SessionProvider';
 import { useTheme } from '../../../theme';
+import { useIotConnection } from '../../../utils/IotConnection';
 import { useResponsive } from '../../../utils/responsive';
 import { useEvents } from '../events';
+import { ConnectionBanner } from './ConnectionBanner';
 import { HomeAwayGlyph, HomeGlyph } from './ModeGlyphs';
 import { ModeCard } from './ModeCard';
 import { QuickActionCard } from './QuickActionCard';
@@ -63,6 +65,7 @@ export function MainScreen() {
   } = useMainControls(reportedArmMode, reportedPartitionMode);
   const { events: latestEvents } = useEvents();
   const { requireStayMode } = useEditGuard();
+  const { reconnect } = useIotConnection();
   const { session, switchDevice } = useSession();
   const [deviceSheetOpen, setDeviceSheetOpen] = useState(false);
   const devices = session?.devices ?? [];
@@ -71,11 +74,22 @@ export function MainScreen() {
     ? t('main.status.summary', { ago: formatAgo(t, timestamp) })
     : t('main.status.connecting');
 
+  // A command that failed because the device connection is down gets a
+  // tap-to-reconnect toast instead of a dead end.
   const reportError = (err: unknown) => {
+    const offline = !connected;
     Toast.show({
       type: 'error',
       text1: t('common.configurationFailed'),
-      text2: (err as any)?.message,
+      text2: offline
+        ? t('main.connection.tapToReconnect')
+        : (err as any)?.message,
+      onPress: offline
+        ? () => {
+            Toast.hide();
+            reconnect();
+          }
+        : undefined,
     });
   };
 
@@ -143,6 +157,11 @@ export function MainScreen() {
             }
           />
         </View>
+
+        {/* only renders while the device connection is down */}
+        <ConnectionBanner
+          style={{ marginHorizontal: gutter, marginTop: spacing.lg }}
+        />
 
         <View
           style={[

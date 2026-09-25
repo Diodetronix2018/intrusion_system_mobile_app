@@ -454,6 +454,10 @@
       "connecting": "சாதனத்துடன் இணைக்கிறது…"
     },
     "connection": {
+      "reconnect": "மீண்டும் இணை",
+      "bannerOffline": "சாதனத்துடன் இணைக்கப்படவில்லை",
+      "bannerReconnecting": "சாதனத்துடன் மீண்டும் இணைக்கிறது…",
+      "tapToReconnect": "மீண்டும் இணைக்க தட்டவும்",
       "connecting": "இணைக்கிறது",
       "connected": "இணைக்கப்பட்டது",
       "reconnecting": "மீண்டும் இணைக்கிறது",
