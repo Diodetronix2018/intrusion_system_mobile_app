@@ -7,7 +7,7 @@ import React, {
 } from 'react';
 import { useColorScheme } from 'react-native';
 
-import { darkColors, lightColors, ThemeColors } from './colors';
+import { lightColors, ThemeColors } from './colors';
 import {
   cardElevation,
   elevation,
@@ -46,16 +46,22 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-function buildTheme(isDark: boolean): Theme {
-  const colors = isDark ? darkColors : lightColors;
+/**
+ * Always builds the light palette — Light/Dark/System stay selectable (the
+ * preference is still stored) but currently render identically, per product
+ * decision to hold off shipping a distinct dark appearance. `darkColors`
+ * (colors.ts) is kept intact for when that changes.
+ */
+function buildTheme(): Theme {
+  const colors = lightColors;
   return {
     ...tokens,
     colors,
-    isDark,
+    isDark: false,
     shadow: elevation(colors.shadow),
-    cardShadow: cardElevation(colors.cardShadow, isDark),
-    layeredShadow: layeredCardShadow(isDark),
-    softShadow: subtleCardShadow(isDark),
+    cardShadow: cardElevation(colors.cardShadow, false),
+    layeredShadow: layeredCardShadow(false),
+    softShadow: subtleCardShadow(false),
   };
 }
 
@@ -78,7 +84,7 @@ export function ThemeProvider({
 
   const value = useMemo<ThemeContextValue>(
     () => ({
-      theme: buildTheme(resolvedMode === 'dark'),
+      theme: buildTheme(),
       mode,
       resolvedMode,
       setMode,
