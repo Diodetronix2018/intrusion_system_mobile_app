@@ -5,6 +5,7 @@ import Toast from 'react-native-toast-message';
 
 import { Button, Screen, ScreenHeader } from '../../../../components';
 import { useTheme } from '../../../../theme';
+import { useEditGuard } from '../../useEditGuard';
 import { ToggleRow, ZoneToggleCard } from './ZoneToggleCard';
 import { TAMPER_INDEX, usePartSetting } from './usePartSetting';
 
@@ -12,6 +13,7 @@ export function PartSettingScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { values, toggle, save, saving } = usePartSetting();
+  const { requireStayMode } = useEditGuard();
 
   const rows: ToggleRow[] = values.map((enabled, index) => ({
     key: String(index),
@@ -25,6 +27,7 @@ export function PartSettingScreen() {
   }));
 
   const handleSave = async () => {
+    if (requireStayMode()) return;
     try {
       await save();
       Toast.show({ type: 'success', text1: t('common.configurationSaved') });

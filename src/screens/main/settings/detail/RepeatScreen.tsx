@@ -14,6 +14,7 @@ import {
 } from '../../../../components';
 import { UsersIcon, Volume2Icon } from '../../../../icons';
 import { useTheme } from '../../../../theme';
+import { useEditGuard } from '../../useEditGuard';
 import {
   REPEAT_COUNTS,
   RepeatCount,
@@ -25,6 +26,7 @@ export function RepeatScreen() {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
   const { settings, set, save, saving } = useRepeatSettings();
+  const { requireStayMode } = useEditGuard();
 
   // "1 Time" / "2 Times" — i18next picks the plural form per language
   const options: ChipOption<RepeatCount>[] = REPEAT_COUNTS.map(count => ({
@@ -35,15 +37,14 @@ export function RepeatScreen() {
   const cards: { key: RepeatKey; icon: React.ReactNode }[] = [
     {
       key: 'call',
-      icon: (
-        <Icon name="call-outline" size={20} color={colors.onPrimary} />
-      ),
+      icon: <Icon name="call-outline" size={20} color={colors.onPrimary} />,
     },
     { key: 'voice', icon: <Volume2Icon size={20} color={colors.onPrimary} /> },
     { key: 'admin', icon: <UsersIcon size={20} color={colors.onPrimary} /> },
   ];
 
   const handleSave = async () => {
+    if (requireStayMode()) return;
     try {
       await save();
       Toast.show({ type: 'success', text1: t('common.configurationSaved') });

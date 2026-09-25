@@ -198,6 +198,7 @@
     "configurationSaved": "कॉन्फ़िगरेशन सहेजा गया",
     "configurationFailed": "कॉन्फ़िगरेशन सहेज नहीं सका",
     "commandSent": "कमांड भेजा गया",
+    "stayModeRequired": "आप सेटिंग्स केवल Stay मोड में बदल सकते हैं",
     "seconds": "सेकंड",
     "minutes": "मिनट",
     "viewAll": "सभी देखें"
@@ -346,7 +347,7 @@
     },
     "district": {
       "label": "जिला",
-      "placeholder": "जिला दर्ज करें"
+      "placeholder": "जिला चुनें"
     },
     "branchName": {
       "label": "शाखा का नाम",

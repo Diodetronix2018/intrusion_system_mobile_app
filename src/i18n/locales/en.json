@@ -198,6 +198,7 @@
     "configurationSaved": "Configuration saved",
     "configurationFailed": "Could not save configuration",
     "commandSent": "Command sent",
+    "stayModeRequired": "You can change settings only in Stay mode",
     "seconds": "sec",
     "minutes": "min",
     "viewAll": "View all"
@@ -346,7 +347,7 @@
     },
     "district": {
       "label": "District",
-      "placeholder": "Enter district"
+      "placeholder": "Select district"
     },
     "branchName": {
       "label": "Branch Name",

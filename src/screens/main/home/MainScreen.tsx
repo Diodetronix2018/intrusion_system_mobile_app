@@ -22,6 +22,7 @@ import { StatusCard } from './StatusCard';
 import { SystemStatusCard } from './SystemStatusCard';
 import type { SubsystemKey } from './SystemStatusCard';
 import { LatestActivityCard } from './LatestActivityCard';
+import { useEditGuard } from '../useEditGuard';
 import { useMainControls } from './useMainControls';
 import { useMainStatus } from './useMainStatus';
 
@@ -61,6 +62,7 @@ export function MainScreen() {
     saving,
   } = useMainControls(reportedArmMode, reportedPartitionMode);
   const { events: latestEvents } = useEvents();
+  const { requireStayMode } = useEditGuard();
   const { session, switchDevice } = useSession();
   const [deviceSheetOpen, setDeviceSheetOpen] = useState(false);
   const devices = session?.devices ?? [];
@@ -93,14 +95,23 @@ export function MainScreen() {
         navigation.navigate('ZoneDetails');
         return;
       case 'battery':
-        navigation.navigate('Tabs', { screen: 'Events', params: { filter: 'battery' } });
+        navigation.navigate('Tabs', {
+          screen: 'Events',
+          params: { filter: 'battery' },
+        });
         return;
       case 'ac':
       case 'signal':
-        navigation.navigate('Tabs', { screen: 'Events', params: { filter: 'powerFail' } });
+        navigation.navigate('Tabs', {
+          screen: 'Events',
+          params: { filter: 'powerFail' },
+        });
         return;
       case 'hooter':
-        navigation.navigate('Tabs', { screen: 'Events', params: { filter: 'hooterFail' } });
+        navigation.navigate('Tabs', {
+          screen: 'Events',
+          params: { filter: 'hooterFail' },
+        });
         return;
     }
   };
@@ -203,12 +214,18 @@ export function MainScreen() {
             glyph={ResetGlyph}
             loading={pendingAction === 'reset'}
             disabled={saving}
-            onPress={() => runCommand(reset)}
+            onPress={() => {
+              if (requireStayMode()) return;
+              runCommand(reset);
+            }}
           />
         </View>
 
         <View style={{ paddingHorizontal: gutter, paddingTop: spacing.xl }}>
-          <SystemStatusCard statuses={statuses} onPressTile={handlePressSystemTile} />
+          <SystemStatusCard
+            statuses={statuses}
+            onPressTile={handlePressSystemTile}
+          />
         </View>
 
         <View style={{ paddingHorizontal: gutter, paddingTop: spacing.lg }}>

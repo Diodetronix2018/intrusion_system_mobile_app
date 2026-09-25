@@ -13,14 +13,17 @@ import {
   Typography,
 } from '../../../../components';
 import { useTheme } from '../../../../theme';
+import { useEditGuard } from '../../useEditGuard';
 import { useHooterNotify } from './useHooterNotify';
 
 export function HooterNotifyScreen() {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
   const { enabled, setEnabled, save, saving } = useHooterNotify();
+  const { requireStayMode } = useEditGuard();
 
   const handleSave = async () => {
+    if (requireStayMode()) return;
     try {
       await save();
       Toast.show({ type: 'success', text1: t('common.configurationSaved') });
@@ -65,7 +68,9 @@ export function HooterNotifyScreen() {
 
         <FeatureCard
           shadow="soft"
-          icon={<Icon name="megaphone-outline" size={20} color={colors.onPrimary} />}
+          icon={
+            <Icon name="megaphone-outline" size={20} color={colors.onPrimary} />
+          }
           title={t('hooterNotify.title')}
           description={t('hooterNotify.description')}
           trailing={

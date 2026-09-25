@@ -16,14 +16,17 @@ import {
 } from '../../../../components';
 import { InfoIcon } from '../../../../icons';
 import { useTheme } from '../../../../theme';
+import { useEditGuard } from '../../useEditGuard';
 import { useAutoArm } from './useAutoArm';
 
 export function AutoArmScreen() {
   const { t } = useTranslation();
   const { colors, radius, spacing, softShadow } = useTheme();
   const { enabled, setEnabled, time, setTime, save, saving } = useAutoArm();
+  const { requireStayMode } = useEditGuard();
 
   const handleSave = async () => {
+    if (requireStayMode()) return;
     try {
       await save();
       Toast.show({ type: 'success', text1: t('common.configurationSaved') });
@@ -98,37 +101,38 @@ export function AutoArmScreen() {
           }
         />
 
-        {enabled && card(
-          <>
-            <Typography
-              variant="captionBold"
-              size={16}
-              align="left"
-              color={colors.primary}
-            >
-              {t('autoArm.setTime')}
-            </Typography>
-
-            <TimePicker
-              value={time}
-              onChange={setTime}
-              accessibilityLabel={t('autoArm.setTime')}
-            />
-
-            <View style={[styles.info, { gap: spacing.sm }]}>
-              <InfoIcon size={14} color={colors.textSecondary} />
+        {enabled &&
+          card(
+            <>
               <Typography
-                variant="caption"
-                size={12}
+                variant="captionBold"
+                size={16}
                 align="left"
-                color={colors.textSecondary}
-                style={styles.infoText}
+                color={colors.primary}
               >
-                {t('autoArm.info', { time: formatTime12(time) })}
+                {t('autoArm.setTime')}
               </Typography>
-            </View>
-          </>,
-        )}
+
+              <TimePicker
+                value={time}
+                onChange={setTime}
+                accessibilityLabel={t('autoArm.setTime')}
+              />
+
+              <View style={[styles.info, { gap: spacing.sm }]}>
+                <InfoIcon size={14} color={colors.textSecondary} />
+                <Typography
+                  variant="caption"
+                  size={12}
+                  align="left"
+                  color={colors.textSecondary}
+                  style={styles.infoText}
+                >
+                  {t('autoArm.info', { time: formatTime12(time) })}
+                </Typography>
+              </View>
+            </>,
+          )}
       </Screen>
     </View>
   );

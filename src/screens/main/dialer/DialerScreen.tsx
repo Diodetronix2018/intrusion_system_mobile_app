@@ -6,6 +6,7 @@ import Toast from 'react-native-toast-message';
 import { Screen, Typography } from '../../../components';
 import { PlusIcon } from '../../../icons';
 import { useTheme } from '../../../theme';
+import { useEditGuard } from '../useEditGuard';
 import { DialerCard } from './DialerCard';
 import { DialerEntrySheet } from './DialerEntrySheet';
 import { DialerEntryInput, MAX_DIALER_ENTRIES } from './types';
@@ -31,6 +32,7 @@ export function DialerScreen() {
 
   // null = the sheet is closed; ADDING = adding; any other number = editing that slot
   const [editingSlot, setEditingSlot] = useState<number | null>(null);
+  const { requireStayMode } = useEditGuard();
 
   const editing =
     editingSlot !== null && editingSlot !== ADDING
@@ -46,6 +48,7 @@ export function DialerScreen() {
   };
 
   const handleSheetSubmit = async (values: DialerEntryInput) => {
+    if (requireStayMode()) return;
     try {
       if (editing) {
         await update(editing.slot, values);
@@ -61,17 +64,23 @@ export function DialerScreen() {
   };
 
   const confirmDelete = (slot: number, phone: string) => {
-    Alert.alert(t('dialer.deleteNumber'), t('dialer.confirmDelete', { phone }), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('common.delete'),
-        style: 'destructive',
-        onPress: () => remove(slot).catch(reportError),
-      },
-    ]);
+    if (requireStayMode()) return;
+    Alert.alert(
+      t('dialer.deleteNumber'),
+      t('dialer.confirmDelete', { phone }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: () => remove(slot).catch(reportError),
+        },
+      ],
+    );
   };
 
   const confirmDeleteAll = () => {
+    if (requireStayMode()) return;
     Alert.alert(t('dialer.deleteAll'), t('dialer.confirmDeleteAll'), [
       { text: t('common.cancel'), style: 'cancel' },
       {
@@ -114,14 +123,19 @@ export function DialerScreen() {
           entry={entry}
           index={entry.slot + 1}
           disabled={saving}
-          onEdit={() => setEditingSlot(entry.slot)}
+          onEdit={() => {
+            if (requireStayMode()) return;
+            setEditingSlot(entry.slot);
+          }}
           onDelete={() => confirmDelete(entry.slot, entry.phone)}
-          onMethodChange={method =>
-            setMethod(entry.slot, method).catch(reportError)
-          }
-          onAlertChange={alert =>
-            setAlert(entry.slot, alert).catch(reportError)
-          }
+          onMethodChange={method => {
+            if (requireStayMode()) return;
+            setMethod(entry.slot, method).catch(reportError);
+          }}
+          onAlertChange={alert => {
+            if (requireStayMode()) return;
+            setAlert(entry.slot, alert).catch(reportError);
+          }}
         />
       ))}
 
@@ -135,7 +149,10 @@ export function DialerScreen() {
         </Typography>
       ) : (
         <Pressable
-          onPress={() => setEditingSlot(ADDING)}
+          onPress={() => {
+            if (requireStayMode()) return;
+            setEditingSlot(ADDING);
+          }}
           disabled={saving}
           accessibilityRole="button"
           accessibilityLabel={t('dialer.addNumber')}
@@ -170,7 +187,10 @@ export function DialerScreen() {
           accessibilityRole="button"
           style={({ pressed }) => [
             styles.deleteAll,
-            { paddingVertical: spacing.lg, opacity: pressed || saving ? 0.6 : 1 },
+            {
+              paddingVertical: spacing.lg,
+              opacity: pressed || saving ? 0.6 : 1,
+            },
           ]}
         >
           <Typography variant="cardTitle" size={14} color={colors.error}>

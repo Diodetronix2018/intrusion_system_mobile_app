@@ -3,8 +3,14 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
 
-import { Button, Screen, ScreenHeader, Typography } from '../../../../components';
+import {
+  Button,
+  Screen,
+  ScreenHeader,
+  Typography,
+} from '../../../../components';
 import { useTheme } from '../../../../theme';
+import { useEditGuard } from '../../useEditGuard';
 import { ToggleRow, ZoneToggleCard } from './ZoneToggleCard';
 import { useRelaySettings } from './useRelaySettings';
 
@@ -13,6 +19,7 @@ export function RelayScreen() {
   const { colors, spacing } = useTheme();
   const { values, toggleZone, selectAll, isAllSelected, save, saving } =
     useRelaySettings();
+  const { requireStayMode } = useEditGuard();
 
   const rows: ToggleRow[] = values.map((enabled, index) => ({
     key: String(index),
@@ -23,6 +30,7 @@ export function RelayScreen() {
   }));
 
   const handleSave = async () => {
+    if (requireStayMode()) return;
     try {
       await save();
       Toast.show({ type: 'success', text1: t('common.configurationSaved') });

@@ -7,7 +7,13 @@ import { useTheme } from '../../../theme';
 /** Height the glyphs render at inside the card. */
 const GLYPH_HEIGHT = 37.8;
 
-/** Icon over label, filled with brand when active. */
+/**
+ * Icon over label — filled with brand for whichever card is NOT the
+ * current mode, muted for the one that is. That's deliberately inverted
+ * from a normal toggle (where the selected option lights up): the current
+ * mode is already stated in the StatusCard banner above, so this row
+ * highlights the *other* option instead, as the switch-to affordance.
+ */
 export function ModeCard({
   label,
   glyph: Glyph,
@@ -22,6 +28,7 @@ export function ModeCard({
    * colour from `active` and mounts it, so it is not recreated each render.
    */
   glyph: React.ComponentType<{ size: number; color: string }>;
+  /** Whether this card represents the panel's current mode. */
   active: boolean;
   /** True while this card's own publish is in flight — swaps the glyph for a spinner. */
   loading?: boolean;
@@ -44,7 +51,7 @@ export function ModeCard({
         styles.card,
         {
           gap: spacing.xs,
-          backgroundColor: active ? colors.primary : colors.accentWell,
+          backgroundColor: active ? colors.accentWell : colors.primary,
           opacity: disabled && !loading ? 0.6 : pressed ? 0.85 : 1,
         },
       ]}

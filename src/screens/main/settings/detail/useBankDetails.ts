@@ -21,6 +21,48 @@ export const BRANCH_NAME_MAX_LENGTH = 50;
 export const MANAGER_NAME_MAX_LENGTH = 30;
 export const EMAIL_MAX_LENGTH = 60;
 
+/** District picks from this fixed list — the device is Tamil Nadu-only. */
+export const TAMIL_NADU_DISTRICTS = [
+  'Ariyalur',
+  'Chengalpattu',
+  'Chennai',
+  'Coimbatore',
+  'Cuddalore',
+  'Dharmapuri',
+  'Dindigul',
+  'Erode',
+  'Kallakurichi',
+  'Kanchipuram',
+  'Kanyakumari',
+  'Karur',
+  'Krishnagiri',
+  'Madurai',
+  'Mayiladuthurai',
+  'Nagapattinam',
+  'Namakkal',
+  'Nilgiris',
+  'Perambalur',
+  'Pudukkottai',
+  'Ramanathapuram',
+  'Ranipet',
+  'Salem',
+  'Sivaganga',
+  'Tenkasi',
+  'Thanjavur',
+  'Theni',
+  'Thoothukudi',
+  'Tiruchirappalli',
+  'Tirunelveli',
+  'Tirupathur',
+  'Tiruppur',
+  'Tiruvallur',
+  'Tiruvannamalai',
+  'Tiruvarur',
+  'Vellore',
+  'Viluppuram',
+  'Virudhunagar',
+] as const;
+
 const DEFAULTS: BankDetails = {
   branchCode: '',
   district: '',
@@ -95,7 +137,8 @@ export function useBankDetails(initial?: Partial<BankDetails>) {
   const { publish, publishing } = useIotShadowPublish(SBA_CONFIG_SHADOW);
 
   const update = useCallback(
-    (patch: Partial<BankDetails>) => setDetails(prev => ({ ...prev, ...patch })),
+    (patch: Partial<BankDetails>) =>
+      setDetails(prev => ({ ...prev, ...patch })),
     [setDetails],
   );
 

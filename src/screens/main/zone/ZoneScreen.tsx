@@ -24,6 +24,7 @@ import {
   ShieldXIcon,
 } from '../../../icons';
 import { useTheme, type Theme } from '../../../theme';
+import { useEditGuard } from '../useEditGuard';
 import { ChoiceCard, ChoiceRow } from './ChoiceCard';
 import { ZoneSelector } from './ZoneSelector';
 import {
@@ -219,8 +220,10 @@ export function ZoneScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
   const { colors, spacing } = theme;
-  const { index, config, previous, next, update, save, saving } = useZoneConfig();
+  const { index, config, previous, next, update, save, saving } =
+    useZoneConfig();
   const [locationError, setLocationError] = useState<string | undefined>();
+  const { requireStayMode } = useEditGuard();
 
   // the third pair uses the icon as a radio indicator: whichever card is
   // selected shows the ticked circle, the other an empty one
@@ -238,6 +241,7 @@ export function ZoneScreen() {
   });
 
   const handleSave = async () => {
+    if (requireStayMode()) return;
     if (config.location.trim().length < LOCATION_MIN_LENGTH) {
       setLocationError(t('zone.locationRequired'));
       return;

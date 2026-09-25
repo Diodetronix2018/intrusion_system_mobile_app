@@ -14,6 +14,7 @@ import {
 } from '../../../../components';
 import { AlertTriangleIcon, BellIcon } from '../../../../icons';
 import { useTheme, type Theme } from '../../../../theme';
+import { useEditGuard } from '../../useEditGuard';
 import {
   SILENCE_TIMER_MAX,
   SILENCE_TIMER_MIN,
@@ -76,8 +77,10 @@ export function SilenceScreen() {
   const theme = useTheme();
   const { colors, spacing } = theme;
   const { settings, setMode, setTimer, save, saving } = useSilenceSettings();
+  const { requireStayMode } = useEditGuard();
 
   const handleSave = async () => {
+    if (requireStayMode()) return;
     try {
       await save();
       Toast.show({ type: 'success', text1: t('common.configurationSaved') });
@@ -122,8 +125,12 @@ export function SilenceScreen() {
             trailing={
               <ToggleSwitch
                 value={settings.faultMode === 'manual'}
-                onValueChange={next => setMode('fault', next ? 'manual' : 'auto')}
-                accessibilityLabel={`${t('silence.fault.title')} ${t('silence.manual')}`}
+                onValueChange={next =>
+                  setMode('fault', next ? 'manual' : 'auto')
+                }
+                accessibilityLabel={`${t('silence.fault.title')} ${t(
+                  'silence.manual',
+                )}`}
               />
             }
           />
@@ -137,8 +144,12 @@ export function SilenceScreen() {
             trailing={
               <ToggleSwitch
                 value={settings.faultMode === 'auto'}
-                onValueChange={next => setMode('fault', next ? 'auto' : 'manual')}
-                accessibilityLabel={`${t('silence.fault.title')} ${t('silence.auto')}`}
+                onValueChange={next =>
+                  setMode('fault', next ? 'auto' : 'manual')
+                }
+                accessibilityLabel={`${t('silence.fault.title')} ${t(
+                  'silence.auto',
+                )}`}
               />
             }
           />
@@ -158,7 +169,9 @@ export function SilenceScreen() {
                     min={SILENCE_TIMER_MIN}
                     max={SILENCE_TIMER_MAX}
                     unit={t('common.minutes')}
-                    accessibilityLabel={`${t('silence.fault.title')} ${t('silence.timer.title')}`}
+                    accessibilityLabel={`${t('silence.fault.title')} ${t(
+                      'silence.timer.title',
+                    )}`}
                   />
                 }
               />
@@ -178,8 +191,12 @@ export function SilenceScreen() {
             trailing={
               <ToggleSwitch
                 value={settings.alarmMode === 'manual'}
-                onValueChange={next => setMode('alarm', next ? 'manual' : 'auto')}
-                accessibilityLabel={`${t('silence.alarm.title')} ${t('silence.manual')}`}
+                onValueChange={next =>
+                  setMode('alarm', next ? 'manual' : 'auto')
+                }
+                accessibilityLabel={`${t('silence.alarm.title')} ${t(
+                  'silence.manual',
+                )}`}
               />
             }
           />
@@ -193,8 +210,12 @@ export function SilenceScreen() {
             trailing={
               <ToggleSwitch
                 value={settings.alarmMode === 'auto'}
-                onValueChange={next => setMode('alarm', next ? 'auto' : 'manual')}
-                accessibilityLabel={`${t('silence.alarm.title')} ${t('silence.auto')}`}
+                onValueChange={next =>
+                  setMode('alarm', next ? 'auto' : 'manual')
+                }
+                accessibilityLabel={`${t('silence.alarm.title')} ${t(
+                  'silence.auto',
+                )}`}
               />
             }
           />
@@ -214,7 +235,9 @@ export function SilenceScreen() {
                     min={SILENCE_TIMER_MIN}
                     max={SILENCE_TIMER_MAX}
                     unit={t('common.minutes')}
-                    accessibilityLabel={`${t('silence.alarm.title')} ${t('silence.timer.title')}`}
+                    accessibilityLabel={`${t('silence.alarm.title')} ${t(
+                      'silence.timer.title',
+                    )}`}
                   />
                 }
               />

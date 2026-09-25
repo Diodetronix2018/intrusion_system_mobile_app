@@ -1,9 +1,10 @@
 import { useEffect, useMemo } from 'react';
 
 import { useIotConnection } from '../../../utils/IotConnection';
+import { useArmMode } from '../useArmMode';
 import type { SubsystemKey } from './SystemStatusCard';
 import type { SubsystemStatus } from './StatusTile';
-import type { ArmMode, PartitionMode } from './useMainControls';
+import type { PartitionMode } from './useMainControls';
 import type { ZoneCondition } from './ZoneStatusCard';
 
 const log = (...args: any[]) => console.log('[Main]', ...args);
@@ -154,7 +155,10 @@ function zoneMode(value?: number): ZoneMode | undefined {
  * real location name — the panel sends that for any zone nobody has wired
  * up in Part Setting yet.
  */
-function normalizeZoneLocation(raw?: string): { location: string; configured: boolean } {
+function normalizeZoneLocation(raw?: string): {
+  location: string;
+  configured: boolean;
+} {
   const location = (raw ?? '').trim();
   const configured = location.length > 0 && location.toLowerCase() !== 'empty';
   return { location, configured };
@@ -169,15 +173,20 @@ function normalizeZoneLocation(raw?: string): { location: string; configured: bo
 export function useMainStatus() {
   const { controlReported, connected, status } = useIotConnection();
   const reported = controlReported as MainReportedStatus | null;
+  const armMode = useArmMode();
 
   useEffect(() => {
-    log('CONNECTION STATUS →', status, connected ? '(connected)' : '(not connected)');
+    log(
+      'CONNECTION STATUS →',
+      status,
+      connected ? '(connected)' : '(not connected)',
+    );
   }, [status, connected]);
 
   const result = useMemo(() => {
-    const armMode: ArmMode | null =
-      reported?.status == null ? null : reported.status === 1 ? 'away' : 'stay';
-    const partitionMode: PartitionMode | null = partitionModeFromZen(reported?.zen);
+    const partitionMode: PartitionMode | null = partitionModeFromZen(
+      reported?.zen,
+    );
 
     const statuses: Partial<Record<SubsystemKey, SubsystemStatus>> = {
       zone: zoneAggregateStatus(reported?.zon),
@@ -192,7 +201,9 @@ export function useMainStatus() {
     const zones: MainZoneEntry[] = Array.from(
       { length: ZONE_LINE_COUNT },
       (_, index) => {
-        const { location, configured } = normalizeZoneLocation(reported?.zloc?.[index]);
+        const { location, configured } = normalizeZoneLocation(
+          reported?.zloc?.[index],
+        );
         const rawValue = reported?.zon?.[index];
         const isTamper = index === TAMPER_INDEX;
         return {
@@ -200,15 +211,24 @@ export function useMainStatus() {
           isTamper,
           location,
           configured,
-          status: isTamper ? tamperCondition(rawValue) : zoneCondition(rawValue),
+          status: isTamper
+            ? tamperCondition(rawValue)
+            : zoneCondition(rawValue),
           rawValue: isTamper ? undefined : rawValue,
           mode: zoneMode(reported?.zmd?.[index]),
         };
       },
     );
 
-    return { connected, armMode, partitionMode, timestamp: reported?.ts, statuses, zones };
-  }, [reported, connected]);
+    return {
+      connected,
+      armMode,
+      partitionMode,
+      timestamp: reported?.ts,
+      statuses,
+      zones,
+    };
+  }, [reported, connected, armMode]);
 
   useEffect(() => {
     if (!reported) return;
@@ -222,7 +242,13 @@ export function useMainStatus() {
       result.timestamp,
     );
     log('DERIVED TILES →', result.statuses);
-  }, [reported, result.armMode, result.partitionMode, result.timestamp, result.statuses]);
+  }, [
+    reported,
+    result.armMode,
+    result.partitionMode,
+    result.timestamp,
+    result.statuses,
+  ]);
 
   return result;
 }

@@ -1,5 +1,12 @@
 import React from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CheckIcon } from '../icons';
@@ -38,6 +45,10 @@ export function OptionSheet<T extends string>({
   const { colors, radius, spacing } = useTheme();
   const { gutter, contentMaxWidth } = useResponsive();
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  // caps a long list (e.g. a state's districts) to a scrollable pane instead
+  // of pushing off the bottom of the screen; short lists just render smaller
+  const listMaxHeight = windowHeight * 0.5;
 
   return (
     <Modal
@@ -82,54 +93,60 @@ export function OptionSheet<T extends string>({
             {title}
           </Typography>
 
-          {options.map((option, index) => {
-            const isSelected = option.value === selected;
-            return (
-              <Pressable
-                key={option.value}
-                onPress={() => {
-                  onSelect(option.value);
-                  onClose();
-                }}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: isSelected }}
-                style={({ pressed }) => [
-                  styles.option,
-                  { paddingVertical: spacing.lg, gap: spacing.md },
-                  index > 0 && {
-                    borderTopWidth: StyleSheet.hairlineWidth,
-                    borderTopColor: colors.border,
-                  },
-                  pressed && { opacity: 0.6 },
-                ]}
-              >
-                <View style={styles.optionText}>
-                  <Typography
-                    variant="cardTitle"
-                    weight={isSelected ? '700' : '400'}
-                    align="left"
-                    color={colors.text}
-                    numberOfLines={1}
-                  >
-                    {option.label}
-                  </Typography>
-                  {!!option.hint && (
+          <ScrollView
+            style={{ maxHeight: listMaxHeight }}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            {options.map((option, index) => {
+              const isSelected = option.value === selected;
+              return (
+                <Pressable
+                  key={option.value}
+                  onPress={() => {
+                    onSelect(option.value);
+                    onClose();
+                  }}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: isSelected }}
+                  style={({ pressed }) => [
+                    styles.option,
+                    { paddingVertical: spacing.lg, gap: spacing.md },
+                    index > 0 && {
+                      borderTopWidth: StyleSheet.hairlineWidth,
+                      borderTopColor: colors.border,
+                    },
+                    pressed && { opacity: 0.6 },
+                  ]}
+                >
+                  <View style={styles.optionText}>
                     <Typography
-                      variant="cardSubtitle"
+                      variant="cardTitle"
+                      weight={isSelected ? '700' : '400'}
                       align="left"
-                      color={colors.textSecondary}
+                      color={colors.text}
                       numberOfLines={1}
-                      style={{ marginTop: spacing.xs }}
                     >
-                      {option.hint}
+                      {option.label}
                     </Typography>
-                  )}
-                </View>
+                    {!!option.hint && (
+                      <Typography
+                        variant="cardSubtitle"
+                        align="left"
+                        color={colors.textSecondary}
+                        numberOfLines={1}
+                        style={{ marginTop: spacing.xs }}
+                      >
+                        {option.hint}
+                      </Typography>
+                    )}
+                  </View>
 
-                {isSelected && <CheckIcon size={20} color={colors.primary} />}
-              </Pressable>
-            );
-          })}
+                  {isSelected && <CheckIcon size={20} color={colors.primary} />}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
         </View>
       </View>
     </Modal>

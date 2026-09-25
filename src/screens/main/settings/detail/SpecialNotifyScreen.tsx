@@ -15,16 +15,14 @@ import {
 } from '../../../../components';
 import { PlugIcon, UsersIcon } from '../../../../icons';
 import { useTheme } from '../../../../theme';
-import {
-  USER_GROUPS,
-  UserGroup,
-  useSpecialNotify,
-} from './useSpecialNotify';
+import { useEditGuard } from '../../useEditGuard';
+import { USER_GROUPS, UserGroup, useSpecialNotify } from './useSpecialNotify';
 
 export function SpecialNotifyScreen() {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
   const { settings, setAlert, setUserGroup, save, saving } = useSpecialNotify();
+  const { requireStayMode } = useEditGuard();
 
   const groupOptions: ChipOption<UserGroup>[] = USER_GROUPS.map(group => ({
     value: group,
@@ -32,6 +30,7 @@ export function SpecialNotifyScreen() {
   }));
 
   const handleSave = async () => {
+    if (requireStayMode()) return;
     try {
       await save();
       Toast.show({ type: 'success', text1: t('common.configurationSaved') });
