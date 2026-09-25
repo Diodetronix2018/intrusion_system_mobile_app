@@ -20,11 +20,16 @@ export type { EventItem };
  * single row can produce several, e.g. one per zone in alarm), and applies
  * the active category filter plus a text search over each card's own
  * title/subtitle — capping the result to the 10 most recent.
+ *
+ * `initialFilter` seeds the category chip (e.g. arriving from the Main
+ * screen's Hooter tile with `hooterFail` preselected) — only read once, on
+ * mount; see `EventsScreen` for how a later navigation while already
+ * mounted re-applies it.
  */
-export function useEvents() {
+export function useEvents(initialFilter?: EventFilter) {
   const { t } = useTranslation();
   const { rows, loading, error } = useEventsTelemetry();
-  const [filter, setFilter] = useState<EventFilter>('all');
+  const [filter, setFilter] = useState<EventFilter>(initialFilter ?? 'all');
   const [query, setQuery] = useState('');
 
   const items = useMemo<EventItem[]>(() => {

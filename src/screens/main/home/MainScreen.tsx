@@ -20,10 +20,10 @@ import {
 } from './QuickActionGlyphs';
 import { StatusCard } from './StatusCard';
 import { SystemStatusCard } from './SystemStatusCard';
+import type { SubsystemKey } from './SystemStatusCard';
 import { LatestActivityCard } from './LatestActivityCard';
 import { useMainControls } from './useMainControls';
 import { useMainStatus } from './useMainStatus';
-import { ZoneStatusCard } from './ZoneStatusCard';
 
 /** "just now" under a minute, otherwise "{{count}}m ago" — from the device's reported `ts`. */
 function formatAgo(t: (key: string, opts?: any) => string, ts: string): string {
@@ -47,7 +47,6 @@ export function MainScreen() {
     partitionMode: reportedPartitionMode,
     timestamp,
     statuses,
-    zones,
   } = useMainStatus();
   const {
     setArmMode,
@@ -84,6 +83,27 @@ export function MainScreen() {
 
   const runCommand = (action: () => Promise<void>) =>
     action().then(reportSent).catch(reportError);
+
+  // Zone/Tamper open the full per-zone breakdown; every other tile jumps to
+  // the Events tab pre-filtered to whatever category actually explains it.
+  const handlePressSystemTile = (key: SubsystemKey) => {
+    switch (key) {
+      case 'zone':
+      case 'tamper':
+        navigation.navigate('ZoneDetails');
+        return;
+      case 'battery':
+        navigation.navigate('Tabs', { screen: 'Events', params: { filter: 'battery' } });
+        return;
+      case 'ac':
+      case 'signal':
+        navigation.navigate('Tabs', { screen: 'Events', params: { filter: 'powerFail' } });
+        return;
+      case 'hooter':
+        navigation.navigate('Tabs', { screen: 'Events', params: { filter: 'hooterFail' } });
+        return;
+    }
+  };
 
   return (
     <>
@@ -188,33 +208,13 @@ export function MainScreen() {
         </View>
 
         <View style={{ paddingHorizontal: gutter, paddingTop: spacing.xl }}>
-          <SystemStatusCard statuses={statuses} />
-        </View>
-
-        <View style={{ paddingHorizontal: gutter, paddingTop: spacing.lg }}>
-          {/* a preview of zone 1 only; the full 9-line breakdown is "View all" */}
-          <ZoneStatusCard
-            zones={
-              zones[0]?.number
-                ? [
-                    {
-                      number: zones[0].number,
-                      location: zones[0].configured
-                        ? zones[0].location
-                        : t('zone.notConfigured'),
-                      condition: zones[0].status,
-                    },
-                  ]
-                : []
-            }
-            onViewAll={() => navigation.navigate('ZoneDetails')}
-          />
+          <SystemStatusCard statuses={statuses} onPressTile={handlePressSystemTile} />
         </View>
 
         <View style={{ paddingHorizontal: gutter, paddingTop: spacing.lg }}>
           {/* a preview; the full log lives on the Events tab */}
           <LatestActivityCard
-            entries={latestEvents.slice(0, 2)}
+            entries={latestEvents.slice(0, 5)}
             onViewAll={() => navigation.navigate('Tabs', { screen: 'Events' })}
           />
         </View>

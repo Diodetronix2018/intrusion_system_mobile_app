@@ -40,9 +40,13 @@ const COLUMNS = 3;
 
 export function SystemStatusCard({
   statuses,
+  onPressTile,
 }: {
   /** Status per subsystem; anything missing is treated as healthy */
   statuses?: Partial<Record<SubsystemKey, SubsystemStatus>>;
+  /** Tapping a tile — e.g. Zone/Tamper go to Zone Details, the rest jump to
+   *  the Events tab pre-filtered to that subsystem's category. */
+  onPressTile?: (key: SubsystemKey) => void;
 }) {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
@@ -90,6 +94,7 @@ export function SystemStatusCard({
                 label={t(`main.system.${item.key}`)}
                 glyph={item.glyph}
                 status={statuses?.[item.key] ?? 'success'}
+                onPress={onPressTile ? () => onPressTile(item.key) : undefined}
               />
             ))}
           </View>

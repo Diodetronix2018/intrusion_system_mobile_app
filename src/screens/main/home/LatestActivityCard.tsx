@@ -13,7 +13,7 @@ import { useTheme } from '../../../theme';
  * lives on the Events tab itself.
  *
  * The card grows with however many rows it is given; the design shows a
- * two-row preview with the rest behind "View all".
+ * five-row preview with the rest behind "View all".
  */
 export function LatestActivityCard({
   entries,

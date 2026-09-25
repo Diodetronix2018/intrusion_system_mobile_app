@@ -1,17 +1,30 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Icon, Input, Screen, Typography } from '../../../components';
+import type { TabScreenProps } from '../../../navigation/types';
 import { useTheme } from '../../../theme';
 import { EventCard } from './EventCard';
 import { EventFilterChips } from './EventFilterChips';
 import { useEvents } from './useEvents';
 
-export function EventsScreen() {
+export function EventsScreen({ route }: TabScreenProps<'Events'>) {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
-  const { events, filter, setFilter, query, setQuery, loading, error } = useEvents();
+  const initialFilter = route.params?.filter;
+  const { events, filter, setFilter, query, setQuery, loading, error } =
+    useEvents(initialFilter);
+
+  // The Events tab stays mounted across tab switches, so a *later* tap on a
+  // Main-screen tile (a fresh navigation with a new `filter` param) needs
+  // its own sync — `useEvents(initialFilter)` above only seeds the very
+  // first mount.
+  useEffect(() => {
+    if (initialFilter) {
+      setFilter(initialFilter);
+    }
+  }, [initialFilter, setFilter]);
 
   return (
     // `scrollable={false}`: the header (title/search/chips) stays put and

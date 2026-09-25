@@ -6,6 +6,7 @@ import type {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import type { SettingsOptionId } from '../screens/main/settings/options';
+import type { EventFilter } from '../screens/main/events';
 
 /** Screens pushed on the root stack. */
 export type RootStackParamList = {
@@ -31,7 +32,9 @@ export type TabParamList = {
   Main: undefined;
   Zone: undefined;
   Dialer: undefined;
-  Events: undefined;
+  /** `filter` preselects a category chip — e.g. tapping the Hooter tile on
+   *  Main jumps here with `hooterFail` already selected. */
+  Events: { filter?: EventFilter } | undefined;
   Settings: undefined;
 };
 

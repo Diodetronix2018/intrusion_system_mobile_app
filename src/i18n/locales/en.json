@@ -447,7 +447,7 @@
     "status": {
       "titleStay": "Stay Mode Active",
       "titleAway": "Away Mode Active",
-      "summary": "All subsystems online • Last sync {{ago}}",
+      "summary": "Last sync {{ago}}",
       "minutesAgo": "{{count}}m ago",
       "justNow": "just now",
       "connecting": "Connecting to device…"

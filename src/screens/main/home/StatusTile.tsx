@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Typography } from '../../../components';
 import { useTheme } from '../../../theme';
@@ -14,10 +14,12 @@ export function StatusTile({
   label,
   glyph: Glyph,
   status,
+  onPress,
 }: {
   label: string;
   glyph: React.ComponentType<{ size: number; color: string }>;
   status: SubsystemStatus;
+  onPress?: () => void;
 }) {
   const { colors, radius, spacing } = useTheme();
 
@@ -40,14 +42,19 @@ export function StatusTile({
   const labelColor = status === 'success' ? colors.text : ringColor;
 
   return (
-    <View
-      style={[
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={onPress ? label : undefined}
+      style={({ pressed }) => [
         styles.tile,
         {
           borderRadius: radius.md,
           borderColor: colors.border,
           backgroundColor: colors.card,
           paddingVertical: spacing.xs,
+          opacity: pressed ? 0.6 : 1,
         },
       ]}
     >
@@ -63,7 +70,7 @@ export function StatusTile({
       >
         {label}
       </Typography>
-    </View>
+    </Pressable>
   );
 }
 

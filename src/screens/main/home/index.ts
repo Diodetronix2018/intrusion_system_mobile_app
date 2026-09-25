@@ -13,5 +13,4 @@ export type { ArmMode, PartitionMode, PendingAction } from './useMainControls';
 export { useMainStatus } from './useMainStatus';
 export type { MainReportedStatus, MainZoneEntry, ZoneMode } from './useMainStatus';
 export { ZoneDetailsScreen } from './ZoneDetailsScreen';
-export { ZoneStatusCard } from './ZoneStatusCard';
 export type { ZoneCondition, ZoneStatusEntry } from './ZoneStatusCard';

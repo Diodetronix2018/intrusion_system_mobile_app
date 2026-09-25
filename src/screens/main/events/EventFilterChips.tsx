@@ -1,5 +1,10 @@
-import React from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useCallback, useEffect, useRef } from 'react';
+import {
+  LayoutChangeEvent,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Typography } from '../../../components';
@@ -14,6 +19,12 @@ const FILTERS: EventFilter[] = ['all', ...EVENT_CATEGORIES];
  * options don't fit one screen width). Each chip sizes to its own label —
  * width is never fixed — with the selected one filled navy/bold-white and
  * the rest outlined navy-on-white, matching the design spec exactly.
+ *
+ * The selected chip is always scrolled into view, centred — important when
+ * `value` arrives pre-selected from outside (e.g. tapping the Hooter tile
+ * on Main), since chips like "Hooter fail" sit near the end of the row and
+ * would otherwise be scrolled off-screen with no visible indication of
+ * which filter is actually active.
  */
 export function EventFilterChips({
   value,
@@ -24,9 +35,37 @@ export function EventFilterChips({
 }) {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
+  const scrollRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
+  const viewportWidth = useRef(0);
+  const chipLayouts = useRef<Partial<Record<EventFilter, { x: number; width: number }>>>(
+    {},
+  );
+
+  const scrollToChip = useCallback((id: EventFilter) => {
+    const layout = chipLayouts.current[id];
+    if (!layout || !viewportWidth.current) return;
+    const targetX = Math.max(
+      0,
+      layout.x + layout.width / 2 - viewportWidth.current / 2,
+    );
+    scrollRef.current?.scrollTo({ x: targetX, animated: true });
+  }, []);
+
+  const handleScrollViewLayout = (e: LayoutChangeEvent) => {
+    viewportWidth.current = e.nativeEvent.layout.width;
+    scrollToChip(value);
+  };
+
+  // Covers `value` changing after both the viewport and every chip's layout
+  // are already known — a later navigation with a new preset filter while
+  // this screen stays mounted, or the user tapping a different chip.
+  useEffect(() => {
+    scrollToChip(value);
+  }, [value, scrollToChip]);
 
   return (
     <ScrollView
+      ref={scrollRef}
       horizontal
       // Fixed to its own content height — without this it has no intrinsic
       // size of its own, so as a plain child of the header's `flex: 1`
@@ -34,6 +73,7 @@ export function EventFilterChips({
       // instead of just sitting at chip height, with its row centered
       // inside that oversized box.
       style={styles.scroll}
+      onLayout={handleScrollViewLayout}
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={[styles.row, { gap: spacing.sm }]}
     >
@@ -43,6 +83,11 @@ export function EventFilterChips({
           <TouchableOpacity
             key={id}
             onPress={() => onChange(id)}
+            onLayout={(e: LayoutChangeEvent) => {
+              const { x, width } = e.nativeEvent.layout;
+              chipLayouts.current[id] = { x, width };
+              if (id === value) scrollToChip(id);
+            }}
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
             style={[

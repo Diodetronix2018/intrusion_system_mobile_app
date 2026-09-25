@@ -447,7 +447,7 @@
     "status": {
       "titleStay": "स्टे मोड सक्रिय",
       "titleAway": "अवे मोड सक्रिय",
-      "summary": "सभी सबसिस्टम ऑनलाइन • अंतिम सिंक {{ago}}",
+      "summary": "अंतिम सिंक {{ago}}",
       "minutesAgo": "{{count}} मिनट पहले",
       "justNow": "अभी",
       "connecting": "डिवाइस से कनेक्ट हो रहा है…"
