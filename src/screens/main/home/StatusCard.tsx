@@ -7,31 +7,35 @@ import { useTheme } from '../../../theme';
 import { HomeAwayGlyph, HomeGlyph } from './ModeGlyphs';
 import type { ArmMode } from './useMainControls';
 
-const ICON_SIZE = 44;
+const ICON_SIZE = 48;
+/** The oversized, faded mode glyph tucked into the top-right corner. */
+const WATERMARK_SIZE = 150;
 
 /**
- * The brand-filled panel status panel: icon, mode title, then a status line.
+ * The brand-filled hero: status pill and device switcher on top, the mode
+ * icon and title below, and whatever is passed as `children` (the Stay/Away
+ * chips) along the bottom — so the current mode and the control that changes
+ * it live in one card.
  *
- * The title and icon track the same Stay/Away selection as the mode cards
- * below — the same glyphs (`HomeGlyph`/`HomeAwayGlyph`), not a separate icon.
- *
- * The two borders are pure-white alphas from the design (#FFFFFF14 on the
- * card, #FFFFFF1F on the icon ring). They are written inline rather than
- * tokenised because they are derived from white and identical in both themes.
+ * The white alphas (borders, pill, watermark) are identical in both themes,
+ * so they're written inline rather than tokenised.
  */
 export function StatusCard({
   mode,
   summary,
   online = true,
   onSwitchDevice,
+  children,
 }: {
   mode: ArmMode;
   summary: string;
   /** Drives the dot colour */
   online?: boolean;
-  /** Shown as a button in place of the balancing spacer, only when the
-   *  signed-in user has more than one device to switch between. */
+  /** Shown as a button in the top-right, only when the signed-in user has
+   *  more than one device to switch between. */
   onSwitchDevice?: () => void;
+  /** Rendered along the bottom of the card, under a divider. */
+  children?: React.ReactNode;
 }) {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
@@ -51,75 +55,114 @@ export function StatusCard({
         },
       ]}
     >
-      <View style={[styles.header, { gap: spacing.md }]}>
-        <View style={styles.iconRing}>
-          <Glyph size={22} color={colors.onPrimary} />
+      <View style={styles.watermark} pointerEvents="none">
+        <Glyph size={WATERMARK_SIZE} color={colors.onPrimary} />
+      </View>
+
+      <View style={[styles.topRow, { gap: spacing.sm }]}>
+        <View
+          style={[
+            styles.pill,
+            { gap: spacing.sm, paddingHorizontal: spacing.md },
+          ]}
+        >
+          <View
+            style={[
+              styles.dot,
+              { backgroundColor: online ? colors.success : colors.textMuted },
+            ]}
+          />
+          <Typography
+            variant="cardSubtitle"
+            weight="600"
+            size={12}
+            align="left"
+            color={colors.onPrimary}
+            numberOfLines={1}
+            style={styles.shrink}
+          >
+            {summary}
+          </Typography>
         </View>
 
-        <Typography
-          variant="screenTitle"
-          size={16}
-          uppercase
-          align="center"
-          color={colors.onPrimary}
-          numberOfLines={2}
-          style={styles.title}
-        >
-          {title}
-        </Typography>
-
-        {/* balances the icon so the title stays optically centred, unless
-            there's an actual device to switch to */}
-        {onSwitchDevice ? (
+        {onSwitchDevice && (
           <Pressable
             onPress={onSwitchDevice}
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel={t('main.switchDevice.action')}
-            style={styles.spacer}
+            style={styles.switchButton}
           >
-            <Icon name="swap-horizontal-outline" size={22} color={colors.onPrimary} />
+            <Icon
+              name="swap-horizontal-outline"
+              size={20}
+              color={colors.onPrimary}
+            />
           </Pressable>
-        ) : (
-          <View style={styles.spacer} />
         )}
       </View>
 
-      <View
-        style={[styles.divider, { backgroundColor: colors.onPrimaryDivider }]}
-      />
+      <View style={[styles.header, { gap: spacing.md }]}>
+        <View style={styles.iconRing}>
+          <Glyph size={24} color={colors.onPrimary} />
+        </View>
 
-      <View style={[styles.statusLine, { gap: spacing.sm }]}>
-        <View
-          style={[
-            styles.dot,
-            { backgroundColor: online ? colors.success : colors.textMuted },
-          ]}
-        />
         <Typography
-          variant="cardSubtitle"
-          weight="600"
-          size={12}
+          variant="screenTitle"
+          size={20}
           align="left"
-          color={colors.onPrimaryMuted}
+          color={colors.onPrimary}
           numberOfLines={2}
-          style={styles.summary}
+          style={styles.shrink}
         >
-          {summary}
+          {title}
         </Typography>
       </View>
+
+      {children && (
+        <>
+          <View style={styles.divider} />
+          {children}
+        </>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 18,
+    borderRadius: 24,
     borderWidth: 1,
-    // #FFFFFF14
     borderColor: 'rgba(255, 255, 255, 0.08)',
-    boxShadow:
-      '0px 10px 28px -10px #00000026, inset 0px 1px 0px 0px #FFFFFF12',
+    overflow: 'hidden',
+    boxShadow: '0px 14px 32px -12px #00000040, inset 0px 1px 0px 0px #FFFFFF12',
+  },
+  watermark: {
+    position: 'absolute',
+    top: -18,
+    right: -28,
+    opacity: 0.07,
+  },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 1,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  switchButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
   },
   header: {
     flexDirection: 'row',
@@ -128,37 +171,22 @@ const styles = StyleSheet.create({
   iconRing: {
     width: ICON_SIZE,
     height: ICON_SIZE,
-    borderRadius: ICON_SIZE / 2,
-    borderWidth: 1,
-    // #FFFFFF1F
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  spacer: {
-    width: ICON_SIZE,
-    height: ICON_SIZE,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    flex: 1,
-    minWidth: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
   },
   divider: {
     height: 1,
-  },
-  statusLine: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
   },
   dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
   },
-  summary: {
-    flex: 1,
+  shrink: {
+    flexShrink: 1,
     minWidth: 0,
   },
 });

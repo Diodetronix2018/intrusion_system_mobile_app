@@ -1,18 +1,17 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet } from 'react-native';
 
-import { Typography } from '../../../components';
+import { Icon, Typography } from '../../../components';
 import { useTheme } from '../../../theme';
 
-/** Height the glyphs render at inside the card. */
-const GLYPH_HEIGHT = 37.8;
+/** Height the glyphs render at inside the chip. */
+const GLYPH_HEIGHT = 22;
 
 /**
- * Icon over label — filled with brand for whichever card is NOT the
- * current mode, muted for the one that is. That's deliberately inverted
- * from a normal toggle (where the selected option lights up): the current
- * mode is already stated in the StatusCard banner above, so this row
- * highlights the *other* option instead, as the switch-to affordance.
+ * A Stay/Away chip, laid out along the bottom of the brand-filled StatusCard.
+ *
+ * The panel's current mode is the solid white chip with a check; the other is
+ * a translucent chip on the brand fill, as the switch-to option.
  */
 export function ModeCard({
   label,
@@ -37,8 +36,7 @@ export function ModeCard({
   onPress: () => void;
 }) {
   const { colors, spacing } = useTheme();
-  // the design keeps the glyph and label white in both states
-  const content = colors.onPrimary;
+  const content = active ? colors.primary : colors.onPrimary;
 
   return (
     <Pressable
@@ -48,10 +46,11 @@ export function ModeCard({
       accessibilityState={{ selected: active, disabled, busy: loading }}
       accessibilityLabel={label}
       style={({ pressed }) => [
-        styles.card,
+        styles.chip,
+        active ? { backgroundColor: colors.onPrimary } : styles.chipIdle,
         {
-          gap: spacing.xs,
-          backgroundColor: active ? colors.accentWell : colors.primary,
+          gap: spacing.sm,
+          paddingHorizontal: spacing.md,
           opacity: disabled && !loading ? 0.6 : pressed ? 0.85 : 1,
         },
       ]}
@@ -64,24 +63,38 @@ export function ModeCard({
 
       <Typography
         variant="captionBold"
-        size={16}
+        size={14}
         uppercase
         color={content}
         numberOfLines={1}
+        style={styles.label}
       >
         {label}
       </Typography>
+
+      {active && !loading && (
+        <Icon name="checkmark-circle" size={18} color={colors.primary} />
+      )}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  chip: {
     flex: 1,
-    minHeight: 86,
-    borderRadius: 50,
+    minHeight: 52,
+    borderRadius: 14,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0px 8px 20px -10px #00000014',
+  },
+  // white alphas over the brand fill, identical in both themes
+  chipIdle: {
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+  },
+  label: {
+    flexShrink: 1,
   },
 });

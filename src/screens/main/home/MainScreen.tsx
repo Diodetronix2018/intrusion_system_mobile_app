@@ -141,45 +141,37 @@ export function MainScreen() {
             onSwitchDevice={
               devices.length > 1 ? () => setDeviceSheetOpen(true) : undefined
             }
-          />
+          >
+            {/* Stay/Away chips sit inside the hero, under the mode title */}
+            <View style={[styles.row, { gap: spacing.sm }]}>
+              <ModeCard
+                label={t('main.modes.stay')}
+                // Only ever the panel's own confirmed state (`status`) — a tap
+                // never flips this immediately, it waits for that to change.
+                active={reportedArmMode === 'stay'}
+                loading={armLoading.stay}
+                disabled={armCommandPending}
+                onPress={() => runCommand(() => setArmMode('stay'))}
+                glyph={HomeGlyph}
+              />
+              <ModeCard
+                label={t('main.modes.away')}
+                active={reportedArmMode === 'away'}
+                loading={armLoading.away}
+                disabled={armCommandPending}
+                onPress={() => runCommand(() => setArmMode('away'))}
+                glyph={HomeAwayGlyph}
+              />
+            </View>
+          </StatusCard>
         </View>
 
         <View
           style={[
-            styles.modes,
+            styles.row,
             {
               paddingHorizontal: gutter,
               paddingTop: spacing.xl,
-              gap: spacing.md,
-            },
-          ]}
-        >
-          <ModeCard
-            label={t('main.modes.stay')}
-            // Only ever the panel's own confirmed state (`status`) — a tap
-            // never flips this immediately, it waits for that to change.
-            active={reportedArmMode === 'stay'}
-            loading={armLoading.stay}
-            disabled={armCommandPending}
-            onPress={() => runCommand(() => setArmMode('stay'))}
-            glyph={HomeGlyph}
-          />
-          <ModeCard
-            label={t('main.modes.away')}
-            active={reportedArmMode === 'away'}
-            loading={armLoading.away}
-            disabled={armCommandPending}
-            onPress={() => runCommand(() => setArmMode('away'))}
-            glyph={HomeAwayGlyph}
-          />
-        </View>
-
-        <View
-          style={[
-            styles.actions,
-            {
-              paddingHorizontal: gutter,
-              paddingTop: spacing.lg,
               gap: spacing.sm,
             },
           ]}
@@ -256,11 +248,7 @@ const styles = StyleSheet.create({
   statusBand: {
     width: '100%',
   },
-  modes: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-  },
-  actions: {
+  row: {
     flexDirection: 'row',
     alignItems: 'stretch',
   },
