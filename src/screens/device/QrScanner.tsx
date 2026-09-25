@@ -1,5 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Linking, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  AppState,
+  Linking,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import {
@@ -30,30 +36,6 @@ export function QrScanner({
   const { t } = useTranslation();
   const { colors, radius, spacing } = useTheme();
   const { hasPermission, requestPermission } = useCameraPermission();
-  const device = useCameraDevice('back');
-  const isFocused = useIsFocused();
-
-  // vision-camera can render a black preview if the <Camera> becomes active in
-  // the same frame it first mounts (e.g. right after permission is granted). So
-  // we mount it inactive and flip `isActive` a tick later, once the native
-  // preview surface is laid out — only while focused and not paused.
-  const [active, setActive] = useState(false);
-  // The preview is only really up once the native side says so; until then a
-  // cover hides the surface, which is black while the session is configuring.
-  const [previewStarted, setPreviewStarted] = useState(false);
-  const [error, setError] = useState<CameraRuntimeError | null>(null);
-  // Bumped to remount the <Camera> on retry, so the session is rebuilt.
-  const [attempt, setAttempt] = useState(0);
-
-  useEffect(() => {
-    if (!isFocused || !hasPermission || !device || paused) {
-      setActive(false);
-      setPreviewStarted(false);
-      return;
-    }
-    const id = setTimeout(() => setActive(true), 300);
-    return () => clearTimeout(id);
-  }, [isFocused, hasPermission, device, paused]);
 
   // Ask as soon as the screen opens — scanning is the whole point of being
   // here, so making the user tap a button first is one tap of nothing.
@@ -81,6 +63,85 @@ export function QrScanner({
       Linking.openSettings();
     }
   }, [requestPermission]);
+
+  const frame = {
+    borderRadius: radius.lg,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceMuted,
+  };
+  const statePadding = { padding: spacing['2xl'], gap: spacing.sm };
+
+  if (!hasPermission) {
+    return (
+      <View style={[styles.state, frame, statePadding]}>
+        <Icon name="camera-outline" size={30} color={colors.textSecondary} />
+        <Typography variant="cardTitle" color={colors.text}>
+          {t('claim.permissionTitle')}
+        </Typography>
+        <Typography variant="caption" color={colors.textSecondary}>
+          {t('claim.permissionBody')}
+        </Typography>
+        <Button
+          title={t('claim.grantPermission')}
+          size="sm"
+          fullWidth={false}
+          onPress={onGrant}
+          leftIcon={<Icon name="camera" size={18} color={colors.onPrimary} />}
+          style={{ marginTop: spacing.sm }}
+        />
+      </View>
+    );
+  }
+
+  // Only mounted once permission is granted, so the device lookup and the
+  // native session are created fresh — exactly as when the screen is reopened.
+  return <ScannerCamera onScanned={onScanned} paused={paused} />;
+}
+
+function ScannerCamera({
+  onScanned,
+  paused,
+}: {
+  onScanned: (value: string) => void;
+  paused: boolean;
+}) {
+  const { t } = useTranslation();
+  const { colors, radius, spacing } = useTheme();
+  const device = useCameraDevice('back');
+  const isFocused = useIsFocused();
+
+  // Right after the permission dialog closes the app is not yet `active` again
+  // (Android resumes the activity a moment later). Starting the session in that
+  // window leaves a black preview, so wait for the app to be in the foreground.
+  const [appActive, setAppActive] = useState(AppState.currentState === 'active');
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', state =>
+      setAppActive(state === 'active'),
+    );
+    return () => sub.remove();
+  }, []);
+
+  // vision-camera can render a black preview if the <Camera> becomes active in
+  // the same frame it first mounts. So we mount it inactive and flip `isActive`
+  // a tick later, once the native preview surface is laid out — only while
+  // focused, in the foreground and not paused.
+  const [active, setActive] = useState(false);
+  // The preview is only really up once the native side says so; until then a
+  // cover hides the surface, which is black while the session is configuring.
+  const [previewStarted, setPreviewStarted] = useState(false);
+  const [error, setError] = useState<CameraRuntimeError | null>(null);
+  // Bumped to remount the <Camera> on retry, so the session is rebuilt.
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    if (!isFocused || !appActive || !device || paused) {
+      setActive(false);
+      setPreviewStarted(false);
+      return;
+    }
+    const id = setTimeout(() => setActive(true), 300);
+    return () => clearTimeout(id);
+  }, [isFocused, appActive, device, paused]);
 
   const onCameraError = useCallback((err: CameraRuntimeError) => {
     // Without this the session just fails silently and the user stares at a
@@ -112,28 +173,6 @@ export function QrScanner({
     backgroundColor: colors.surfaceMuted,
   };
   const statePadding = { padding: spacing['2xl'], gap: spacing.sm };
-
-  if (!hasPermission) {
-    return (
-      <View style={[styles.state, frame, statePadding]}>
-        <Icon name="camera-outline" size={30} color={colors.textSecondary} />
-        <Typography variant="cardTitle" color={colors.text}>
-          {t('claim.permissionTitle')}
-        </Typography>
-        <Typography variant="caption" color={colors.textSecondary}>
-          {t('claim.permissionBody')}
-        </Typography>
-        <Button
-          title={t('claim.grantPermission')}
-          size="sm"
-          fullWidth={false}
-          onPress={onGrant}
-          leftIcon={<Icon name="camera" size={18} color={colors.onPrimary} />}
-          style={{ marginTop: spacing.sm }}
-        />
-      </View>
-    );
-  }
 
   if (!device) {
     return (
