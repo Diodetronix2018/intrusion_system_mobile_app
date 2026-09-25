@@ -1,18 +1,20 @@
 import React from 'react';
-import { ActivityIndicator, Pressable, StyleSheet } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
-import { Typography } from '../../../components';
+import { Icon, Typography } from '../../../components';
 import { useTheme } from '../../../theme';
 
-/** Height the glyphs render at inside the card. */
-const GLYPH_HEIGHT = 37.8;
+/** Height the glyphs render at inside the icon bubble. */
+const GLYPH_HEIGHT = 24;
+const BUBBLE_SIZE = 44;
 
 /**
- * Icon over label — filled with brand for whichever card is NOT the
- * current mode, muted for the one that is. That's deliberately inverted
- * from a normal toggle (where the selected option lights up): the current
- * mode is already stated in the StatusCard banner above, so this row
- * highlights the *other* option instead, as the switch-to affordance.
+ * Icon bubble, label and a one-line status caption.
+ *
+ * The panel's current mode is the light, outlined card with a check and an
+ * "Active" caption; the other is brand-filled with "Tap to switch", so the
+ * option you can act on is the one that stands out.
  */
 export function ModeCard({
   label,
@@ -36,9 +38,10 @@ export function ModeCard({
   disabled?: boolean;
   onPress: () => void;
 }) {
+  const { t } = useTranslation();
   const { colors, spacing } = useTheme();
-  // the design keeps the glyph and label white in both states
-  const content = colors.onPrimary;
+  const title = active ? colors.primary : colors.onPrimary;
+  const caption = active ? colors.textSecondary : colors.onPrimaryMuted;
 
   return (
     <Pressable
@@ -50,27 +53,56 @@ export function ModeCard({
       style={({ pressed }) => [
         styles.card,
         {
-          gap: spacing.xs,
-          backgroundColor: active ? colors.accentWell : colors.primary,
+          padding: spacing.lg,
+          gap: spacing.md,
+          backgroundColor: active ? colors.primaryMuted : colors.primary,
+          borderColor: active ? colors.primary : 'transparent',
           opacity: disabled && !loading ? 0.6 : pressed ? 0.85 : 1,
         },
       ]}
     >
-      {loading ? (
-        <ActivityIndicator color={content} size="small" />
-      ) : (
-        <Glyph size={GLYPH_HEIGHT} color={content} />
-      )}
+      <View style={styles.header}>
+        <View
+          style={[
+            styles.bubble,
+            active ? { backgroundColor: colors.primary } : styles.bubbleOnBrand,
+          ]}
+        >
+          {loading ? (
+            <ActivityIndicator color={colors.onPrimary} size="small" />
+          ) : (
+            <Glyph size={GLYPH_HEIGHT} color={colors.onPrimary} />
+          )}
+        </View>
 
-      <Typography
-        variant="captionBold"
-        size={16}
-        uppercase
-        color={content}
-        numberOfLines={1}
-      >
-        {label}
-      </Typography>
+        {active ? (
+          <View style={[styles.badge, { backgroundColor: colors.primary }]}>
+            <Icon name="checkmark" size={14} color={colors.onPrimary} />
+          </View>
+        ) : (
+          <Icon name="arrow-forward" size={18} color={colors.onPrimaryMuted} />
+        )}
+      </View>
+
+      <View style={styles.text}>
+        <Typography
+          variant="captionBold"
+          size={16}
+          uppercase
+          color={title}
+          numberOfLines={1}
+        >
+          {label}
+        </Typography>
+        <Typography
+          variant="caption"
+          size={12}
+          color={caption}
+          numberOfLines={1}
+        >
+          {t(active ? 'main.modes.active' : 'main.modes.tapToSwitch')}
+        </Typography>
+      </View>
     </Pressable>
   );
 }
@@ -78,10 +110,36 @@ export function ModeCard({
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    minHeight: 86,
-    borderRadius: 50,
+    minHeight: 128,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    justifyContent: 'space-between',
+    boxShadow: '0px 8px 20px -10px #00000026',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  bubble: {
+    width: BUBBLE_SIZE,
+    height: BUBBLE_SIZE,
+    borderRadius: BUBBLE_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0px 8px 20px -10px #00000014',
+  },
+  // white alpha over the brand fill, identical in both themes
+  bubbleOnBrand: {
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+  },
+  badge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  text: {
+    gap: 2,
   },
 });

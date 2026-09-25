@@ -466,7 +466,9 @@
     },
     "modes": {
       "stay": "Stay",
-      "away": "Away"
+      "away": "Away",
+      "active": "Active",
+      "tapToSwitch": "Tap to switch"
     },
     "actions": {
       "all": "All",
