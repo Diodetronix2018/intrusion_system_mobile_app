@@ -87,7 +87,7 @@ export function QrScanner({
           fullWidth={false}
           onPress={onGrant}
           leftIcon={<Icon name="camera" size={18} color={colors.onPrimary} />}
-          style={{ marginTop: spacing.sm }}
+          style={[styles.stateButton, { marginTop: spacing.sm }]}
         />
       </View>
     );
@@ -200,7 +200,7 @@ function ScannerCamera({
           size="sm"
           fullWidth={false}
           onPress={retry}
-          style={{ marginTop: spacing.sm }}
+          style={[styles.stateButton, { marginTop: spacing.sm }]}
         />
       </View>
     );
@@ -256,6 +256,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: StyleSheet.hairlineWidth,
+  },
+  // Button pins itself to the start when not full width; centre it in the card.
+  stateButton: {
+    alignSelf: 'center',
   },
   reticle: {
     position: 'absolute',
