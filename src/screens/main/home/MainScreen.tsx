@@ -144,34 +144,39 @@ export function MainScreen() {
           />
         </View>
 
-        <View
-          style={[
-            styles.modes,
-            {
-              paddingHorizontal: gutter,
-              paddingTop: spacing.xl,
-              gap: spacing.md,
-            },
-          ]}
-        >
-          <ModeCard
-            label={t('main.modes.stay')}
-            // Only ever the panel's own confirmed state (`status`) — a tap
-            // never flips this immediately, it waits for that to change.
-            active={reportedArmMode === 'stay'}
-            loading={armLoading.stay}
-            disabled={armCommandPending}
-            onPress={() => runCommand(() => setArmMode('stay'))}
-            glyph={HomeGlyph}
-          />
-          <ModeCard
-            label={t('main.modes.away')}
-            active={reportedArmMode === 'away'}
-            loading={armLoading.away}
-            disabled={armCommandPending}
-            onPress={() => runCommand(() => setArmMode('away'))}
-            glyph={HomeAwayGlyph}
-          />
+        <View style={{ paddingHorizontal: gutter, paddingTop: spacing.xl }}>
+          {/* Stay/Away as one segmented track — the current mode is the
+              filled segment */}
+          <View
+            style={[
+              styles.modes,
+              {
+                padding: spacing.xs,
+                gap: spacing.xs,
+                backgroundColor: colors.primaryMuted,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            <ModeCard
+              label={t('main.modes.stay')}
+              // Only ever the panel's own confirmed state (`status`) — a tap
+              // never flips this immediately, it waits for that to change.
+              active={reportedArmMode === 'stay'}
+              loading={armLoading.stay}
+              disabled={armCommandPending}
+              onPress={() => runCommand(() => setArmMode('stay'))}
+              glyph={HomeGlyph}
+            />
+            <ModeCard
+              label={t('main.modes.away')}
+              active={reportedArmMode === 'away'}
+              loading={armLoading.away}
+              disabled={armCommandPending}
+              onPress={() => runCommand(() => setArmMode('away'))}
+              glyph={HomeAwayGlyph}
+            />
+          </View>
         </View>
 
         <View
@@ -259,6 +264,8 @@ const styles = StyleSheet.create({
   modes: {
     flexDirection: 'row',
     alignItems: 'stretch',
+    borderRadius: 20,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   actions: {
     flexDirection: 'row',
