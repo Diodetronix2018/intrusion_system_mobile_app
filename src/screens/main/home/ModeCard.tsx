@@ -1,18 +1,18 @@
 import React from 'react';
-import { ActivityIndicator, Pressable, StyleSheet } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
-import { Typography } from '../../../components';
+import { Icon, Typography } from '../../../components';
 import { useTheme } from '../../../theme';
 
-/** Height the glyphs render at inside the card. */
-const GLYPH_HEIGHT = 37.8;
+/** Height the glyphs render at inside the segment. */
+const GLYPH_HEIGHT = 26;
 
 /**
- * Icon over label — filled with brand for whichever card is NOT the
- * current mode, muted for the one that is. That's deliberately inverted
- * from a normal toggle (where the selected option lights up): the current
- * mode is already stated in the StatusCard banner above, so this row
- * highlights the *other* option instead, as the switch-to affordance.
+ * One segment of the Stay/Away toggle — glyph beside label.
+ *
+ * Rendered side by side inside the track in `MainScreen`: the panel's current
+ * mode is the filled brand segment with a check, the other sits flat on the
+ * track as the switch-to option.
  */
 export function ModeCard({
   label,
@@ -37,8 +37,7 @@ export function ModeCard({
   onPress: () => void;
 }) {
   const { colors, spacing } = useTheme();
-  // the design keeps the glyph and label white in both states
-  const content = colors.onPrimary;
+  const content = active ? colors.onPrimary : colors.primary;
 
   return (
     <Pressable
@@ -48,10 +47,12 @@ export function ModeCard({
       accessibilityState={{ selected: active, disabled, busy: loading }}
       accessibilityLabel={label}
       style={({ pressed }) => [
-        styles.card,
+        styles.segment,
+        active && styles.segmentActive,
         {
-          gap: spacing.xs,
-          backgroundColor: active ? colors.accentWell : colors.primary,
+          gap: spacing.sm,
+          paddingHorizontal: spacing.md,
+          backgroundColor: active ? colors.primary : 'transparent',
           opacity: disabled && !loading ? 0.6 : pressed ? 0.85 : 1,
         },
       ]}
@@ -64,24 +65,44 @@ export function ModeCard({
 
       <Typography
         variant="captionBold"
-        size={16}
+        size={15}
         uppercase
         color={content}
         numberOfLines={1}
+        style={styles.label}
       >
         {label}
       </Typography>
+
+      {active && !loading && (
+        <View style={[styles.check, { backgroundColor: colors.onPrimary }]}>
+          <Icon name="checkmark" size={12} color={colors.primary} />
+        </View>
+      )}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  segment: {
     flex: 1,
-    minHeight: 86,
-    borderRadius: 50,
+    minHeight: 60,
+    borderRadius: 16,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0px 8px 20px -10px #00000014',
+  },
+  segmentActive: {
+    boxShadow: '0px 6px 14px -6px #00000040',
+  },
+  label: {
+    flexShrink: 1,
+  },
+  check: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
