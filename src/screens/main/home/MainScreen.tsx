@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -28,15 +28,33 @@ import { useEditGuard } from '../useEditGuard';
 import { useMainControls } from './useMainControls';
 import { useMainStatus } from './useMainStatus';
 
-/** "just now" under a minute, otherwise "{{count}}m ago" — from the device's reported `ts`. */
-function formatAgo(t: (key: string, opts?: any) => string, ts: string): string {
-  const minutes = Math.max(
-    0,
-    Math.round((Date.now() - Date.parse(ts)) / 60000),
-  );
-  return minutes < 1
-    ? t('main.status.justNow')
-    : t('main.status.minutesAgo', { count: minutes });
+/** How often the "Last sync …" label re-renders, so it keeps counting up. */
+const AGO_REFRESH_MS = 60000;
+
+/**
+ * The device's reported `ts` as a relative age in the largest whole unit:
+ * "just now" under a minute, then minutes, hours, days, months and years
+ * ("10 mins ago", "1 hr ago", "3 days ago", …).
+ */
+function formatAgo(
+  t: (key: string, opts?: any) => string,
+  ts: string,
+  now: number,
+): string {
+  const parsed = Date.parse(ts);
+  // an unparseable or future `ts` (device clock ahead) reads as fresh
+  const minutes = Number.isNaN(parsed)
+    ? 0
+    : Math.max(0, Math.floor((now - parsed) / 60000));
+  if (minutes < 1) return t('main.status.justNow');
+  if (minutes < 60) return t('main.status.minutesAgo', { count: minutes });
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return t('main.status.hoursAgo', { count: hours });
+  const days = Math.floor(hours / 24);
+  if (days < 30) return t('main.status.daysAgo', { count: days });
+  const months = Math.floor(days / 30);
+  if (months < 12) return t('main.status.monthsAgo', { count: months });
+  return t('main.status.yearsAgo', { count: Math.floor(days / 365) });
 }
 
 export function MainScreen() {
@@ -70,8 +88,16 @@ export function MainScreen() {
   const [deviceSheetOpen, setDeviceSheetOpen] = useState(false);
   const devices = session?.devices ?? [];
 
+  // Ticks once a minute so the relative "Last sync" age stays current even
+  // when no new report arrives.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), AGO_REFRESH_MS);
+    return () => clearInterval(id);
+  }, []);
+
   const summary = timestamp
-    ? t('main.status.summary', { ago: formatAgo(t, timestamp) })
+    ? t('main.status.summary', { ago: formatAgo(t, timestamp, now) })
     : t('main.status.connecting');
 
   // A command that failed because the device connection is down gets a
