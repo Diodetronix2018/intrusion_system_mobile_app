@@ -459,6 +459,11 @@
       "monthsAgo_other": "{{count}} months ago",
       "yearsAgo_one": "{{count}} year ago",
       "yearsAgo_other": "{{count}} years ago",
+      "refresh": "Refresh",
+      "refreshed": "Status updated",
+      "refreshedBody": "Showing the latest data from your device",
+      "refreshFailed": "Couldn't refresh",
+      "refreshFailedBody": "Check your internet connection and try again.",
       "justNow": "just now",
       "connecting": "Connecting to device…"
     },

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
@@ -30,6 +30,12 @@ import { useMainStatus } from './useMainStatus';
 
 /** How often the "Last sync …" label re-renders, so it keeps counting up. */
 const AGO_REFRESH_MS = 60000;
+
+/**
+ * How long a refresh waits for a fresh shadow document before reporting it
+ * failed — long enough to cover a reconnect when tapped while offline.
+ */
+const REFRESH_TIMEOUT_MS = 10000;
 
 /**
  * The device's reported `ts` as a relative age in the largest whole unit:
@@ -83,7 +89,52 @@ export function MainScreen() {
   } = useMainControls(reportedArmMode, reportedPartitionMode);
   const { events: latestEvents } = useEvents();
   const { requireStayMode } = useEditGuard();
-  const { reconnect } = useIotConnection();
+  const { reconnect, refresh, controlReported } = useIotConnection();
+
+  // Spins from the tap until the refreshed shadow document lands (the
+  // reported object is replaced on every message) or the timeout passes,
+  // then says which it was. The ref lets the arrival effect below read it
+  // without re-running (and falsely "succeeding") when a refresh starts.
+  const [refreshing, setRefreshing] = useState(false);
+  const refreshingRef = useRef(false);
+  const setRefreshingState = (value: boolean) => {
+    refreshingRef.current = value;
+    setRefreshing(value);
+  };
+  const onRefresh = () => {
+    setRefreshingState(true);
+    if (!connected) {
+      Toast.show({
+        type: 'info',
+        text1: t('main.connection.bannerReconnecting'),
+      });
+    }
+    refresh();
+  };
+  useEffect(() => {
+    if (!refreshingRef.current) return;
+    setRefreshingState(false);
+    Toast.show({
+      type: 'success',
+      text1: t('main.status.refreshed'),
+      text2: t('main.status.refreshedBody'),
+    });
+    // only a new document should end a refresh, not a re-render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [controlReported]);
+  useEffect(() => {
+    if (!refreshing) return;
+    const id = setTimeout(() => {
+      setRefreshingState(false);
+      Toast.show({
+        type: 'error',
+        text1: t('main.status.refreshFailed'),
+        text2: t('main.status.refreshFailedBody'),
+      });
+    }, REFRESH_TIMEOUT_MS);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshing]);
   const { session, switchDevice } = useSession();
   const [deviceSheetOpen, setDeviceSheetOpen] = useState(false);
   const devices = session?.devices ?? [];
@@ -178,6 +229,8 @@ export function MainScreen() {
             mode={reportedArmMode ?? 'stay'}
             summary={summary}
             online={connected}
+            onRefresh={onRefresh}
+            refreshing={refreshing}
             onSwitchDevice={
               devices.length > 1 ? () => setDeviceSheetOpen(true) : undefined
             }

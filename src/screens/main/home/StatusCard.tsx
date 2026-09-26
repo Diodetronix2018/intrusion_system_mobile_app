@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Icon, Typography } from '../../../components';
@@ -24,6 +24,8 @@ export function StatusCard({
   summary,
   online = true,
   onSwitchDevice,
+  onRefresh,
+  refreshing = false,
 }: {
   mode: ArmMode;
   summary: string;
@@ -32,6 +34,10 @@ export function StatusCard({
   /** Shown as a button in place of the balancing spacer, only when the
    *  signed-in user has more than one device to switch between. */
   onSwitchDevice?: () => void;
+  /** Shows a refresh button at the end of the status line. */
+  onRefresh?: () => void;
+  /** Swaps the refresh icon for a spinner while fresh data is on its way. */
+  refreshing?: boolean;
 }) {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
@@ -78,7 +84,11 @@ export function StatusCard({
             accessibilityLabel={t('main.switchDevice.action')}
             style={styles.spacer}
           >
-            <Icon name="swap-horizontal-outline" size={22} color={colors.onPrimary} />
+            <Icon
+              name="swap-horizontal-outline"
+              size={22}
+              color={colors.onPrimary}
+            />
           </Pressable>
         ) : (
           <View style={styles.spacer} />
@@ -107,6 +117,26 @@ export function StatusCard({
         >
           {summary}
         </Typography>
+
+        {onRefresh &&
+          (refreshing ? (
+            <View style={styles.refresh}>
+              <ActivityIndicator size="small" color={colors.onPrimary} />
+            </View>
+          ) : (
+            <Pressable
+              onPress={onRefresh}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={t('main.status.refresh')}
+              style={({ pressed }) => [
+                styles.refresh,
+                { opacity: pressed ? 0.6 : 1 },
+              ]}
+            >
+              <Icon name="refresh" size={18} color={colors.onPrimary} />
+            </Pressable>
+          ))}
       </View>
     </View>
   );
@@ -118,8 +148,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     // #FFFFFF14
     borderColor: 'rgba(255, 255, 255, 0.08)',
-    boxShadow:
-      '0px 10px 28px -10px #00000026, inset 0px 1px 0px 0px #FFFFFF12',
+    boxShadow: '0px 10px 28px -10px #00000026, inset 0px 1px 0px 0px #FFFFFF12',
   },
   header: {
     flexDirection: 'row',
@@ -156,6 +185,12 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
+  },
+  refresh: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   summary: {
     flex: 1,

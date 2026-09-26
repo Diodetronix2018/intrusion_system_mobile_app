@@ -84,6 +84,12 @@ interface IotConnectionValue {
    * attempt is already in flight.
    */
   reconnect: () => void;
+  /**
+   * Re-fetches both shadows' full documents (`get`), so every screen picks up
+   * the latest reported state. Reconnects instead when the connection is
+   * down — a successful connect fetches both anyway.
+   */
+  refresh: () => void;
 }
 
 const IotConnectionContext = createContext<IotConnectionValue | undefined>(undefined);
@@ -423,9 +429,33 @@ export function IotConnectionProvider({ children }: { children: React.ReactNode 
     [session?.activeThingName, waitForConnection, reconnect],
   );
 
+  const refresh = useCallback(() => {
+    const client = clientRef.current;
+    if (!client?.connected) {
+      reconnect();
+      return;
+    }
+    const thingName = resolveThingName(session?.activeThingName);
+    for (const shadowName of [SBA_CONTROL_SHADOW, SBA_CONFIG_SHADOW]) {
+      const { get } = namedShadowTopics(thingName, shadowName);
+      log('REFRESH → publishing {} to', get);
+      client.publish(get, '{}', { qos: 0 }, (err?: Error) => {
+        if (err) logWarn('REFRESH GET FAILED:', err.message);
+      });
+    }
+  }, [session?.activeThingName, reconnect]);
+
   const value = useMemo<IotConnectionValue>(
-    () => ({ controlReported, configReported, connected, status, publish, reconnect }),
-    [controlReported, configReported, connected, status, publish, reconnect],
+    () => ({
+      controlReported,
+      configReported,
+      connected,
+      status,
+      publish,
+      reconnect,
+      refresh,
+    }),
+    [controlReported, configReported, connected, status, publish, reconnect, refresh],
   );
 
   return (

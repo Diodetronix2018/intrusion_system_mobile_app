@@ -459,6 +459,11 @@
       "monthsAgo_other": "{{count}} महीने पहले",
       "yearsAgo_one": "{{count}} साल पहले",
       "yearsAgo_other": "{{count}} साल पहले",
+      "refresh": "रीफ़्रेश करें",
+      "refreshed": "स्थिति अपडेट हो गई",
+      "refreshedBody": "आपके डिवाइस का नवीनतम डेटा दिखाया जा रहा है",
+      "refreshFailed": "रीफ़्रेश नहीं हो सका",
+      "refreshFailedBody": "अपना इंटरनेट कनेक्शन जांचें और फिर से प्रयास करें।",
       "justNow": "अभी",
       "connecting": "डिवाइस से कनेक्ट हो रहा है…"
     },
