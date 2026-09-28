@@ -295,7 +295,12 @@ export function MainScreen() {
             active={reportedPartitionMode === 'all'}
             loading={partitionLoading.all}
             disabled={partitionCommandPending}
-            onPress={() => runCommand(() => setPartitionMode('all'))}
+            // All/Part changes the panel's zone setup, so like the settings
+            // pages it's Stay-only; Mute and Reset work in either mode.
+            onPress={() => {
+              if (requireStayMode()) return;
+              runCommand(() => setPartitionMode('all'));
+            }}
           />
           <QuickActionCard
             label={t('main.actions.part')}
@@ -303,7 +308,10 @@ export function MainScreen() {
             active={reportedPartitionMode === 'part'}
             loading={partitionLoading.part}
             disabled={partitionCommandPending}
-            onPress={() => runCommand(() => setPartitionMode('part'))}
+            onPress={() => {
+              if (requireStayMode()) return;
+              runCommand(() => setPartitionMode('part'));
+            }}
           />
           <QuickActionCard
             label={t('main.actions.mute')}
@@ -317,10 +325,7 @@ export function MainScreen() {
             glyph={ResetGlyph}
             loading={pendingAction === 'reset'}
             disabled={saving}
-            onPress={() => {
-              if (requireStayMode()) return;
-              runCommand(reset);
-            }}
+            onPress={() => runCommand(reset)}
           />
         </View>
 

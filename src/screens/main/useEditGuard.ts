@@ -6,7 +6,7 @@ import { useArmMode } from './useArmMode';
 
 /**
  * Blocks publishing a settings change while the panel is Away — every
- * settings/Dialer/Zone page's save, and the Main screen's Reset action,
+ * settings/Dialer/Zone page's save, and the Main screen's All/Part cards,
  * call `requireStayMode()` first and bail out if it returns true (it has
  * already shown the toast explaining why).
  */
