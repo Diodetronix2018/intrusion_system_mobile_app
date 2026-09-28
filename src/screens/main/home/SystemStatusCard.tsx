@@ -26,13 +26,16 @@ export type SubsystemKey =
 const SUBSYSTEMS: {
   key: SubsystemKey;
   glyph: React.ComponentType<{ size: number; color: string }>;
+  /** False for a display-only tile — it ignores `onPressTile`. */
+  pressable?: boolean;
 }[] = [
   { key: 'zone', glyph: ZoneGlyph },
   { key: 'battery', glyph: BatteryGlyph },
   { key: 'ac', glyph: AcGlyph },
   { key: 'hooter', glyph: HooterGlyph },
   { key: 'tamper', glyph: TamperGlyph },
-  { key: 'signal', glyph: SignalGlyph },
+  // Signal has no detail page or event category to open, so it only shows status.
+  { key: 'signal', glyph: SignalGlyph, pressable: false },
 ];
 
 /** Three per row, two rows. */
@@ -81,7 +84,10 @@ export function SystemStatusCard({
         </Typography>
 
         {zoneStatus !== 'success' && (
-          <StatusChip status={zoneStatus} label={t(`main.system.zoneChip.${zoneStatus}`)} />
+          <StatusChip
+            status={zoneStatus}
+            label={t(`main.system.zoneChip.${zoneStatus}`)}
+          />
         )}
       </View>
 
@@ -94,7 +100,11 @@ export function SystemStatusCard({
                 label={t(`main.system.${item.key}`)}
                 glyph={item.glyph}
                 status={statuses?.[item.key] ?? 'success'}
-                onPress={onPressTile ? () => onPressTile(item.key) : undefined}
+                onPress={
+                  onPressTile && item.pressable !== false
+                    ? () => onPressTile(item.key)
+                    : undefined
+                }
               />
             ))}
           </View>
@@ -108,8 +118,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 20,
     borderWidth: 1,
-    boxShadow:
-      '0px 2px 10px 0px #0000000A, 0px 14px 28px -10px #00000012',
+    boxShadow: '0px 2px 10px 0px #0000000A, 0px 14px 28px -10px #00000012',
   },
   titleRow: {
     flexDirection: 'row',

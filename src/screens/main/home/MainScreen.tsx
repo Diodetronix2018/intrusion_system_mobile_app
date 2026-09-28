@@ -177,8 +177,9 @@ export function MainScreen() {
   const runCommand = (action: () => Promise<void>) =>
     action().then(reportSent).catch(reportError);
 
-  // Zone/Tamper open the full per-zone breakdown; every other tile jumps to
-  // the Events tab pre-filtered to whatever category actually explains it.
+  // Zone/Tamper open the full per-zone breakdown; Battery, AC and Hooter jump
+  // to the Events tab pre-filtered to whatever category explains them.
+  // Signal is display-only (see `SystemStatusCard`) and never lands here.
   const handlePressSystemTile = (key: SubsystemKey) => {
     switch (key) {
       case 'zone':
@@ -192,7 +193,6 @@ export function MainScreen() {
         });
         return;
       case 'ac':
-      case 'signal':
         navigation.navigate('Tabs', {
           screen: 'Events',
           params: { filter: 'powerFail' },
