@@ -24,13 +24,21 @@ export function formatEventTimestamp(datetime?: string): string {
 
 export function eventStatusColor(
   status: EventStatus,
-  colors: { success: string; warning: string; failed: string; primary: string },
+  colors: {
+    success: string;
+    warning: string;
+    caution: string;
+    failed: string;
+    primary: string;
+  },
 ): string {
   switch (status) {
     case 'success':
       return colors.success;
     case 'warning':
       return colors.warning;
+    case 'caution':
+      return colors.caution;
     case 'failed':
       return colors.failed;
     default:

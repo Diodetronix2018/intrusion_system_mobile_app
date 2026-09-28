@@ -270,13 +270,12 @@
     "empty": "अभी तक कोई इवेंट नहीं",
     "categories": {
       "all": "सभी",
-      "alarm": "अलार्म",
       "mode": "मोड",
       "powerFail": "पावर फेल",
       "battery": "बैटरी",
       "hooterFail": "हूटर फेल",
       "heartBeat": "हार्ट बीट",
-      "zoneStatus": "ज़ोन स्थिति",
+      "zoneStatus": "ज़ोन",
       "zoneMode": "ज़ोन मोड",
       "zoneLocation": "ज़ोन लोकेशन"
     },
@@ -297,9 +296,6 @@
     "hooter": {
       "normal": "हूटर सामान्य",
       "fail": "हूटर फेल"
-    },
-    "alarm": {
-      "zoneTitle": "ज़ोन {{number}} अलार्म"
     }
   },
   "partSetting": {

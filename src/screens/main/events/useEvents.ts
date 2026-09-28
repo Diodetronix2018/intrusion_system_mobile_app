@@ -17,9 +17,9 @@ export type { EventItem };
  * whose `trigger_type` isn't one of the known categories (the device also
  * sends `info`/`signal`/`initial`/… rows that aren't real events), expands
  * each remaining row into its actual event card(s) (`buildEventItems` — a
- * single row can produce several, e.g. one per zone in alarm), and applies
+ * single row can produce several, e.g. Power Fail's AC + Charge), and applies
  * the active category filter plus a text search over each card's own
- * title/subtitle — capping the result to the 10 most recent.
+ * title, chips and details — capping the result to the 10 most recent.
  *
  * `initialFilter` seeds the category chip (e.g. arriving from the Main
  * screen's Hooter tile with `hooterFail` preselected) — only read once, on
@@ -51,7 +51,9 @@ export function useEvents(initialFilter?: EventFilter) {
       list = list.filter(
         item =>
           item.title.toLowerCase().includes(q) ||
-          (item.subtitle ?? '').toLowerCase().includes(q) ||
+          (item.chips ?? []).some(chip => chip.label.toLowerCase().includes(q)) ||
+          (item.titleDetail?.label ?? '').toLowerCase().includes(q) ||
+          (item.metaDetail?.label ?? '').toLowerCase().includes(q) ||
           (item.datetime ?? '').toLowerCase().includes(q),
       );
     }

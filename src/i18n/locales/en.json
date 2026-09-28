@@ -270,13 +270,12 @@
     "empty": "No events yet",
     "categories": {
       "all": "All",
-      "alarm": "Alarm",
       "mode": "Mode",
       "powerFail": "Power fail",
       "battery": "Battery",
       "hooterFail": "Hooter fail",
       "heartBeat": "Heart Beat",
-      "zoneStatus": "Zone status",
+      "zoneStatus": "Zone",
       "zoneMode": "Zone mode",
       "zoneLocation": "Zone location"
     },
@@ -297,9 +296,6 @@
     "hooter": {
       "normal": "Hooter Normal",
       "fail": "Hooter Fail"
-    },
-    "alarm": {
-      "zoneTitle": "Zone {{number}} Alarm"
     }
   },
   "partSetting": {

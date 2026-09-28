@@ -85,6 +85,8 @@ export type ThemeColors = {
   success: string;
   warning: string;
   failed: string;
+  /** Between `warning` and `failed` — e.g. a zone's Warning/Isolate code */
+  caution: string;
 
   /** Colour used by the elevated-button shadow */
   shadow: string;
@@ -139,6 +141,7 @@ export const lightColors: ThemeColors = {
   success: '#00C853',
   warning: '#F59E0B',
   failed: '#EF4444',
+  caution: '#F97316',
 
   shadow: '#000055',
 
@@ -209,6 +212,7 @@ export const darkColors: ThemeColors = {
   success: '#00C853',
   warning: '#F59E0B',
   failed: '#EF4444',
+  caution: '#F97316',
 
   shadow: '#000000',
 

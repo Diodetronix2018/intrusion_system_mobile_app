@@ -9,7 +9,7 @@ import { useTheme } from '../../../theme';
 
 /**
  * Event log preview: a header with "View all", then one row per entry
- * showing just the status and timestamp — the full detail (icon, subtitle)
+ * showing just the status and timestamp — the full detail (icon, chips, details)
  * lives on the Events tab itself.
  *
  * The card grows with however many rows it is given; the design shows a

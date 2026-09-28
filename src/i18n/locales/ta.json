@@ -270,13 +270,12 @@
     "empty": "இதுவரை நிகழ்வுகள் இல்லை",
     "categories": {
       "all": "அனைத்தும்",
-      "alarm": "அலாரம்",
       "mode": "முறை",
       "powerFail": "மின் தடை",
       "battery": "பேட்டரி",
       "hooterFail": "ஹூட்டர் தோல்வி",
       "heartBeat": "ஹார்ட் பீட்",
-      "zoneStatus": "மண்டல நிலை",
+      "zoneStatus": "மண்டலம்",
       "zoneMode": "மண்டல முறை",
       "zoneLocation": "மண்டல இடம்"
     },
@@ -297,9 +296,6 @@
     "hooter": {
       "normal": "ஹூட்டர் சாதாரணம்",
       "fail": "ஹூட்டர் தோல்வி"
-    },
-    "alarm": {
-      "zoneTitle": "மண்டலம் {{number}} அலாரம்"
     }
   },
   "partSetting": {
