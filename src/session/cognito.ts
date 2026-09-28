@@ -294,7 +294,16 @@ export async function signInUserPool(
 export async function refreshSession(
   cfg: CognitoConfig,
   refreshToken: string,
-): Promise<{ idToken: string; accessToken: string; expiresIn: number }> {
+): Promise<{
+  idToken: string;
+  accessToken: string;
+  /**
+   * Only present when the app client has refresh-token rotation on: the old
+   * refresh token stops working shortly after, so this one must replace it.
+   */
+  refreshToken?: string;
+  expiresIn: number;
+}> {
   const json = await cognitoCall(
     cfg.region,
     'AWSCognitoIdentityProviderService.InitiateAuth',
@@ -311,6 +320,7 @@ export async function refreshSession(
   return {
     idToken: result.IdToken,
     accessToken: result.AccessToken,
+    refreshToken: result.RefreshToken,
     expiresIn: result.ExpiresIn ?? 3600,
   };
 }

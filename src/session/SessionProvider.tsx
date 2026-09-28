@@ -12,6 +12,7 @@ import { COGNITO, DEVICES_TABLE, USER_DEVICES_TABLE } from '../config/awsConfig'
 import { StorageService } from '../storage';
 import { queryUserDevices } from '../utils/dynamoDb';
 import {
+  CognitoError,
   confirmForgotPassword as cognitoConfirmForgotPassword,
   confirmSignUp as cognitoConfirmSignUp,
   decodeJwtClaims,
@@ -124,6 +125,19 @@ async function fetchDeviceThingNames(idToken: string): Promise<string[]> {
   return rows.map(row => row.thingName).filter(Boolean);
 }
 
+/**
+ * True only when Cognito itself turned the refresh token down (expired,
+ * revoked, or the user is gone) — the one case that really needs a fresh
+ * sign-in. Anything else (no network, a timeout, throttling, a 5xx) is
+ * transient: the saved session stays and the next call simply tries again.
+ */
+function isSessionRejected(err: unknown): boolean {
+  return (
+    err instanceof CognitoError &&
+    (err.code === 'NotAuthorizedException' || err.code === 'UserNotFoundException')
+  );
+}
+
 function persist(session: AuthSession | null) {
   if (session) {
     StorageService.setString(SESSION_KEY, JSON.stringify(session));
@@ -169,7 +183,9 @@ const sessionFromTokens = (
  * A session restored from storage is used as-is while its ID token is still
  * good; once it is close to expiry the refresh token mints a new one, so the
  * user only signs in again when that refresh token itself expires (30 days by
- * default) or they log out.
+ * default) or they log out. A refresh that fails for any other reason — the
+ * app opened offline, say — keeps the session and retries on the next call
+ * instead of signing the user out.
  */
 type Restore = {
   /** Good enough to render with immediately. */
@@ -208,6 +224,56 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     persist(next);
   }, []);
 
+  // One refresh at a time: the IoT connection, device list and Events all
+  // ask for a token together once it expires, and with refresh-token
+  // rotation on, parallel refreshes would race to replace the same token.
+  const refreshInFlight = useRef<Promise<AuthSession> | null>(null);
+
+  /**
+   * Mints a new ID token from `base`'s refresh token and saves the result —
+   * keeping the rotated refresh token when Cognito sends one. Signs out only
+   * if Cognito rejects the refresh token; any other failure is re-thrown
+   * with the saved session left untouched.
+   */
+  const refreshNow = useCallback(
+    (base: AuthSession): Promise<AuthSession> => {
+      if (!refreshInFlight.current) {
+        refreshInFlight.current = (async () => {
+          try {
+            const tokens = await refreshSession(COGNITO, base.refreshToken);
+            const claims = decodeJwtClaims(tokens.idToken);
+            // Anything else may have changed the session meanwhile (a device
+            // switch, say) — build on the latest copy, not the one we started from.
+            const latest = sessionRef.current ?? base;
+            const next: AuthSession = {
+              ...latest,
+              idToken: tokens.idToken,
+              accessToken: tokens.accessToken,
+              refreshToken: tokens.refreshToken ?? latest.refreshToken,
+              email: claims.email || latest.email,
+              name: claims.name ?? latest.name,
+              expiresAt: Date.now() + tokens.expiresIn * 1000,
+            };
+            applySession(next);
+            return next;
+          } catch (err: any) {
+            if (isSessionRejected(err)) {
+              console.warn('[auth] refresh token rejected — signing out:', err?.message);
+              applySession(null);
+            } else {
+              console.warn('[auth] refresh failed, keeping session:', err?.message);
+            }
+            throw err;
+          } finally {
+            refreshInFlight.current = null;
+          }
+        })();
+      }
+      return refreshInFlight.current;
+    },
+    [applySession],
+  );
+
   // Bring the persisted session up to date on launch.
   useEffect(() => {
     const { recheck } = initial.current;
@@ -217,26 +283,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     (async () => {
       try {
-        const tokens = await refreshSession(COGNITO, recheck.refreshToken);
-        if (!cancelled) {
-          const refreshed = sessionFromTokens(
-            { ...tokens, refreshToken: recheck.refreshToken },
-            recheck.email,
-          );
-          // Keep what we already had if this token happens to omit it. The
-          // device list itself is re-verified separately, below.
-          applySession({
-            ...refreshed,
-            name: refreshed.name ?? recheck.name,
-            devices: recheck.devices,
-            activeThingName: recheck.activeThingName,
-          });
-        }
-      } catch (err: any) {
-        if (!cancelled) {
-          // Nothing usable and no new token: the refresh token is gone.
-          console.warn('[auth] launch refresh failed:', err?.message);
-          applySession(null);
+        // Keeps devices/activeThingName from the saved session; the device
+        // list itself is re-verified separately, below.
+        await refreshNow(recheck);
+      } catch (err) {
+        // `refreshNow` already signed out if the refresh token was rejected.
+        // Otherwise (e.g. opened offline) carry on with the saved session —
+        // the next token request retries the refresh.
+        if (!cancelled && !isSessionRejected(err)) {
+          applySession(recheck);
         }
       } finally {
         if (!cancelled) {
@@ -247,7 +302,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [applySession]);
+  }, [applySession, refreshNow]);
 
   const signIn = useCallback(
     async (identifier: string, password: string) => {
@@ -278,24 +333,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     if (Date.now() < current.expiresAt - EXPIRY_SKEW_MS) {
       return current.idToken;
     }
-    try {
-      const tokens = await refreshSession(COGNITO, current.refreshToken);
-      const claims = decodeJwtClaims(tokens.idToken);
-      applySession({
-        ...current,
-        idToken: tokens.idToken,
-        accessToken: tokens.accessToken,
-        email: claims.email || current.email,
-        name: claims.name ?? current.name,
-        expiresAt: Date.now() + tokens.expiresIn * 1000,
-      });
-      return tokens.idToken;
-    } catch (err) {
-      // Refresh token expired/revoked → force a fresh sign-in.
-      applySession(null);
-      throw err;
-    }
-  }, [applySession]);
+    const refreshed = await refreshNow(current);
+    return refreshed.idToken;
+  }, [refreshNow]);
 
   // Independently keeps the device list current: right after sign-in, after
   // the launch-time token recheck above, and after claiming a device (see
