@@ -41,9 +41,7 @@ const TRIGGER_TYPE_TO_CATEGORY: Record<string, EventCategoryId> = {
   battery: 'battery',
   fault: 'hooterFail',
   heartbeat: 'heartBeat',
-  'zone on off status': 'zoneStatus',
-  // 'zone mode change': 'zoneMode',
-  // 'zone location': 'zoneLocation',
+  zone: 'zoneStatus',
 };
 
 /** Returns the category for a raw `trigger_type`, or undefined to drop the row entirely. */

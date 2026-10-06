@@ -208,15 +208,20 @@ function buildHeartBeatEvent(row: TelemetryRow, id: string, t: T): EventItem[] {
   ];
 }
 
-/** The zone index a row is about, from its `trigger` — e.g. `"zon[3]"` -> 3. */
+/**
+ * The zone index a row is about, from its `trigger` — whichever field changed
+ * (`zon`, `zen`, `zmd`, `zloc`, …) with a single index, e.g. `"zloc[0]"` -> 0,
+ * `"zmd[2]"` -> 2. A trigger listing several indices (`"zon[0,1,2,3]"`) isn't
+ * about one zone, so it yields undefined and the row is dropped.
+ */
 function triggerZoneIndex(trigger: unknown): number | undefined {
   if (typeof trigger !== 'string') return undefined;
-  const match = /zon\[(\d+)\]/.exec(trigger);
+  const match = /^\s*\w+\[\s*(\d+)\s*\]\s*$/.exec(trigger);
   return match ? Number(match[1]) : undefined;
 }
 
 /**
- * One card for the single zone the row's `trigger` names (`zon[i]`):
+ * One card for the single zone the row's `trigger` names (e.g. `zloc[i]`):
  *   - chips: ON/OFF from `zen[i]` (1 on — green, 0 off — red), then the
  *     zone's condition from `zon[i]` (Normal, Entry/Exit Delay, Alarm, …,
  *     see `ZONE_CODE_CHIPS`), each in its own colour;
