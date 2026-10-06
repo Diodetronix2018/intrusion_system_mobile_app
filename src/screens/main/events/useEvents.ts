@@ -28,7 +28,7 @@ export type { EventItem };
  */
 export function useEvents(initialFilter?: EventFilter) {
   const { t } = useTranslation();
-  const { rows, loading, error } = useEventsTelemetry();
+  const { rows, loading, error, refreshing, refresh } = useEventsTelemetry();
   const [filter, setFilter] = useState<EventFilter>(initialFilter ?? 'all');
   const [query, setQuery] = useState('');
 
@@ -61,5 +61,15 @@ export function useEvents(initialFilter?: EventFilter) {
     return list.slice(0, MAX_VISIBLE);
   }, [items, filter, query]);
 
-  return { events, filter, setFilter, query, setQuery, loading, error };
+  return {
+    events,
+    filter,
+    setFilter,
+    query,
+    setQuery,
+    loading,
+    error,
+    refreshing,
+    refresh,
+  };
 }

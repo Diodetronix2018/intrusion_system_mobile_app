@@ -1,5 +1,11 @@
 import React, { useEffect } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Icon, Input, Screen, Typography } from '../../../components';
@@ -13,8 +19,17 @@ export function EventsScreen({ route }: TabScreenProps<'Events'>) {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
   const initialFilter = route.params?.filter;
-  const { events, filter, setFilter, query, setQuery, loading, error } =
-    useEvents(initialFilter);
+  const {
+    events,
+    filter,
+    setFilter,
+    query,
+    setQuery,
+    loading,
+    error,
+    refreshing,
+    refresh,
+  } = useEvents(initialFilter);
 
   // The Events tab stays mounted across tab switches, so a *later* tap on a
   // Main-screen tile (a fresh navigation with a new `filter` param) needs
@@ -70,6 +85,14 @@ export function EventsScreen({ route }: TabScreenProps<'Events'>) {
           contentContainerStyle={[styles.listContent, { gap: spacing.md }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={refresh}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+            />
+          }
         >
           {error ? (
             <Typography

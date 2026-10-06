@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { COGNITO, TELEMETRY_TABLE } from '../../../config/awsConfig';
 import { getCredentials } from '../../../session/cognito';
@@ -16,12 +16,24 @@ const PAGE_SIZE = 50;
  * Fetches the device's event/telemetry history from `dtx_tngrama_telemetry`
  * for the Events tab, logging the raw rows to the console (tagged
  * `[Events]`) for debugging alongside what actually renders.
+ *
+ * `refresh()` re-runs the query for pull-to-refresh; `refreshing` is true
+ * only for those user-triggered reloads (not the initial load), so the
+ * list keeps its current rows under the pull spinner meanwhile.
  */
 export function useEventsTelemetry() {
   const { session, getFreshIdToken } = useSession();
   const [rows, setRows] = useState<TelemetryRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  // Bumped by `refresh()` to re-run the fetch effect below.
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const refresh = useCallback(() => {
+    setRefreshing(true);
+    setReloadKey(key => key + 1);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,7 +62,10 @@ export function useEventsTelemetry() {
         logWarn('FETCH FAILED:', e?.message);
         setError(e?.message ?? 'Failed to load events.');
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
     }
 
@@ -59,7 +74,7 @@ export function useEventsTelemetry() {
     return () => {
       cancelled = true;
     };
-  }, [session?.activeThingName, getFreshIdToken]);
+  }, [session?.activeThingName, getFreshIdToken, reloadKey]);
 
-  return { rows, loading, error };
+  return { rows, loading, error, refreshing, refresh };
 }
