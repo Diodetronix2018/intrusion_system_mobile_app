@@ -54,7 +54,8 @@ const POST_PUBLISH_GET_DELAY_MS = 2000;
 /**
  * Back-off between automatic reconnects after a drop or a failed connect:
  * the n-th consecutive retry waits `RETRY_DELAYS_MS[n]`, then the last value
- * repeats. Reset to the start once a connection succeeds.
+ * repeats. Reset to the start once a connection has stayed up for
+ * `STABLE_CONNECTION_MS`.
  */
 const RETRY_DELAYS_MS = [2000, 5000, 10000, 20000, 30000];
 
@@ -64,6 +65,24 @@ const RETRY_DELAYS_MS = [2000, 5000, 10000, 20000, 30000];
  * the socket dropped still goes through instead of erroring immediately.
  */
 const CONNECT_WAIT_MS = 10000;
+
+/**
+ * A connection that drops sooner than this after connecting doesn't reset
+ * the retry back-off — otherwise two phones evicting each other (see
+ * `CLIENT_ID_SUFFIX`) would ping-pong at the first, 2-second delay forever.
+ */
+const STABLE_CONNECTION_MS = 30000;
+
+/**
+ * Per-app-launch suffix for the MQTT clientId (`<identityId>-<suffix>`), so
+ * the same login on two phones doesn't share one clientId — AWS IoT allows
+ * one live connection per clientId and evicts the older one, so two phones
+ * on one login kept kicking each other off every few seconds. Needs the IoT
+ * policy's `iot:Connect` resource to allow `client/<identityId>-*`; until it
+ * does, the suffixed connect is refused and we fall back to the bare
+ * identity id (see `bareClientIdRef`).
+ */
+const CLIENT_ID_SUFFIX = Math.random().toString(36).slice(2, 10);
 
 interface IotConnectionValue {
   /** `sba_control_v01`'s most recent reported document. */
@@ -75,7 +94,8 @@ interface IotConnectionValue {
   /**
    * Publishes desired state to a named shadow over the one shared connection.
    * If the connection is down it reconnects first, waiting up to
-   * `CONNECT_WAIT_MS` before giving up.
+   * `CONNECT_WAIT_MS` before giving up. Resolves `POST_PUBLISH_GET_DELAY_MS`
+   * after the broker's ack, once the device has had time to apply it.
    */
   publish: (shadowName: string, desired: Record<string, unknown>) => Promise<void>;
   /**
@@ -102,10 +122,10 @@ const IotConnectionContext = createContext<IotConnectionValue | undefined>(undef
  * here instead of opening a connection of its own).
  *
  * AWS IoT allows only one live connection per clientId, and ours is the
- * bare Cognito identity id (the attached IoT policy's `iot:Connect`
- * resource requires an exact match — see `useIotShadowPublish`'s history).
- * Earlier this app opened a separate connection per subscription *and* per
- * publish, all with that same clientId — each new one silently evicted
+ * Cognito identity id plus a per-launch suffix (`CLIENT_ID_SUFFIX`) — or the
+ * bare identity id, if the attached IoT policy's `iot:Connect` resource
+ * still requires an exact match. Earlier this app opened a separate
+ * connection per subscription *and* per publish, all with that same clientId — each new one silently evicted
  * whichever was already live, producing an endless connect → evict →
  * reconnect loop. Keeping everything on a single client, the same way the
  * sibling 3-phase app's `IotProvider` does, is what keeps the connection
@@ -133,6 +153,9 @@ export function IotConnectionProvider({ children }: { children: React.ReactNode 
   const inFlightRef = useRef(false);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryCountRef = useRef(0);
+  // Set once a suffixed clientId has been refused by the IoT policy; every
+  // later connect in this app run then uses the bare identity id.
+  const bareClientIdRef = useRef(false);
 
   const clearRetry = useCallback(() => {
     if (retryTimerRef.current) {
@@ -207,9 +230,11 @@ export function IotConnectionProvider({ children }: { children: React.ReactNode 
 
         const url = presignIotWssUrl(COGNITO.region, IOT_ENDPOINT, credentials);
         const streamBuilder = createRNWebSocketStreamBuilder(url);
+        const suffixed = !bareClientIdRef.current;
+        const clientId = suffixed ? `${identityId}-${CLIENT_ID_SUFFIX}` : identityId;
+        log('CLIENT ID —', clientId);
         const client = new mqtt.MqttClient(streamBuilder, {
-          // Must be exactly the identity id — see the module doc comment.
-          clientId: identityId,
+          clientId,
           clean: true,
           keepalive: 60,
           connectTimeout: 15000,
@@ -229,12 +254,15 @@ export function IotConnectionProvider({ children }: { children: React.ReactNode 
           return;
         }
         clientRef.current = client;
+        // When this client got its CONNACK — still null at `close` means the
+        // broker refused the CONNECT (or the network failed before it).
+        let connectedAt: number | null = null;
 
         client.on('connect', () => {
           if (cancelled) return;
           log('CONNECTED — thing', thingName);
+          connectedAt = Date.now();
           inFlightRef.current = false;
-          retryCountRef.current = 0;
           clearRetry();
           setConnected(true);
           setStatus('connected');
@@ -312,6 +340,16 @@ export function IotConnectionProvider({ children }: { children: React.ReactNode 
         client.on('close', () => {
           if (cancelled) return;
           log('CLOSE — connection closed');
+          if (connectedAt == null && suffixed) {
+            // Most likely the policy doesn't allow suffixed clientIds yet. A
+            // network failure lands here too — falling back then just means
+            // the bare id for the rest of this run, which is still valid.
+            logWarn('suffixed clientId refused — falling back to the bare identity id');
+            bareClientIdRef.current = true;
+          }
+          if (connectedAt != null && Date.now() - connectedAt >= STABLE_CONNECTION_MS) {
+            retryCountRef.current = 0;
+          }
           inFlightRef.current = false;
           setConnected(false);
           setStatus(prev => (prev === 'error' ? prev : 'disconnected'));
@@ -410,19 +448,26 @@ export function IotConnectionProvider({ children }: { children: React.ReactNode 
           // ack, the shadow only has our new `desired` — `reported` hasn't
           // moved yet because the panel itself hasn't processed the delta,
           // so a `get` fired immediately would just re-read the stale value.
+          //
+          // The publish only resolves once this delay is over, so every
+          // caller's loader (e.g. a Save button's spinner) covers the
+          // device's processing time too, and its success toast lands after.
           setTimeout(() => {
             const activeClient = clientRef.current;
-            if (!activeClient || !activeClient.connected) return;
-            log(
-              'GET → publishing {} to',
-              topics.get,
-              `(after ${POST_PUBLISH_GET_DELAY_MS}ms)`,
-            );
-            activeClient.publish(topics.get, '{}', { qos: 0 }, (getErr?: Error) => {
-              if (getErr) logWarn('POST-PUBLISH GET FAILED:', getErr.message);
-            });
+            if (activeClient?.connected) {
+              log(
+                'GET → publishing {} to',
+                topics.get,
+                `(after ${POST_PUBLISH_GET_DELAY_MS}ms)`,
+              );
+              activeClient.publish(topics.get, '{}', { qos: 0 }, (getErr?: Error) => {
+                if (getErr) logWarn('POST-PUBLISH GET FAILED:', getErr.message);
+              });
+            }
+            // The ack already confirmed the command reached AWS IoT — a
+            // dropped connection during the wait doesn't undo that.
+            resolve();
           }, POST_PUBLISH_GET_DELAY_MS);
-          resolve();
         });
       });
     },

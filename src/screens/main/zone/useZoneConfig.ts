@@ -109,8 +109,21 @@ function stateFromCode(zoneIndex: number, raw: string): ZoneState {
  * Wait time and detection count are only meaningful while smart check is
  * on, so they're always sent as `0` while it's off, regardless of the
  * last value the user had dialed in.
+ *
+ * The tamper line only has on/off and location on screen, so every other
+ * field is sent as `0` — same 10-field shape, e.g. `"8,6,0,0,0,0,0,0,0,Tamper"`.
  */
 export function buildZonValue(zoneIndex: number, config: ZoneConfig): string {
+  // the value is comma-joined, so a comma in the location would corrupt
+  // the fields after it
+  const location = config.location.replace(/,/g, '');
+
+  if (zoneIndex === TAMPER_INDEX) {
+    // schedule, contact, exit/entry delay, smart check, wait time, detection count
+    const unused = [0, 0, 0, 0, 0, 0, 0];
+    return [zoneIndex, stateCode(zoneIndex, config.state), ...unused, location].join(',');
+  }
+
   return [
     zoneIndex,
     stateCode(zoneIndex, config.state),
@@ -121,9 +134,7 @@ export function buildZonValue(zoneIndex: number, config: ZoneConfig): string {
     config.smartCheck ? 1 : 0,
     config.smartCheck ? config.waitTime : 0,
     config.smartCheck ? config.detectionCount : 0,
-    // the value is comma-joined, so a comma in the location would corrupt
-    // the fields after it
-    config.location.replace(/,/g, ''),
+    location,
   ].join(',');
 }
 

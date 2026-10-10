@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
@@ -224,6 +225,12 @@ export function ZoneScreen() {
     useZoneConfig();
   const [locationError, setLocationError] = useState<string | undefined>();
   const { requireStayMode } = useEditGuard();
+  // The tamper line only has on/off and location — the rest is zones 1-8 only.
+  const isTamper = index === TAMPER_INDEX;
+
+  // Unsaved edits are dropped on leaving (see `usePrepopulatedState`), so a
+  // validation message about one shouldn't outlive it either.
+  useFocusEffect(useCallback(() => () => setLocationError(undefined), []));
 
   // the third pair uses the icon as a radio indicator: whichever card is
   // selected shows the ticked circle, the other an empty one
@@ -268,7 +275,7 @@ export function ZoneScreen() {
     >
       <ZoneSelector
         label={
-          index === TAMPER_INDEX
+          isTamper
             ? t('partSetting.tamper')
             : t('zone.label', { number: index + 1 })
         }
@@ -292,93 +299,101 @@ export function ZoneScreen() {
           />
         </ChoiceRow>
 
-        <ChoiceRow>
-          <ChoiceCard
-            icon={TimeIcon}
-            label={t('zone.always')}
-            selected={config.schedule === 'always'}
-            onPress={() => update({ schedule: 'always' })}
-          />
-          <ChoiceCard
-            icon={MoonIcon}
-            label={t('zone.night')}
-            selected={config.schedule === 'night'}
-            onPress={() => update({ schedule: 'night' })}
-          />
-        </ChoiceRow>
-
-        <ChoiceRow>
-          <ChoiceCard
-            icon={radioIcon(config.contact === 'nc')}
-            label={t('zone.nc')}
-            selected={config.contact === 'nc'}
-            onPress={() => update({ contact: 'nc' })}
-          />
-          <ChoiceCard
-            icon={radioIcon(config.contact === 'no')}
-            label={t('zone.no')}
-            selected={config.contact === 'no'}
-            onPress={() => update({ contact: 'no' })}
-          />
-        </ChoiceRow>
-      </View>
-
-      <View style={{ marginTop: spacing.lg }}>
-        <SectionLabel>{t('zone.delays')}</SectionLabel>
-        <View style={{ gap: spacing.md }}>
-          <DelayRow
-            theme={theme}
-            label={t('zone.exitDelay')}
-            range={delayRange}
-            value={config.exitDelay}
-            onChange={exitDelay => update({ exitDelay })}
-            unit={t('common.seconds')}
-          />
-          <DelayRow
-            theme={theme}
-            label={t('zone.entryDelay')}
-            range={delayRange}
-            value={config.entryDelay}
-            onChange={entryDelay => update({ entryDelay })}
-            unit={t('common.seconds')}
-          />
-        </View>
-      </View>
-
-      <View style={{ marginTop: spacing.lg, gap: spacing.md }}>
-        <ToggleRow
-          theme={theme}
-          label={t('zone.smartCheck.title')}
-          description={t('zone.smartCheck.description')}
-          value={config.smartCheck}
-          onChange={smartCheck => update({ smartCheck })}
-        />
-
-        {config.smartCheck && (
+        {!isTamper && (
           <>
-            <DelayRow
-              theme={theme}
-              label={t('zone.waitTime')}
-              range={t('zone.delayRange', {
-                min: WAIT_TIME_MIN,
-                max: WAIT_TIME_MAX,
-              })}
-              value={config.waitTime}
-              onChange={waitTime => update({ waitTime })}
-              unit={t('common.seconds')}
-            />
-            <SliderRow
-              theme={theme}
-              label={t('zone.detectionCount')}
-              range={detectionCountRange}
-              min={DETECTION_COUNT_MIN}
-              max={DETECTION_COUNT_MAX}
-              value={config.detectionCount}
-              onChange={detectionCount => update({ detectionCount })}
-            />
+            <ChoiceRow>
+              <ChoiceCard
+                icon={TimeIcon}
+                label={t('zone.always')}
+                selected={config.schedule === 'always'}
+                onPress={() => update({ schedule: 'always' })}
+              />
+              <ChoiceCard
+                icon={MoonIcon}
+                label={t('zone.night')}
+                selected={config.schedule === 'night'}
+                onPress={() => update({ schedule: 'night' })}
+              />
+            </ChoiceRow>
+
+            <ChoiceRow>
+              <ChoiceCard
+                icon={radioIcon(config.contact === 'nc')}
+                label={t('zone.nc')}
+                selected={config.contact === 'nc'}
+                onPress={() => update({ contact: 'nc' })}
+              />
+              <ChoiceCard
+                icon={radioIcon(config.contact === 'no')}
+                label={t('zone.no')}
+                selected={config.contact === 'no'}
+                onPress={() => update({ contact: 'no' })}
+              />
+            </ChoiceRow>
           </>
         )}
       </View>
+
+      {!isTamper && (
+        <>
+          <View style={{ marginTop: spacing.lg }}>
+            <SectionLabel>{t('zone.delays')}</SectionLabel>
+            <View style={{ gap: spacing.md }}>
+              <DelayRow
+                theme={theme}
+                label={t('zone.exitDelay')}
+                range={delayRange}
+                value={config.exitDelay}
+                onChange={exitDelay => update({ exitDelay })}
+                unit={t('common.seconds')}
+              />
+              <DelayRow
+                theme={theme}
+                label={t('zone.entryDelay')}
+                range={delayRange}
+                value={config.entryDelay}
+                onChange={entryDelay => update({ entryDelay })}
+                unit={t('common.seconds')}
+              />
+            </View>
+          </View>
+
+          <View style={{ marginTop: spacing.lg, gap: spacing.md }}>
+            <ToggleRow
+              theme={theme}
+              label={t('zone.smartCheck.title')}
+              description={t('zone.smartCheck.description')}
+              value={config.smartCheck}
+              onChange={smartCheck => update({ smartCheck })}
+            />
+
+            {config.smartCheck && (
+              <>
+                <DelayRow
+                  theme={theme}
+                  label={t('zone.waitTime')}
+                  range={t('zone.delayRange', {
+                    min: WAIT_TIME_MIN,
+                    max: WAIT_TIME_MAX,
+                  })}
+                  value={config.waitTime}
+                  onChange={waitTime => update({ waitTime })}
+                  unit={t('common.seconds')}
+                />
+                <SliderRow
+                  theme={theme}
+                  label={t('zone.detectionCount')}
+                  range={detectionCountRange}
+                  min={DETECTION_COUNT_MIN}
+                  max={DETECTION_COUNT_MAX}
+                  value={config.detectionCount}
+                  onChange={detectionCount => update({ detectionCount })}
+                />
+              </>
+            )}
+          </View>
+        </>
+      )}
 
       <View style={{ marginTop: spacing.lg }}>
         <SectionLabel>{t('zone.locationEntry')}</SectionLabel>

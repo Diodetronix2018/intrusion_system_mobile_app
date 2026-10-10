@@ -6,8 +6,8 @@ import { useIotConnection } from './IotConnection';
  * One-shot AWS IoT device-shadow publish, scoped to a single named shadow.
  * Publishes over the app's one shared MQTT connection (`IotConnectionProvider`,
  * mounted at the navigation root) instead of opening a connection of its
- * own — AWS IoT allows only one live connection per clientId (ours is the
- * bare Cognito identity id the attached policy requires), so a second
+ * own — AWS IoT allows only one live connection per clientId (ours is
+ * derived from the Cognito identity id, see `IotConnection`), so a second
  * connection per publish used to evict the shared one and vice versa,
  * producing an endless connect/evict/reconnect loop and a multi-second
  * delay on every command while it redid the whole connect flow. Reusing

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
+import { NavigationContext } from '@react-navigation/native';
 
 /** Plain-data equality — every `T` this hook is used with is a JSON-shaped
  *  object/array of strings/numbers/booleans, built fresh by the same `parse`
@@ -23,6 +24,12 @@ function isEqual<T>(a: T, b: T): boolean {
  *    setting directly on the panel: the new value flows straight through,
  *    since there was nothing local to protect.
  *
+ * Leaving the screen (navigation `blur` — switching tabs, going back)
+ * discards any unsaved edit and resets to the device's saved value (or
+ * `defaults`, if nothing has loaded yet), so coming back always shows what
+ * is actually saved rather than a stale draft. Outside a navigator (e.g.
+ * tests) there's no blur, so this part is a no-op.
+ *
  * `parse` is read through a ref, so it can freely close over `t()` or other
  * per-render values without retriggering the sync effect — only a change to
  * `raw` itself does that.
@@ -43,6 +50,22 @@ export function usePrepopulatedState<Raw, T>(
   // live update is compared against to tell "untouched since then" from
   // "mid-edit". `undefined` means it has never synced at all yet.
   const lastSyncedRef = useRef<T | undefined>(undefined);
+
+  const rawRef = useRef(raw);
+  rawRef.current = raw;
+  const defaultsRef = useRef(defaults);
+
+  // `useContext` rather than `useNavigation`, which throws outside a navigator.
+  const navigation = useContext(NavigationContext);
+  useEffect(() => {
+    if (!navigation) return;
+    return navigation.addListener('blur', () => {
+      const latest = rawRef.current;
+      const saved = latest === undefined ? undefined : parseRef.current(latest);
+      lastSyncedRef.current = saved;
+      setState(saved ?? defaultsRef.current);
+    });
+  }, [navigation]);
 
   useEffect(() => {
     if (raw === undefined) return;
