@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -56,13 +56,18 @@ export function DialerEntrySheet({
 
   const isEditing = !!initialValue;
 
-  // reset on every open, so a cancelled edit is not remembered
+  // Reset only when the sheet opens, so a cancelled edit is not remembered.
+  // `initialValue` is read through a ref rather than being a dependency: the
+  // Save), which would otherwise snap the user's picks back to the saved
+  // values while the publish is still in flight.
+  const initialValueRef = useRef(initialValue);
+  initialValueRef.current = initialValue;
   useEffect(() => {
     if (visible) {
-      setValues(initialValue ?? DEFAULTS);
+      setValues(initialValueRef.current ?? DEFAULTS);
       setError(undefined);
     }
-  }, [visible, initialValue]);
+  }, [visible]);
 
   const handleSubmit = () => {
     if (saving) {

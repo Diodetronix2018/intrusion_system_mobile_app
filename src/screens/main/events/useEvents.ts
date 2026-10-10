@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { buildEventItems, type EventItem } from './buildEventItems';
@@ -6,6 +6,13 @@ import { categoryFromTriggerType, type EventCategoryId } from './eventCategories
 import { useEventsTelemetry } from './useEventsTelemetry';
 
 export type EventFilter = 'all' | EventCategoryId;
+
+/**
+ * Filter-scoped debug log, tagged with the category — e.g. `[Events][battery]`
+ * — so one category's logs can be picked out on their own.
+ */
+const logFilter = (category: EventCategoryId, ...args: any[]) =>
+  console.log(`[Events][${category}]`, ...args);
 
 /** How many events to show at once, after filtering. */
 const MAX_VISIBLE = 10;
@@ -60,6 +67,30 @@ export function useEvents(initialFilter?: EventFilter) {
 
     return list.slice(0, MAX_VISIBLE);
   }, [items, filter, query]);
+
+  // With a category chip selected, log that category's raw rows and the
+  // cards they produced. Skipped for "All" — the Main screen also uses this
+  // hook (unfiltered), and the full raw dump is already logged on fetch.
+  useEffect(() => {
+    if (filter === 'all') return;
+    const raw = rows.filter(row => categoryFromTriggerType(row.trigger_type) === filter);
+    logFilter(filter, 'FILTER —', raw.length, 'raw row(s),', events.length, 'card(s) shown');
+    logFilter(filter, 'RAW ROWS →', JSON.stringify(raw, null, 2));
+    logFilter(
+      filter,
+      'CARDS →',
+      JSON.stringify(
+        events.map(({ title, status, datetime, chips }) => ({
+          title,
+          status,
+          datetime,
+          chips: chips?.map(chip => chip.label),
+        })),
+        null,
+        2,
+      ),
+    );
+  }, [filter, rows, events]);
 
   return {
     events,
