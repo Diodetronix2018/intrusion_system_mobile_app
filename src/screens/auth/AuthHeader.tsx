@@ -6,7 +6,7 @@ import { Logo, Typography } from '../../components';
 import { useTheme } from '../../theme';
 import { useResponsive } from '../../utils/responsive';
 
-/** Logo → "Diodetronix" → "DTX Secure", shared by sign in and sign up. */
+/** Logo → "DTX Secure", shared by sign in and sign up. */
 export function AuthHeader() {
   const { t } = useTranslation();
   const { colors, spacing } = useTheme();
@@ -16,7 +16,6 @@ export function AuthHeader() {
 
   return (
     <View style={{ marginBottom: spacing['3xl'] }}>
-
       <Logo size={logoSize} />
 
       <Typography
@@ -26,14 +25,6 @@ export function AuthHeader() {
         style={{ marginTop: spacing.lg }}
       >
         {t('brand.name')}
-      </Typography>
-
-      <Typography
-        variant="subheading"
-        size={moderateScale(20)}
-        color={colors.textSecondary}
-      >
-        {t('brand.tagline')}
       </Typography>
     </View>
   );

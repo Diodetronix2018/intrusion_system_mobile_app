@@ -72,7 +72,6 @@ describe.each<ThemeMode>(['light', 'dark'])('in %s theme', mode => {
 
 const TRANSLATED_KEYS = [
   'brand.name',
-  'brand.tagline',
   'auth.signIn.submit',
   'auth.signIn.forgotPassword',
   'auth.signIn.footerPrompt',

@@ -1,7 +1,6 @@
 {
   "brand": {
-    "name": "Diodetronix",
-    "tagline": "DTX Secure"
+    "name": "DTX Secure"
   },
   "auth": {
     "signIn": {
@@ -262,7 +261,9 @@
     "invalidPhone": "Enter a valid phone number",
     "empty": "No numbers configured yet.",
     "maxReached": "You can add up to {{count}} numbers.",
-    "phoneHint": "{{count}}-digit mobile number, without +91"
+    "phoneHint": "{{count}}-digit mobile number, without +91",
+    "numberAdded": "Phone number added",
+    "numberUpdated": "Phone number updated"
   },
   "events": {
     "title": "Events",
@@ -291,7 +292,8 @@
     },
     "battery": {
       "normal": "Battery Normal",
-      "fail": "Battery Fail"
+      "fail": "Battery Fail",
+      "low": "Low Battery"
     },
     "hooter": {
       "normal": "Hooter Normal",
@@ -375,6 +377,10 @@
     "batteryFail": {
       "title": "Battery Fail",
       "description": "Notify when backup battery is low or critically low"
+    },
+    "lowBattery": {
+      "title": "Low Battery",
+      "description": "Notify when backup battery is running low"
     },
     "users": {
       "title": "Number of Users",

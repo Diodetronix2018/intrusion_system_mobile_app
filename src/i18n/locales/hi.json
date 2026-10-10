@@ -1,7 +1,6 @@
 {
   "brand": {
-    "name": "Diodetronix",
-    "tagline": "DTX Secure"
+    "name": "DTX Secure"
   },
   "auth": {
     "signIn": {
@@ -262,7 +261,9 @@
     "invalidPhone": "मान्य फ़ोन नंबर दर्ज करें",
     "empty": "अभी कोई नंबर कॉन्फ़िगर नहीं है।",
     "maxReached": "आप अधिकतम {{count}} नंबर जोड़ सकते हैं।",
-    "phoneHint": "{{count}} अंकों का मोबाइल नंबर, +91 के बिना"
+    "phoneHint": "{{count}} अंकों का मोबाइल नंबर, +91 के बिना",
+    "numberAdded": "फ़ोन नंबर जोड़ा गया",
+    "numberUpdated": "फ़ोन नंबर अपडेट किया गया"
   },
   "events": {
     "title": "इवेंट्स",
@@ -291,7 +292,8 @@
     },
     "battery": {
       "normal": "बैटरी सामान्य",
-      "fail": "बैटरी फेल"
+      "fail": "बैटरी फेल",
+      "low": "कम बैटरी"
     },
     "hooter": {
       "normal": "हूटर सामान्य",
@@ -375,6 +377,10 @@
     "batteryFail": {
       "title": "बैटरी विफलता",
       "description": "बैकअप बैटरी कम या गंभीर रूप से कम होने पर सूचित करें"
+    },
+    "lowBattery": {
+      "title": "कम बैटरी",
+      "description": "बैकअप बैटरी कम होने पर सूचित करें"
     },
     "users": {
       "title": "उपयोगकर्ताओं की संख्या",

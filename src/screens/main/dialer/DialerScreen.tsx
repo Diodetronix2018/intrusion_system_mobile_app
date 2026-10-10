@@ -24,8 +24,6 @@ export function DialerScreen() {
     saving,
     add,
     update,
-    setMethod,
-    setAlert,
     remove,
     removeAll,
   } = useDialerEntries();
@@ -58,6 +56,10 @@ export function DialerScreen() {
       // Only close once the publish actually landed — a failure leaves the
       // sheet open (with an error toast) so the user's input isn't lost.
       setEditingSlot(null);
+      Toast.show({
+        type: 'success',
+        text1: t(editing ? 'dialer.numberUpdated' : 'dialer.numberAdded'),
+      });
     } catch (err) {
       reportError(err);
     }
@@ -128,14 +130,6 @@ export function DialerScreen() {
             setEditingSlot(entry.slot);
           }}
           onDelete={() => confirmDelete(entry.slot, entry.phone)}
-          onMethodChange={method => {
-            if (requireStayMode()) return;
-            setMethod(entry.slot, method).catch(reportError);
-          }}
-          onAlertChange={alert => {
-            if (requireStayMode()) return;
-            setAlert(entry.slot, alert).catch(reportError);
-          }}
         />
       ))}
 

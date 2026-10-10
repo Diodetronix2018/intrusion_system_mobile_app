@@ -161,7 +161,27 @@ function buildPowerFailEvents(row: TelemetryRow, id: string, t: T): EventItem[] 
   ];
 }
 
+/**
+ * `battery` rows cover two events, told apart by `trigger`: `"bat_low"` is
+ * a low-battery event (from `bat_low`), anything else battery fail (from
+ * `bat_fail`).
+ */
 function buildBatteryEvents(row: TelemetryRow, id: string, t: T): EventItem[] {
+  if (row.trigger === 'bat_low') {
+    const low = asNumber(row.bat_low) === 1;
+    return [
+      {
+        id,
+        category: 'battery',
+        title: t(low ? 'events.battery.low' : 'events.battery.normal'),
+        status: low ? 'warning' : 'success',
+        icon: low ? BatteryFailIcon : BatteryNormalIcon,
+        timestamp: asNumber(row.timestamp),
+        datetime: asDatetime(row),
+      },
+    ];
+  }
+
   const fail = asNumber(row.bat_fail) === 1;
   return [
     {

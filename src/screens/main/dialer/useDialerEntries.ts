@@ -134,24 +134,6 @@ export function useDialerEntries(initial: DialerEntry[] = []) {
     [publish, setEntries],
   );
 
-  const setMethod = useCallback(
-    async (slot: number, method: ContactMethod) => {
-      const entry = entries.find(item => item.slot === slot);
-      if (!entry) return;
-      await update(slot, { ...entry, method });
-    },
-    [entries, update],
-  );
-
-  const setAlert = useCallback(
-    async (slot: number, alert: AlertKind) => {
-      const entry = entries.find(item => item.slot === slot);
-      if (!entry) return;
-      await update(slot, { ...entry, alert });
-    },
-    [entries, update],
-  );
-
   const remove = useCallback(
     async (slot: number) => {
       await publish({ dia: buildDiaDeleteValue(slot) });
@@ -172,8 +154,6 @@ export function useDialerEntries(initial: DialerEntry[] = []) {
     saving: publishing,
     add,
     update,
-    setMethod,
-    setAlert,
     remove,
     removeAll,
   };

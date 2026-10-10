@@ -13,14 +13,16 @@ import {
   DialerEntry,
 } from './types';
 
+/**
+ * One saved dial-out number. Read-only — the type/alert chips only show
+ * what's saved; changing anything goes through the edit (pencil) button.
+ */
 export function DialerCard({
   entry,
   index,
   disabled = false,
   onEdit,
   onDelete,
-  onMethodChange,
-  onAlertChange,
 }: {
   entry: DialerEntry;
   /** 1-based position, shown in the circle */
@@ -29,8 +31,6 @@ export function DialerCard({
   disabled?: boolean;
   onEdit: () => void;
   onDelete: () => void;
-  onMethodChange: (method: ContactMethod) => void;
-  onAlertChange: (alert: AlertKind) => void;
 }) {
   const { t } = useTranslation();
   const { colors, radius, sizing, spacing, layeredShadow } = useTheme();
@@ -108,36 +108,29 @@ export function DialerCard({
         </Pressable>
       </View>
 
-      <View
-        pointerEvents={disabled ? 'none' : 'auto'}
-        style={disabled ? styles.disabled : undefined}
-      >
-        {section(
-          t('dialer.type'),
-          <ChipGroup<ContactMethod>
-            accessibilityLabel={t('dialer.type')}
-            selected={entry.method}
-            onSelect={onMethodChange}
-            options={CONTACT_METHODS.map(item => ({
-              value: item.value,
-              label: t(item.labelKey),
-            }))}
-          />,
-        )}
+      {section(
+        t('dialer.type'),
+        <ChipGroup<ContactMethod>
+          accessibilityLabel={t('dialer.type')}
+          selected={entry.method}
+          options={CONTACT_METHODS.map(item => ({
+            value: item.value,
+            label: t(item.labelKey),
+          }))}
+        />,
+      )}
 
-        {section(
-          t('dialer.alert'),
-          <ChipGroup<AlertKind>
-            accessibilityLabel={t('dialer.alert')}
-            selected={entry.alert}
-            onSelect={onAlertChange}
-            options={ALERT_KINDS.map(item => ({
-              value: item.value,
-              label: t(item.labelKey),
-            }))}
-          />,
-        )}
-      </View>
+      {section(
+        t('dialer.alert'),
+        <ChipGroup<AlertKind>
+          accessibilityLabel={t('dialer.alert')}
+          selected={entry.alert}
+          options={ALERT_KINDS.map(item => ({
+            value: item.value,
+            label: t(item.labelKey),
+          }))}
+        />,
+      )}
     </View>
   );
 }

@@ -10,7 +10,8 @@ export type ChipOption<T extends string | number> = {
 };
 
 /**
- * Pick-one row of pill chips.
+ * Pick-one row of pill chips. Without `onSelect` it's read-only: the chips
+ * just show which option is selected and don't respond to taps.
  *
  * Widths come from the content plus 12pt side padding rather than the fixed
  * 84/47 in the spec, so the longer translations ("Burglar + Fire", and the
@@ -24,7 +25,7 @@ export function ChipGroup<T extends string | number>({
 }: {
   options: readonly ChipOption<T>[];
   selected: T;
-  onSelect: (value: T) => void;
+  onSelect?: (value: T) => void;
   accessibilityLabel?: string;
 }) {
   const { colors, spacing } = useTheme();
@@ -40,9 +41,10 @@ export function ChipGroup<T extends string | number>({
         return (
           <Pressable
             key={option.value}
-            onPress={() => onSelect(option.value)}
+            onPress={onSelect ? () => onSelect(option.value) : undefined}
+            disabled={!onSelect}
             accessibilityRole="radio"
-            accessibilityState={{ selected: isSelected }}
+            accessibilityState={{ selected: isSelected, disabled: !onSelect }}
             style={({ pressed }) => [
               styles.chip,
               {

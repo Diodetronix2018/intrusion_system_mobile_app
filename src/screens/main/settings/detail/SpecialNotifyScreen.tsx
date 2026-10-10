@@ -112,6 +112,27 @@ export function SpecialNotifyScreen() {
 
         <FeatureCard
           shadow="soft"
+          icon={
+            <Image
+              source={require('../../../../assets/images/battery-alert.png')}
+              style={styles.batteryIcon}
+              resizeMode="contain"
+              accessibilityIgnoresInvertColors
+            />
+          }
+          title={t('specialNotify.lowBattery.title')}
+          description={t('specialNotify.lowBattery.description')}
+          trailing={
+            <ToggleSwitch
+              value={settings.lowBattery}
+              onValueChange={next => setAlert('lowBattery', next)}
+              accessibilityLabel={t('specialNotify.lowBattery.title')}
+            />
+          }
+        />
+
+        <FeatureCard
+          shadow="soft"
           icon={<UsersIcon size={20} color={colors.onPrimary} />}
           title={t('specialNotify.users.title')}
           description={t('specialNotify.users.description')}
