@@ -14,6 +14,7 @@ import {
   TamperGlyph,
   ZoneGlyph,
 } from './SystemStatusGlyphs';
+import type { ZoneCodeChip } from './useMainStatus';
 
 export type SubsystemKey =
   | 'zone'
@@ -43,10 +44,13 @@ const COLUMNS = 3;
 
 export function SystemStatusCard({
   statuses,
+  zoneChips = [],
   onPressTile,
 }: {
   /** Status per subsystem; anything missing is treated as healthy */
   statuses?: Partial<Record<SubsystemKey, SubsystemStatus>>;
+  /** One chip per zone code active right now (Delay, Alarm, Bypass, …) */
+  zoneChips?: ZoneCodeChip[];
   /** Tapping a tile — e.g. Zone/Tamper go to Zone Details, the rest jump to
    *  the Events tab pre-filtered to that subsystem's category. */
   onPressTile?: (key: SubsystemKey) => void;
@@ -58,8 +62,6 @@ export function SystemStatusCard({
     { length: Math.ceil(SUBSYSTEMS.length / COLUMNS) },
     (_, row) => SUBSYSTEMS.slice(row * COLUMNS, row * COLUMNS + COLUMNS),
   );
-
-  const zoneStatus = statuses?.zone ?? 'success';
 
   return (
     <View
@@ -83,11 +85,16 @@ export function SystemStatusCard({
           {t('main.system.title')}
         </Typography>
 
-        {zoneStatus !== 'success' && (
-          <StatusChip
-            status={zoneStatus}
-            label={t(`main.system.zoneChip.${zoneStatus}`)}
-          />
+        {zoneChips.length > 0 && (
+          <View style={[styles.chips, { gap: spacing.xs }]}>
+            {zoneChips.map(chip => (
+              <StatusChip
+                key={chip.code}
+                status={chip.status}
+                label={t(`main.zoneStatus.codes.${chip.labelKey}`)}
+              />
+            ))}
+          </View>
         )}
       </View>
 
@@ -124,6 +131,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 8,
+  },
+  chips: {
+    flexShrink: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
   },
   row: {
     flexDirection: 'row',

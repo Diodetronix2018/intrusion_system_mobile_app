@@ -144,6 +144,32 @@ export function zoneCodeLabelKey(value?: number): string {
   return (value != null && ZONE_CODE_LABEL_KEYS[value]) || 'normal';
 }
 
+/** One System Status chip: a zone code that's active on at least one zone. */
+export type ZoneCodeChip = {
+  code: number;
+  /** Under `main.zoneStatus.codes.*` — the same labels as Zone Details. */
+  labelKey: string;
+  status: SubsystemStatus;
+};
+
+/** Chip order: most severe first (Fire, Alarm), then the warning tier. */
+const ZONE_CODE_CHIP_ORDER = [7, 2, 1, 3, 4, 6];
+
+/**
+ * Every distinct non-normal code across zones 1-8 (`zon[0..TAMPER_INDEX-1]`,
+ * tamper excluded like `zoneAggregateStatus`), one chip each — e.g. zones
+ * on Delay and Bypass at once show both. Normal (0), and codes the panel
+ * hasn't defined, get no chip.
+ */
+function zoneCodeChips(zon?: number[]): ZoneCodeChip[] {
+  const active = new Set(zon?.slice(0, TAMPER_INDEX));
+  return ZONE_CODE_CHIP_ORDER.filter(code => active.has(code)).map(code => ({
+    code,
+    labelKey: ZONE_CODE_LABEL_KEYS[code],
+    status: ZONE_FAULT_VALUES.has(code) ? 'failed' : 'warning',
+  }));
+}
+
 /** 0 -> night, 1 -> always; undefined when `zmd` has no entry at this index. */
 function zoneMode(value?: number): ZoneMode | undefined {
   return value == null ? undefined : value === 1 ? 'always' : 'night';
@@ -226,6 +252,7 @@ export function useMainStatus() {
       partitionMode,
       timestamp: reported?.ts,
       statuses,
+      zoneChips: zoneCodeChips(reported?.zon),
       zones,
     };
   }, [reported, connected, armMode]);

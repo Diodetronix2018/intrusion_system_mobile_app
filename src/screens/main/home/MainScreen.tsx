@@ -21,6 +21,7 @@ import {
   ResetGlyph,
 } from './QuickActionGlyphs';
 import { StatusCard } from './StatusCard';
+import { SwitchingDeviceOverlay } from './SwitchingDeviceOverlay';
 import { SystemStatusCard } from './SystemStatusCard';
 import type { SubsystemKey } from './SystemStatusCard';
 import { LatestActivityCard } from './LatestActivityCard';
@@ -36,6 +37,15 @@ const AGO_REFRESH_MS = 60000;
  * failed — long enough to cover a reconnect when tapped while offline.
  */
 const REFRESH_TIMEOUT_MS = 10000;
+
+/**
+ * After a device switch, the loader stays up this much longer once the new
+ * device's state has arrived, so the screen settles before it's usable.
+ */
+const SWITCH_SETTLE_MS = 1000;
+
+/** Gives up on a device switch (with an error toast) after this long. */
+const SWITCH_TIMEOUT_MS = 15000;
 
 /**
  * The device's reported `ts` as a relative age in the largest whole unit:
@@ -74,6 +84,7 @@ export function MainScreen() {
     partitionMode: reportedPartitionMode,
     timestamp,
     statuses,
+    zoneChips,
   } = useMainStatus();
   const {
     setArmMode,
@@ -87,9 +98,14 @@ export function MainScreen() {
     pendingAction,
     saving,
   } = useMainControls(reportedArmMode, reportedPartitionMode);
-  const { events: latestEvents } = useEvents();
+  const {
+    events: latestEvents,
+    loading: eventsLoading,
+    error: eventsError,
+  } = useEvents();
   const { requireStayMode } = useEditGuard();
-  const { reconnect, refresh, controlReported } = useIotConnection();
+  const { reconnect, refresh, controlReported, syncedThingName } =
+    useIotConnection();
 
   // Spins from the tap until the refreshed shadow document lands (the
   // reported object is replaced on every message) or the timeout passes,
@@ -138,6 +154,32 @@ export function MainScreen() {
   const { session, switchDevice } = useSession();
   const [deviceSheetOpen, setDeviceSheetOpen] = useState(false);
   const devices = session?.devices ?? [];
+
+  // The device a switch is waiting on — non-null shows the blocking loader
+  // until that device is connected and its state is in (+ a short settle),
+  // so Stay/Away can't be sent before the new connection is ready.
+  const [switchingTo, setSwitchingTo] = useState<string | null>(null);
+  const onSelectDevice = (thingName: string) => {
+    if (thingName === session?.activeThingName) return;
+    setSwitchingTo(thingName);
+    switchDevice(thingName);
+  };
+  useEffect(() => {
+    if (!switchingTo) return;
+    if (syncedThingName === switchingTo) {
+      const id = setTimeout(() => setSwitchingTo(null), SWITCH_SETTLE_MS);
+      return () => clearTimeout(id);
+    }
+    const id = setTimeout(() => {
+      setSwitchingTo(null);
+      Toast.show({
+        type: 'error',
+        text1: t('main.switchDevice.failed'),
+        text2: t('main.switchDevice.failedBody'),
+      });
+    }, SWITCH_TIMEOUT_MS);
+    return () => clearTimeout(id);
+  }, [switchingTo, syncedThingName, t]);
 
   // Ticks once a minute so the relative "Last sync" age stays current even
   // when no new report arrives.
@@ -332,6 +374,7 @@ export function MainScreen() {
         <View style={{ paddingHorizontal: gutter, paddingTop: spacing.xl }}>
           <SystemStatusCard
             statuses={statuses}
+            zoneChips={zoneChips}
             onPressTile={handlePressSystemTile}
           />
         </View>
@@ -340,6 +383,8 @@ export function MainScreen() {
           {/* a preview; the full log lives on the Events tab */}
           <LatestActivityCard
             entries={latestEvents.slice(0, 5)}
+            loading={eventsLoading}
+            error={!!eventsError}
             onViewAll={() => navigation.navigate('Tabs', { screen: 'Events' })}
           />
         </View>
@@ -353,9 +398,11 @@ export function MainScreen() {
           label: thingName,
         }))}
         selected={session?.activeThingName ?? ''}
-        onSelect={switchDevice}
+        onSelect={onSelectDevice}
         onClose={() => setDeviceSheetOpen(false)}
       />
+
+      <SwitchingDeviceOverlay thingName={switchingTo} />
     </>
   );
 }

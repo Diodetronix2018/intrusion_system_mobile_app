@@ -482,7 +482,11 @@
     },
     "switchDevice": {
       "action": "Switch device",
-      "title": "Switch device"
+      "title": "Switch device",
+      "switching": "Switching device…",
+      "switchingBody": "Connecting to {{name}}",
+      "failed": "Couldn't reach the device",
+      "failedBody": "The device didn't respond. Tap refresh or try switching again."
     },
     "modes": {
       "stay": "Stay",
@@ -501,12 +505,7 @@
       "ac": "AC",
       "hooter": "Hooter",
       "tamper": "Tamper",
-      "signal": "Signal",
-      "zoneChip": {
-        "success": "Normal",
-        "warning": "Warning",
-        "failed": "Alarm"
-      }
+      "signal": "Signal"
     },
     "zoneStatus": {
       "title": "Zone Status",
@@ -527,7 +526,9 @@
       "title": "Zone Details"
     },
     "activity": {
-      "title": "Latest Activity"
+      "title": "Latest Activity",
+      "empty": "No activity found",
+      "error": "Couldn't load activity"
     }
   }
 }

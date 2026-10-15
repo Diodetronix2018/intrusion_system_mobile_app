@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Typography } from '../../../components';
@@ -17,13 +17,21 @@ const ICON_CIRCLE = 24;
  * Events tab itself.
  *
  * The card grows with however many rows it is given; the design shows a
- * five-row preview with the rest behind "View all".
+ * five-row preview with the rest behind "View all". With no rows it shows
+ * a spinner during the first load, then "No activity found" (or a load
+ * error) instead of an empty card.
  */
 export function LatestActivityCard({
   entries,
+  loading = false,
+  error = false,
   onViewAll,
 }: {
   entries: EventItem[];
+  /** The event history is still loading. */
+  loading?: boolean;
+  /** The event history failed to load. */
+  error?: boolean;
   onViewAll?: () => void;
 }) {
   const { t } = useTranslation();
@@ -74,6 +82,32 @@ export function LatestActivityCard({
           </Typography>
         </Pressable>
       </View>
+
+      {entries.length === 0 && (
+        <View
+          style={[
+            styles.empty,
+            {
+              borderRadius: radius.sm,
+              backgroundColor: colors.backgroundSubtle,
+              paddingVertical: spacing.lg,
+            },
+          ]}
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <Typography
+              variant="caption"
+              size={13}
+              align="center"
+              color={error ? colors.error : colors.textSecondary}
+            >
+              {t(error ? 'main.activity.error' : 'main.activity.empty')}
+            </Typography>
+          )}
+        </View>
+      )}
 
       {entries.length > 0 && (
         <View
@@ -156,6 +190,10 @@ const styles = StyleSheet.create({
   },
   list: {
     overflow: 'hidden',
+  },
+  empty: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   row: {
     minHeight: 30,

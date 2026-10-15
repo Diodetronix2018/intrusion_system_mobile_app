@@ -92,6 +92,13 @@ interface IotConnectionValue {
   connected: boolean;
   status: IotConnectionStatus;
   /**
+   * The device whose control shadow has actually loaded (its first full
+   * `get` arrived) — null right after switching devices, until the new
+   * one's state is in. Lets a screen wait on a switch instead of acting on
+   * the previous device's state.
+   */
+  syncedThingName: string | null;
+  /**
    * Publishes desired state to a named shadow over the one shared connection.
    * If the connection is down it reconnects first, waiting up to
    * `CONNECT_WAIT_MS` before giving up. Resolves `POST_PUBLISH_GET_DELAY_MS`
@@ -146,6 +153,10 @@ export function IotConnectionProvider({ children }: { children: React.ReactNode 
   const [configReported, setConfigReported] = useState<Record<string, unknown> | null>(null);
   const [connected, setConnected] = useState(false);
   const [status, setStatus] = useState<IotConnectionStatus>('connecting');
+  const [syncedThingName, setSyncedThingName] = useState<string | null>(null);
+  // The device the reported state above belongs to — when it changes, that
+  // state is dropped rather than merged into (see the connect effect).
+  const stateThingRef = useRef<string | null>(null);
   const clientRef = useRef<MqttClient | null>(null);
   // Bumped to tear the current client down and run the connect flow again.
   const [generation, setGeneration] = useState(0);
@@ -207,6 +218,17 @@ export function IotConnectionProvider({ children }: { children: React.ReactNode 
     const thingName = resolveThingName(session?.activeThingName);
     const controlTopics = namedShadowTopics(thingName, SBA_CONTROL_SHADOW);
     const configTopics = namedShadowTopics(thingName, SBA_CONFIG_SHADOW);
+
+    // Switched devices: the previous one's shadow state must not linger on
+    // screen (or be merged with the new one's), so start from empty and
+    // wait for this device's own first `get`. A plain reconnect to the same
+    // device keeps what's already loaded.
+    if (stateThingRef.current !== thingName) {
+      stateThingRef.current = thingName;
+      setControlReported(null);
+      setConfigReported(null);
+      setSyncedThingName(null);
+    }
 
     inFlightRef.current = true;
     setStatus(generation === 0 ? 'connecting' : 'reconnecting');
@@ -329,6 +351,7 @@ export function IotConnectionProvider({ children }: { children: React.ReactNode 
               // harmlessly the same way.
               if (isControl) setControlReported(prev => ({ ...prev, ...reported }));
               else setConfigReported(prev => ({ ...prev, ...reported }));
+              if (msgTopic === controlTopics.getAccepted) setSyncedThingName(thingName);
             }
           } catch (e: any) {
             logWarn('message parse failed:', e?.message, raw);
@@ -496,11 +519,21 @@ export function IotConnectionProvider({ children }: { children: React.ReactNode 
       configReported,
       connected,
       status,
+      syncedThingName,
       publish,
       reconnect,
       refresh,
     }),
-    [controlReported, configReported, connected, status, publish, reconnect, refresh],
+    [
+      controlReported,
+      configReported,
+      connected,
+      status,
+      syncedThingName,
+      publish,
+      reconnect,
+      refresh,
+    ],
   );
 
   return (
