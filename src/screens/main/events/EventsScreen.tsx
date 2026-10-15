@@ -8,7 +8,13 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { Icon, Input, Screen, Typography } from '../../../components';
+import {
+  Icon,
+  Input,
+  PAGE_PADDING_VERTICAL,
+  Screen,
+  Typography,
+} from '../../../components';
 import type { TabScreenProps } from '../../../navigation/types';
 import { useTheme } from '../../../theme';
 import { EventCard } from './EventCard';
@@ -133,6 +139,8 @@ const styles = StyleSheet.create({
   },
   listContent: {
     flexGrow: 1,
+    // the list runs right down to the tab bar; this is its end spacing
+    paddingBottom: PAGE_PADDING_VERTICAL,
   },
   status: {
     marginTop: 32,

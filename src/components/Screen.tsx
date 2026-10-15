@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useContext } from 'react';
+import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
 import { StatusBar, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import {
   KeyboardAwareScrollView,
@@ -23,7 +24,11 @@ export type ScreenProps = {
    * with the keyboard. Use it for the primary action button.
    */
   footer?: React.ReactNode;
-  /** Wraps the content in a scroll view — turn off for full-height layouts */
+  /**
+   * Wraps the content in a scroll view — turn off for full-height layouts.
+   * Off, there's no bottom page padding either: the screen's own scrolling
+   * list owns its end spacing, so it can run right down to the edge.
+   */
   scrollable?: boolean;
   style?: StyleProp<ViewStyle>;
   contentContainerStyle?: StyleProp<ViewStyle>;
@@ -51,6 +56,11 @@ export function Screen({
   const { colors, isDark, spacing } = useTheme();
   const { gutter, contentMaxWidth } = useResponsive();
   const insets = useSafeAreaInsets();
+  // Inside the bottom tabs, the tab bar already pads the bottom safe-area
+  // inset (see `TabBar`) — padding it here too left a blank band at the end
+  // of every tab's scroll.
+  const inTabs = useContext(BottomTabBarHeightContext) !== undefined;
+  const bottomInset = inTabs ? 0 : insets.bottom;
 
   const horizontal = padded ? gutter : 0;
 
@@ -58,7 +68,11 @@ export function Screen({
     paddingHorizontal: horizontal,
     paddingTop: PAGE_PADDING_VERTICAL,
     // with a pinned footer the bottom padding lives on the footer instead
-    paddingBottom: footer ? spacing.lg : PAGE_PADDING_VERTICAL + insets.bottom,
+    paddingBottom: !scrollable
+      ? 0
+      : footer
+      ? spacing.lg
+      : PAGE_PADDING_VERTICAL + bottomInset,
   };
 
   const measure: ViewStyle = { maxWidth: contentMaxWidth };
@@ -98,14 +112,14 @@ export function Screen({
       {!!footer && (
         // rides up with the keyboard; the safe-area inset is only needed while
         // the keyboard is closed, so it is cancelled out when open
-        <KeyboardStickyView offset={{ closed: 0, opened: insets.bottom }}>
+        <KeyboardStickyView offset={{ closed: 0, opened: bottomInset }}>
           <View
             style={[
               styles.footer,
               {
                 paddingHorizontal: horizontal,
                 paddingTop: spacing.md,
-                paddingBottom: PAGE_PADDING_VERTICAL + insets.bottom,
+                paddingBottom: PAGE_PADDING_VERTICAL + bottomInset,
                 backgroundColor: background ?? colors.background,
               },
             ]}
