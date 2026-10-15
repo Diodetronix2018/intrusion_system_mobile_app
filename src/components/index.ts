@@ -2,6 +2,7 @@ export { AppHeader } from './AppHeader';
 export { LanguageCard, ThemeCard } from './AppPreferences';
 export { Button } from './Button';
 export { ChipGroup } from './ChipGroup';
+export { ConfirmModal } from './ConfirmModal';
 export type { ChipOption } from './ChipGroup';
 export type { ButtonProps, ButtonSize, ButtonVariant } from './Button';
 export { Input } from './Input';

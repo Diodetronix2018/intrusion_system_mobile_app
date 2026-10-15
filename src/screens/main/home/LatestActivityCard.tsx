@@ -7,10 +7,14 @@ import { eventStatusColor, formatEventTimestamp } from '../events';
 import type { EventItem } from '../events';
 import { useTheme } from '../../../theme';
 
+/** A smaller take on the Events card's icon ring, to fit the compact row. */
+const ICON_CIRCLE = 24;
+
 /**
  * Event log preview: a header with "View all", then one row per entry
- * showing just the status and timestamp — the full detail (icon, chips, details)
- * lives on the Events tab itself.
+ * showing the event's icon (in the same status-tinted ring as the Events
+ * tab), title and timestamp — the full detail (chips, details) lives on the
+ * Events tab itself.
  *
  * The card grows with however many rows it is given; the design shows a
  * five-row preview with the rest behind "View all".
@@ -83,6 +87,7 @@ export function LatestActivityCard({
         >
           {entries.map((entry, index) => {
             const tint = eventStatusColor(entry.status, colors);
+            const Glyph = entry.icon;
             return (
               <View
                 key={entry.id}
@@ -101,13 +106,12 @@ export function LatestActivityCard({
               >
                 <View
                   style={[
-                    styles.dot,
-                    {
-                      backgroundColor: tint,
-                      boxShadow: `0px 0px 8px 0px ${tint}33`,
-                    },
+                    styles.iconCircle,
+                    { borderColor: tint, backgroundColor: colors.card },
                   ]}
-                />
+                >
+                  <Glyph size={13} color={tint} />
+                </View>
 
                 <Typography
                   variant="captionBold"
@@ -158,10 +162,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  iconCircle: {
+    width: ICON_CIRCLE,
+    height: ICON_CIRCLE,
+    borderRadius: ICON_CIRCLE / 2,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   entryLabel: {
     flex: 1,

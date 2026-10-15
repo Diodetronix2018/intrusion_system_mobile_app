@@ -14,12 +14,15 @@ export function ScreenHeader({
   title,
   onBack,
   background,
+  right,
 }: {
   /** Omit on screens that render their own page title below the bar */
   title?: string;
   onBack?: () => void;
   /** Matches the page when the screen uses a grouped background */
   background?: string;
+  /** Optional action on the right end, e.g. a logout icon button */
+  right?: React.ReactNode;
 }) {
   const { t } = useTranslation();
   const { colors, spacing, sizing } = useTheme();
@@ -72,7 +75,7 @@ export function ScreenHeader({
       )}
 
       {/* balances the back button so the title stays optically centred */}
-      <View style={styles.back} />
+      <View style={[styles.back, styles.right]}>{right}</View>
     </View>
   );
 }
@@ -90,5 +93,8 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
+  },
+  right: {
+    alignItems: 'flex-end',
   },
 });

@@ -1,11 +1,12 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
 
 import {
   Button,
+  ConfirmModal,
   Icon,
   Input,
   Screen,
@@ -18,6 +19,7 @@ import {
   normalizeThingName,
   parseClaimQr,
 } from '../../session/deviceClaim';
+import { LogOutIcon } from '../../icons';
 import { useTheme } from '../../theme';
 import { QrScanner } from './QrScanner';
 
@@ -29,14 +31,19 @@ type Mode = 'scan' | 'manual';
  * behind "Enter manually".
  */
 export function ClaimDeviceScreen() {
-  const { colors, spacing } = useTheme();
+  const { colors, spacing, sizing } = useTheme();
   const { t } = useTranslation();
-  const { claimDevice } = useSession();
+  const { claimDevice, signOut } = useSession();
   const navigation = useNavigation();
   // Whether there's somewhere to go back to: false when this is the
   // mandatory gate for a first-ever claim (nothing before it on the stack),
   // true when it was opened from Profile to add another device.
   const canGoBack = navigation.canGoBack();
+
+  // The first-claim gate is the whole app until a device is linked, so its
+  // header carries a logout (e.g. to try another account) — same
+  // confirmation as Profile's Logout.
+  const [confirmingSignOut, setConfirmingSignOut] = useState(false);
 
   const [mode, setMode] = useState<Mode>('scan');
   const [deviceId, setDeviceId] = useState('');
@@ -126,6 +133,37 @@ export function ClaimDeviceScreen() {
             ? () => navigation.goBack()
             : undefined
         }
+        // Only on the mandatory first-claim gate — opened from Profile,
+        // Profile's own Logout is one back-tap away.
+        right={
+          !canGoBack ? (
+            <Pressable
+              onPress={() => setConfirmingSignOut(true)}
+              disabled={claiming}
+              hitSlop={sizing.hitSlop}
+              accessibilityRole="button"
+              accessibilityLabel={t('profile.logout')}
+              style={claiming ? styles.disabled : undefined}
+            >
+              <LogOutIcon size={22} color={colors.error} />
+            </Pressable>
+          ) : undefined
+        }
+      />
+
+      <ConfirmModal
+        visible={confirmingSignOut}
+        icon={LogOutIcon}
+        title={t('profile.logout')}
+        message={t('profile.logoutConfirm')}
+        confirmLabel={t('profile.logout')}
+        cancelLabel={t('common.cancel')}
+        destructive
+        onCancel={() => setConfirmingSignOut(false)}
+        onConfirm={() => {
+          setConfirmingSignOut(false);
+          signOut();
+        }}
       />
 
       <Screen
@@ -231,5 +269,8 @@ const styles = StyleSheet.create({
   overlay: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  disabled: {
+    opacity: 0.5,
   },
 });

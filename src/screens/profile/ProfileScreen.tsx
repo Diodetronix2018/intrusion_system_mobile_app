@@ -1,10 +1,11 @@
-import React, { useCallback } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 
 import {
   Button,
+  ConfirmModal,
   LanguageCard,
   PreferenceCard,
   Screen,
@@ -25,12 +26,7 @@ export function ProfileScreen() {
 
   // Logging out revokes the refresh token, so the next launch needs a full
   // sign-in again — worth one tap of confirmation.
-  const confirmSignOut = useCallback(() => {
-    Alert.alert(t('profile.logout'), t('profile.logoutConfirm'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: t('profile.logout'), style: 'destructive', onPress: signOut },
-    ]);
-  }, [signOut, t]);
+  const [confirmingSignOut, setConfirmingSignOut] = useState(false);
 
   return (
     <View style={[styles.flex, { backgroundColor: colors.backgroundGrouped }]}>
@@ -110,11 +106,26 @@ export function ProfileScreen() {
         <Button
           title={t('profile.logout')}
           variant="error"
-          onPress={confirmSignOut}
+          onPress={() => setConfirmingSignOut(true)}
           leftIcon={<LogOutIcon size={18} color={colors.onError} />}
           style={{ marginTop: spacing.lg }}
         />
       </Screen>
+
+      <ConfirmModal
+        visible={confirmingSignOut}
+        icon={LogOutIcon}
+        title={t('profile.logout')}
+        message={t('profile.logoutConfirm')}
+        confirmLabel={t('profile.logout')}
+        cancelLabel={t('common.cancel')}
+        destructive
+        onCancel={() => setConfirmingSignOut(false)}
+        onConfirm={() => {
+          setConfirmingSignOut(false);
+          signOut();
+        }}
+      />
     </View>
   );
 }
