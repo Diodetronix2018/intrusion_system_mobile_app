@@ -42,7 +42,8 @@ export function ModeCard({
   return (
     <Pressable
       onPress={onPress}
-      disabled={disabled}
+      // the active mode is already applied — tapping it again must not resend
+      disabled={disabled || active}
       accessibilityRole="radio"
       accessibilityState={{ selected: active, disabled, busy: loading }}
       accessibilityLabel={label}

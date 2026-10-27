@@ -42,7 +42,8 @@ export function QuickActionCard({
   return (
     <Pressable
       onPress={onPress}
-      disabled={disabled}
+      // the active All/Part is already applied — tapping it again must not resend
+      disabled={disabled || active === true}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={

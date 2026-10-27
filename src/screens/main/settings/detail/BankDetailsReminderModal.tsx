@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 
 import { Button, Icon, Typography } from '../../../../components';
+import { useSession } from '../../../../session/SessionProvider';
 import { useTheme } from '../../../../theme';
 import { useResponsive } from '../../../../utils/responsive';
 import { useConfigStatus } from '../../useConfigStatus';
@@ -12,13 +13,12 @@ import { isBnkValueEmpty } from './useBankDetails';
 const ICON_SIZE = 56;
 
 /**
- * Nudges the user to fill in Bank Details once per app open, if the device's
- * `bnk` shadow value is still empty by the time it loads — never before
- * (`isBnkValueEmpty` treats "not loaded yet" as not-empty, so this can't
- * flash before the real value arrives) and never more than once per launch
- * (`dismissed` is plain component state: it starts fresh every time this
- * mounts, which only happens once per signed-in session, and there's
- * nothing persisted to make it "remember" across a real app close/reopen).
+ * Nudges the user to fill in Bank Details once per app open and device, if
+ * the device's `bnk` shadow value is still empty by the time it loads —
+ * never before (`isBnkValueEmpty` treats "not loaded yet" as not-empty, so
+ * this can't flash before the real value arrives). Dismissing it only lasts
+ * until the next device switch, which checks the new device afresh. Plain
+ * component state, so nothing is remembered across a real app close/reopen.
  */
 export function BankDetailsReminderModal() {
   const { t } = useTranslation();
@@ -26,12 +26,15 @@ export function BankDetailsReminderModal() {
   const { contentMaxWidth } = useResponsive();
   const navigation = useNavigation();
   const { reported } = useConfigStatus();
+  const thingName = useSession().session?.activeThingName ?? null;
   const [dismissed, setDismissed] = useState(false);
+  const dismiss = () => setDismissed(true);
+  useEffect(() => setDismissed(false), [thingName]);
 
   const visible = !dismissed && isBnkValueEmpty(reported?.bnk);
 
   const goToBankDetails = () => {
-    setDismissed(true);
+    dismiss();
     navigation.navigate('SettingsDetail', { optionId: 'bankDetails' });
   };
 
@@ -41,7 +44,7 @@ export function BankDetailsReminderModal() {
       transparent
       animationType="fade"
       statusBarTranslucent
-      onRequestClose={() => setDismissed(true)}
+      onRequestClose={dismiss}
     >
       <View style={[styles.anchor, { backgroundColor: colors.overlay }]}>
         <View
@@ -60,7 +63,10 @@ export function BankDetailsReminderModal() {
           <View
             style={[
               styles.iconWell,
-              { borderRadius: ICON_SIZE / 2, backgroundColor: colors.primaryMuted },
+              {
+                borderRadius: ICON_SIZE / 2,
+                backgroundColor: colors.primaryMuted,
+              },
             ]}
           >
             <Icon name="business-outline" size={26} color={colors.primary} />
@@ -89,11 +95,7 @@ export function BankDetailsReminderModal() {
             style={{ marginTop: spacing.sm }}
           />
 
-          <Pressable
-            onPress={() => setDismissed(true)}
-            accessibilityRole="button"
-            hitSlop={8}
-          >
+          <Pressable onPress={dismiss} accessibilityRole="button" hitSlop={8}>
             <Typography
               variant="captionBold"
               align="center"

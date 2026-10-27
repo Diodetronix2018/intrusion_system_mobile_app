@@ -23,56 +23,52 @@ export type SpecialNotifySettings = {
   acFail: boolean;
   batteryFail: boolean;
   lowBattery: boolean;
+  acRestore: boolean;
   userGroup: UserGroup;
 };
 
-export type SpecialNotifyAlert = 'acFail' | 'batteryFail' | 'lowBattery';
+export type SpecialNotifyAlert = 'acFail' | 'batteryFail' | 'lowBattery' | 'acRestore';
 
 const DEFAULTS: SpecialNotifySettings = {
   acFail: true,
   batteryFail: true,
   lowBattery: true,
+  acRestore: false,
   userGroup: 'admin',
 };
 
 /**
  * Builds the device's `nty` shadow value from the on-screen settings:
- * `"<acFail 0|1>,<batteryFail 0|1>,<lowBattery 0|1>,<userGroup 0-3>"`,
- * e.g. `"0,0,1,2"`.
+ * `"<acFail 0|1>,<batteryFail 0|1>,<lowBattery 0|1>,<acRestore 0|1>,<userGroup 0-3>"`,
+ * e.g. `"0,0,1,0,2"`.
  */
 export function buildNtyValue(settings: SpecialNotifySettings): string {
   return [
     settings.acFail ? 1 : 0,
     settings.batteryFail ? 1 : 0,
     settings.lowBattery ? 1 : 0,
+    settings.acRestore ? 1 : 0,
     USER_GROUP_INDEX[settings.userGroup],
   ].join(',');
 }
 
 /**
  * Parses the device's saved `nty` value back into `SpecialNotifySettings`.
- * Also accepts the older 3-field form (no low-battery field) that panels
- * saved before it existed — low battery then shows its default, ON.
+ * Also accepts the older forms panels saved before a field existed — 3
+ * fields (no low battery, no AC restore) and 4 (no AC restore) — showing
+ * each missing field at its default. The user group is always last.
  */
 export function parseNtyValue(raw: string): SpecialNotifySettings | undefined {
   const parts = raw.split(',').map(Number);
-  if (parts.some(Number.isNaN)) return undefined;
-  if (parts.length === 3) {
-    const [acFail, batteryFail, groupIndex] = parts;
-    return {
-      acFail: acFail === 1,
-      batteryFail: batteryFail === 1,
-      lowBattery: DEFAULTS.lowBattery,
-      userGroup: USER_GROUPS[groupIndex] ?? 'admin',
-    };
+  if (parts.length < 3 || parts.length > 5 || parts.some(Number.isNaN)) {
+    return undefined;
   }
-  if (parts.length !== 4) return undefined;
-  const [acFail, batteryFail, lowBattery, groupIndex] = parts;
   return {
-    acFail: acFail === 1,
-    batteryFail: batteryFail === 1,
-    lowBattery: lowBattery === 1,
-    userGroup: USER_GROUPS[groupIndex] ?? 'admin',
+    acFail: parts[0] === 1,
+    batteryFail: parts[1] === 1,
+    lowBattery: parts.length >= 4 ? parts[2] === 1 : DEFAULTS.lowBattery,
+    acRestore: parts.length === 5 ? parts[3] === 1 : DEFAULTS.acRestore,
+    userGroup: USER_GROUPS[parts[parts.length - 1]] ?? 'admin',
   };
 }
 

@@ -382,6 +382,10 @@
       "title": "Low Battery",
       "description": "Notify when backup battery is running low"
     },
+    "acRestore": {
+      "title": "AC Restore",
+      "description": "Notify when main power comes back"
+    },
     "users": {
       "title": "Number of Users",
       "description": "Select group access level for notifications"

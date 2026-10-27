@@ -133,6 +133,20 @@ export function SpecialNotifyScreen() {
 
         <FeatureCard
           shadow="soft"
+          icon={<PlugIcon size={20} color={colors.onPrimary} />}
+          title={t('specialNotify.acRestore.title')}
+          description={t('specialNotify.acRestore.description')}
+          trailing={
+            <ToggleSwitch
+              value={settings.acRestore}
+              onValueChange={next => setAlert('acRestore', next)}
+              accessibilityLabel={t('specialNotify.acRestore.title')}
+            />
+          }
+        />
+
+        <FeatureCard
+          shadow="soft"
           icon={<UsersIcon size={20} color={colors.onPrimary} />}
           title={t('specialNotify.users.title')}
           description={t('specialNotify.users.description')}
