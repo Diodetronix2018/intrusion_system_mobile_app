@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
 
@@ -44,6 +44,12 @@ const REFRESH_TIMEOUT_MS = 10000;
  * device's state has arrived, so the screen settles before it's usable.
  */
 const SWITCH_SETTLE_MS = 1000;
+
+/**
+ * After a new device report, wait this long before re-pulling Latest
+ * Activity — the Lambda writes the history row just after the shadow update.
+ */
+const EVENTS_REFETCH_DELAY_MS = 3000;
 
 /** Gives up on a device switch (with an error toast) after this long. */
 const SWITCH_TIMEOUT_MS = 15000;
@@ -103,10 +109,20 @@ export function MainScreen() {
     events: latestEvents,
     loading: eventsLoading,
     error: eventsError,
+    refresh: refreshEvents,
   } = useEvents();
   const { requireStayMode } = useEditGuard();
   const { reconnect, refresh, controlReported, syncedThingName } =
     useIotConnection();
+
+  // The Main tab stays mounted, so its one fetch on mount goes stale — re-pull
+  // Latest Activity whenever the tab is shown and after every device report.
+  useFocusEffect(useCallback(() => refreshEvents(), [refreshEvents]));
+  useEffect(() => {
+    if (!controlReported) return;
+    const id = setTimeout(refreshEvents, EVENTS_REFETCH_DELAY_MS);
+    return () => clearTimeout(id);
+  }, [controlReported, refreshEvents]);
 
   // Spins from the tap until the refreshed shadow document lands (the
   // reported object is replaced on every message) or the timeout passes,
