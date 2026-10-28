@@ -16,6 +16,7 @@ import {
 import { useSession } from '../../session/SessionProvider';
 import {
   ClaimRejectedError,
+  DeviceLimitError,
   DevicePasswordError,
   normalizeThingName,
   parseClaimQr,
@@ -97,6 +98,12 @@ export function ClaimDeviceScreen() {
         if (badPassword && !err.unavailable) {
           // A wrong password is a field error, shown under the password input.
           setErrors({ password: { key: 'claim.wrongPasswordBody' } });
+        } else if (err instanceof DeviceLimitError) {
+          Toast.show({
+            type: 'error',
+            text1: t('claim.limitTitle'),
+            text2: t('claim.limitBody', { count: err.max }),
+          });
         } else {
           Toast.show({
             type: 'error',

@@ -246,6 +246,37 @@ export async function putDynamoItem(opts: {
   }
 }
 
+/**
+ * Every owner (Cognito sub) who has claimed `thingName`, via the table's
+ * thingName GSI.
+ */
+export async function queryDeviceOwners(opts: {
+  region: string;
+  table: string;
+  indexName: string;
+  thingName: string;
+  creds: AwsCredentials;
+}): Promise<string[]> {
+  const body = JSON.stringify({
+    TableName: opts.table,
+    IndexName: opts.indexName,
+    KeyConditionExpression: '#tn = :tn',
+    ProjectionExpression: '#o',
+    ExpressionAttributeNames: { '#tn': 'thingName', '#o': 'owner' },
+    ExpressionAttributeValues: { ':tn': { S: opts.thingName } },
+  });
+  const res = await sigV4Post(
+    'dynamodb',
+    opts.region,
+    'DynamoDB_20120810.Query',
+    'application/x-amz-json-1.0',
+    body,
+    opts.creds,
+  );
+  const items: any[] = Array.isArray(res?.Items) ? res.Items : [];
+  return items.map(item => unmarshallDynamo({ M: item })?.owner).filter(Boolean);
+}
+
 /** One row of `dtx_user_devices` — a device a user has claimed. */
 export type UserDeviceRow = { thingName: string; claimedAt?: string; label?: string };
 

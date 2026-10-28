@@ -110,7 +110,9 @@
     "passwordPlaceholder": "पैनल पासवर्ड दर्ज करें",
     "wrongPasswordTitle": "गलत पैनल पासवर्ड",
     "wrongPasswordBody": "गलत पैनल पासवर्ड",
-    "passwordUnavailableBody": "पैनल पासवर्ड सत्यापित नहीं हो सका। सुनिश्चित करें कि पैनल ऑनलाइन है, फिर से प्रयास करें।"
+    "passwordUnavailableBody": "पैनल पासवर्ड सत्यापित नहीं हो सका। सुनिश्चित करें कि पैनल ऑनलाइन है, फिर से प्रयास करें।",
+    "limitTitle": "डिवाइस की सीमा पूरी हो गई",
+    "limitBody": "इस डिवाइस पर पहले से अधिकतम {{count}} उपयोगकर्ता हैं।"
   },
   "validation": {
     "required": "{{field}} आवश्यक है",

@@ -110,7 +110,9 @@
     "passwordPlaceholder": "Enter panel password",
     "wrongPasswordTitle": "Incorrect panel password",
     "wrongPasswordBody": "Incorrect panel password",
-    "passwordUnavailableBody": "Couldn't verify the panel password. Make sure the panel is online, then try again."
+    "passwordUnavailableBody": "Couldn't verify the panel password. Make sure the panel is online, then try again.",
+    "limitTitle": "Device limit reached",
+    "limitBody": "This device already has the maximum of {{count}} users."
   },
   "validation": {
     "required": "{{field}} is required",

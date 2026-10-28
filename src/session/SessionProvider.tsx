@@ -11,8 +11,10 @@ import React, {
 import {
   COGNITO,
   DEVICES_TABLE,
+  MAX_USERS_PER_DEVICE,
   TELEMETRY_TABLE,
   USER_DEVICES_TABLE,
+  USER_DEVICES_THING_INDEX,
 } from '../config/awsConfig';
 import { StorageService } from '../storage';
 import { queryUserDevices } from '../utils/dynamoDb';
@@ -102,7 +104,8 @@ type SessionContextValue = {
    * Claim a device from its QR (thing name + code) directly against AWS:
    * validates the code, records ownership in `dtx_user_devices`, and makes
    * it the active device. Throws `ClaimRejectedError` if the thing name or
-   * code is wrong, `DevicePasswordError` if the device password is wrong;
+   * code is wrong, `DeviceLimitError` if the device already has the most
+   * users, `DevicePasswordError` if the device password is wrong;
    * claiming a device already owned is a no-op, not an error.
    */
   claimDevice: (
@@ -434,6 +437,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         region: COGNITO.region,
         devicesTable: DEVICES_TABLE,
         userDevicesTable: USER_DEVICES_TABLE,
+        userDevicesThingIndex: USER_DEVICES_THING_INDEX,
+        maxUsers: MAX_USERS_PER_DEVICE,
         telemetryTable: TELEMETRY_TABLE,
         thingName,
         claimCode,

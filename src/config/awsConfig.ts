@@ -48,6 +48,12 @@ export const DEVICES_TABLE = 'dtx_devices';
 // lets them switch between.
 export const USER_DEVICES_TABLE = 'dtx_user_devices';
 
+// GSI on `dtx_user_devices` keyed by thingName — lists who has claimed a device.
+export const USER_DEVICES_THING_INDEX = 'thingName-index';
+
+// Most users that can claim one device.
+export const MAX_USERS_PER_DEVICE = 5;
+
 // DynamoDB table holding each device's event/telemetry history, read for the
 // Events tab (partition key assumed to be `thingName`, matching every other
 // table in this app — confirm once real rows come back).

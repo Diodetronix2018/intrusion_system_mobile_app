@@ -14,6 +14,7 @@ import {
   ConditionalCheckFailedError,
   getDynamoItem,
   putDynamoItem,
+  queryDeviceOwners,
   queryTelemetry,
 } from '../utils/dynamoDb';
 import type { AwsCredentials } from './cognito';
@@ -81,6 +82,14 @@ export class ClaimRejectedError extends Error {
   }
 }
 
+/** Raised when the device already has the maximum number of users. */
+export class DeviceLimitError extends Error {
+  constructor(readonly max: number) {
+    super(`This device already has the maximum of ${max} users.`);
+    this.name = 'DeviceLimitError';
+  }
+}
+
 /** Raised when the device password doesn't match the device's reported `pwd`. */
 export class DevicePasswordError extends Error {
   constructor(
@@ -141,14 +150,19 @@ export async function checkPanelPassword(opts: {
  * `dtx_user_devices`. Many different users can claim the same device — the
  * only thing this guards against is the *same* user claiming the *same*
  * device twice, which is treated as a silent no-op rather than an error.
+ * Checks run in order: claim code, then the per-device user limit, then the
+ * panel password.
  * Throws {@link ClaimRejectedError} when the thing name is unknown or the
- * code doesn't match it, and {@link DevicePasswordError} when `password`
+ * code doesn't match it, {@link DeviceLimitError} when `maxUsers` others
+ * already claimed it, and {@link DevicePasswordError} when `password`
  * doesn't match the `pwd` the device reported to the telemetry table.
  */
 export async function claimDeviceInDynamo(opts: {
   region: string;
   devicesTable: string;
   userDevicesTable: string;
+  userDevicesThingIndex: string;
+  maxUsers: number;
   telemetryTable: string;
   thingName: string;
   claimCode: string;
@@ -164,6 +178,19 @@ export async function claimDeviceInDynamo(opts: {
   });
   if (!device || device.claimCode !== opts.claimCode) {
     throw new ClaimRejectedError();
+  }
+
+  // shortcut: read-then-write, so two simultaneous claims can both take the last slot; move to a Lambda with a counter + transaction for a hard limit.
+  const owners = await queryDeviceOwners({
+    region: opts.region,
+    table: opts.userDevicesTable,
+    indexName: opts.userDevicesThingIndex,
+    thingName: opts.thingName,
+    creds: opts.creds,
+  });
+  // Re-claiming a device this user already owns never counts against them.
+  if (!owners.includes(opts.owner) && owners.length >= opts.maxUsers) {
+    throw new DeviceLimitError(opts.maxUsers);
   }
 
   await checkPanelPassword(opts);
