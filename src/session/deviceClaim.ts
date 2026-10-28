@@ -14,6 +14,7 @@ import {
   ConditionalCheckFailedError,
   getDynamoItem,
   putDynamoItem,
+  queryTelemetry,
 } from '../utils/dynamoDb';
 import type { AwsCredentials } from './cognito';
 
@@ -80,6 +81,39 @@ export class ClaimRejectedError extends Error {
   }
 }
 
+/** Raised when the device password doesn't match the device's reported `pwd`. */
+export class DevicePasswordError extends Error {
+  constructor(
+    /** True when no telemetry row carries a `pwd` to compare against. */
+    readonly unavailable = false,
+  ) {
+    super(unavailable ? 'Device password unavailable.' : 'Incorrect device password.');
+    this.name = 'DevicePasswordError';
+  }
+}
+
+/**
+ * The device's password, from the most recent `dtx_tngrama_telemetry` row
+ * that carries a `pwd` field. undefined when none of them does.
+ */
+// shortcut: only looks at the latest 50 rows (TTL keeps ~5 days anyway); move the whole check to a Lambda if pwd must stay secret.
+async function fetchDevicePassword(opts: {
+  region: string;
+  telemetryTable: string;
+  thingName: string;
+  creds: AwsCredentials;
+}): Promise<string | undefined> {
+  const rows = await queryTelemetry({
+    region: opts.region,
+    table: opts.telemetryTable,
+    thingName: opts.thingName,
+    creds: opts.creds,
+    limit: 50,
+  });
+  const pwd = rows.find(row => row.pwd !== undefined && row.pwd !== null)?.pwd;
+  return pwd === undefined ? undefined : String(pwd).trim();
+}
+
 /**
  * Claim a device: validate the scanned `claimCode` against the `dtx_devices`
  * catalog, then record this user's ownership as a new row in
@@ -87,14 +121,17 @@ export class ClaimRejectedError extends Error {
  * only thing this guards against is the *same* user claiming the *same*
  * device twice, which is treated as a silent no-op rather than an error.
  * Throws {@link ClaimRejectedError} when the thing name is unknown or the
- * code doesn't match it.
+ * code doesn't match it, and {@link DevicePasswordError} when `password`
+ * doesn't match the `pwd` the device reported to the telemetry table.
  */
 export async function claimDeviceInDynamo(opts: {
   region: string;
   devicesTable: string;
   userDevicesTable: string;
+  telemetryTable: string;
   thingName: string;
   claimCode: string;
+  password: string;
   owner: string;
   creds: AwsCredentials;
 }): Promise<void> {
@@ -106,6 +143,19 @@ export async function claimDeviceInDynamo(opts: {
   });
   if (!device || device.claimCode !== opts.claimCode) {
     throw new ClaimRejectedError();
+  }
+
+  const devicePassword = await fetchDevicePassword({
+    region: opts.region,
+    telemetryTable: opts.telemetryTable,
+    thingName: opts.thingName,
+    creds: opts.creds,
+  });
+  if (devicePassword === undefined) {
+    throw new DevicePasswordError(true);
+  }
+  if (devicePassword !== opts.password) {
+    throw new DevicePasswordError();
   }
 
   try {

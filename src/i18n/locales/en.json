@@ -101,12 +101,16 @@
     "linkButton": "Link device",
     "linking": "Linking…",
     "invalidQr": "That QR code isn't a device code.",
-    "missingFields": "Enter both the device ID and the claim code.",
     "successTitle": "Device linked",
     "successBody": "Setting up your panel…",
     "rejectedTitle": "Could not link device",
     "rejectedBody": "This device is already claimed, or the code is incorrect.",
-    "failedTitle": "Something went wrong"
+    "failedTitle": "Something went wrong",
+    "passwordLabel": "Panel Password",
+    "passwordPlaceholder": "Enter panel password",
+    "wrongPasswordTitle": "Incorrect panel password",
+    "wrongPasswordBody": "Incorrect panel password",
+    "passwordUnavailableBody": "Couldn't verify the panel password. Make sure the panel is online, then try again."
   },
   "validation": {
     "required": "{{field}} is required",
@@ -115,7 +119,9 @@
     "passwordMismatch": "Passwords do not match",
     "phoneRequired": "Phone number is required",
     "phoneLength": "Enter a {{count}}-digit mobile number",
-    "phoneInvalid": "Enter a valid Indian mobile number"
+    "phoneInvalid": "Enter a valid Indian mobile number",
+    "digitsOnly": "{{field}} must contain numbers only",
+    "lengthRange": "{{field}} must be {{min}}–{{max}} digits"
   },
   "tabs": {
     "main": "Main",

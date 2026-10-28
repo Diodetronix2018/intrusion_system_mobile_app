@@ -8,7 +8,12 @@ import React, {
   useState,
 } from 'react';
 
-import { COGNITO, DEVICES_TABLE, USER_DEVICES_TABLE } from '../config/awsConfig';
+import {
+  COGNITO,
+  DEVICES_TABLE,
+  TELEMETRY_TABLE,
+  USER_DEVICES_TABLE,
+} from '../config/awsConfig';
 import { StorageService } from '../storage';
 import { queryUserDevices } from '../utils/dynamoDb';
 import {
@@ -97,9 +102,14 @@ type SessionContextValue = {
    * Claim a device from its QR (thing name + code) directly against AWS:
    * validates the code, records ownership in `dtx_user_devices`, and makes
    * it the active device. Throws `ClaimRejectedError` if the thing name or
-   * code is wrong; claiming a device already owned is a no-op, not an error.
+   * code is wrong, `DevicePasswordError` if the device password is wrong;
+   * claiming a device already owned is a no-op, not an error.
    */
-  claimDevice: (thingName: string, claimCode: string) => Promise<void>;
+  claimDevice: (
+    thingName: string,
+    claimCode: string,
+    password: string,
+  ) => Promise<void>;
   /** Switches the active device among the ones this user has already claimed. */
   switchDevice: (thingName: string) => void;
   signOut: () => void;
@@ -384,7 +394,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, [session, refreshDevices]);
 
   const claimDevice = useCallback(
-    async (thingName: string, claimCode: string): Promise<void> => {
+    async (
+      thingName: string,
+      claimCode: string,
+      password: string,
+    ): Promise<void> => {
       const idToken = await getFreshIdToken();
       const owner = decodeJwtClaims(idToken).sub;
       if (!owner) {
@@ -398,8 +412,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         region: COGNITO.region,
         devicesTable: DEVICES_TABLE,
         userDevicesTable: USER_DEVICES_TABLE,
+        telemetryTable: TELEMETRY_TABLE,
         thingName,
         claimCode,
+        password,
         owner,
         creds: credentials,
       });

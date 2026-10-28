@@ -101,12 +101,16 @@
     "linkButton": "डिवाइस जोड़ें",
     "linking": "जोड़ा जा रहा है…",
     "invalidQr": "यह QR कोड डिवाइस कोड नहीं है।",
-    "missingFields": "डिवाइस आईडी और क्लेम कोड दोनों दर्ज करें।",
     "successTitle": "डिवाइस जुड़ गया",
     "successBody": "आपका पैनल सेट किया जा रहा है…",
     "rejectedTitle": "डिवाइस नहीं जोड़ा जा सका",
     "rejectedBody": "यह डिवाइस पहले ही क्लेम हो चुका है, या कोड गलत है।",
-    "failedTitle": "कुछ गलत हो गया"
+    "failedTitle": "कुछ गलत हो गया",
+    "passwordLabel": "पैनल पासवर्ड",
+    "passwordPlaceholder": "पैनल पासवर्ड दर्ज करें",
+    "wrongPasswordTitle": "गलत पैनल पासवर्ड",
+    "wrongPasswordBody": "गलत पैनल पासवर्ड",
+    "passwordUnavailableBody": "पैनल पासवर्ड सत्यापित नहीं हो सका। सुनिश्चित करें कि पैनल ऑनलाइन है, फिर से प्रयास करें।"
   },
   "validation": {
     "required": "{{field}} आवश्यक है",
@@ -115,7 +119,9 @@
     "passwordMismatch": "पासवर्ड मेल नहीं खाते",
     "phoneRequired": "फ़ोन नंबर आवश्यक है",
     "phoneLength": "{{count}} अंकों का मोबाइल नंबर दर्ज करें",
-    "phoneInvalid": "मान्य भारतीय मोबाइल नंबर दर्ज करें"
+    "phoneInvalid": "मान्य भारतीय मोबाइल नंबर दर्ज करें",
+    "digitsOnly": "{{field}} में केवल अंक होने चाहिए",
+    "lengthRange": "{{field}} {{min}}–{{max}} अंकों का होना चाहिए"
   },
   "tabs": {
     "main": "मुख्य",

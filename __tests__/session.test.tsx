@@ -332,7 +332,7 @@ test('claiming a second device adds it without dropping the first, and switchDev
   ]);
 
   await ReactTestRenderer.act(async () => {
-    await seen.current!.claimDevice(SECOND, 'CODE-1234');
+    await seen.current!.claimDevice(SECOND, 'CODE-1234', '1234');
   });
   expect(seen.current!.session!.devices).toEqual([THING, SECOND]);
   // Claiming makes the newly claimed device the active one.

@@ -45,6 +45,36 @@ export function validatePassword(
       };
 }
 
+// shortcut: assumed panel password length range; set to the device spec once confirmed.
+export const MIN_PANEL_PASSWORD_LENGTH = 4;
+export const MAX_PANEL_PASSWORD_LENGTH = 8;
+
+/** The panel's device password: digits only, within the length range. */
+export function validatePanelPassword(
+  value: string,
+  field: string,
+): ValidationError {
+  const required = validateRequired(value, field);
+  if (required) {
+    return required;
+  }
+  const digits = value.trim();
+  if (!/^\d+$/.test(digits)) {
+    return { key: 'validation.digitsOnly', params: { field } };
+  }
+  return digits.length >= MIN_PANEL_PASSWORD_LENGTH &&
+    digits.length <= MAX_PANEL_PASSWORD_LENGTH
+    ? undefined
+    : {
+        key: 'validation.lengthRange',
+        params: {
+          field,
+          min: MIN_PANEL_PASSWORD_LENGTH,
+          max: MAX_PANEL_PASSWORD_LENGTH,
+        },
+      };
+}
+
 /** Indian mobile numbers are exactly ten digits and start 6-9. */
 export const INDIAN_MOBILE_LENGTH = 10;
 const INDIAN_MOBILE_RE = /^[6-9]\d{9}$/;

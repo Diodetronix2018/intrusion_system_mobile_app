@@ -16,23 +16,38 @@ import {
 import { useSession } from '../../session/SessionProvider';
 import {
   ClaimRejectedError,
+  DevicePasswordError,
   normalizeThingName,
   parseClaimQr,
 } from '../../session/deviceClaim';
-import { LogOutIcon } from '../../icons';
+import { EyeIcon, EyeOffIcon, LockIcon, LogOutIcon } from '../../icons';
 import { useTheme } from '../../theme';
+import { useValidationMessage } from '../../utils/useValidationMessage';
+import {
+  MAX_PANEL_PASSWORD_LENGTH,
+  validatePanelPassword,
+  validateRequired,
+  ValidationError,
+} from '../../utils/validation';
 import { QrScanner } from './QrScanner';
 
 type Mode = 'scan' | 'manual';
+type Errors = {
+  deviceId?: ValidationError;
+  claimCode?: ValidationError;
+  password?: ValidationError;
+};
 
 /**
  * Links a physical panel to the signed-in account — the whole app until one is
  * claimed. Scanning is the default path; typing the details in is the fallback
- * behind "Enter manually".
+ * behind "Enter manually". Either way the device password is typed in — a scan
+ * fills the device ID and claim code, then lands on the form for it.
  */
 export function ClaimDeviceScreen() {
   const { colors, spacing, sizing } = useTheme();
   const { t } = useTranslation();
+  const message = useValidationMessage();
   const { claimDevice, signOut } = useSession();
   const navigation = useNavigation();
   // Whether there's somewhere to go back to: false when this is the
@@ -48,19 +63,22 @@ export function ClaimDeviceScreen() {
   const [mode, setMode] = useState<Mode>('scan');
   const [deviceId, setDeviceId] = useState('');
   const [claimCode, setClaimCode] = useState('');
+  const [password, setPassword] = useState('');
+  const [secure, setSecure] = useState(true);
+  const [errors, setErrors] = useState<Errors>({});
   const [claiming, setClaiming] = useState(false);
   // Blocks repeat scans (the reader fires continuously) while a claim runs.
   const claimingRef = useRef(false);
 
   const runClaim = useCallback(
-    async (thingName: string, code: string) => {
+    async (thingName: string, code: string, devicePassword: string) => {
       if (claimingRef.current) {
         return;
       }
       claimingRef.current = true;
       setClaiming(true);
       try {
-        await claimDevice(thingName, code);
+        await claimDevice(thingName, code, devicePassword);
         Toast.show({
           type: 'success',
           text1: t('claim.successTitle'),
@@ -75,13 +93,25 @@ export function ClaimDeviceScreen() {
         }
       } catch (err: any) {
         const rejected = err instanceof ClaimRejectedError;
-        Toast.show({
-          type: 'error',
-          text1: rejected ? t('claim.rejectedTitle') : t('claim.failedTitle'),
-          text2: rejected
-            ? t('claim.rejectedBody')
-            : err?.message || t('auth.errors.tryAgain'),
-        });
+        const badPassword = err instanceof DevicePasswordError;
+        if (badPassword && !err.unavailable) {
+          // A wrong password is a field error, shown under the password input.
+          setErrors({ password: { key: 'claim.wrongPasswordBody' } });
+        } else {
+          Toast.show({
+            type: 'error',
+            text1: badPassword
+              ? t('claim.wrongPasswordTitle')
+              : rejected
+              ? t('claim.rejectedTitle')
+              : t('claim.failedTitle'),
+            text2: badPassword
+              ? t('claim.passwordUnavailableBody')
+              : rejected
+              ? t('claim.rejectedBody')
+              : err?.message || t('auth.errors.tryAgain'),
+          });
+        }
         // Let them try again (rescan / re-enter).
         claimingRef.current = false;
         setClaiming(false);
@@ -100,9 +130,13 @@ export function ClaimDeviceScreen() {
         }
         return;
       }
-      runClaim(parsed.thingName, parsed.claimCode);
+      // The QR has no password — prefill the form and let them type it.
+      setDeviceId(parsed.thingName);
+      setClaimCode(parsed.claimCode);
+      setErrors({});
+      setMode('manual');
     },
-    [runClaim, t],
+    [t],
   );
 
   const onManualSubmit = useCallback(() => {
@@ -110,12 +144,18 @@ export function ClaimDeviceScreen() {
     // device's registered "DTX867…" IoT thing name.
     const thing = normalizeThingName(deviceId);
     const code = claimCode.trim();
-    if (!thing || !code) {
-      Toast.show({ type: 'error', text1: t('claim.missingFields') });
+    const devicePassword = password.trim();
+    const next: Errors = {
+      deviceId: validateRequired(thing, t('claim.thingLabel')),
+      claimCode: validateRequired(code, t('claim.codeLabel')),
+      password: validatePanelPassword(devicePassword, t('claim.passwordLabel')),
+    };
+    setErrors(next);
+    if (next.deviceId || next.claimCode || next.password) {
       return;
     }
-    runClaim(thing, code);
-  }, [deviceId, claimCode, runClaim, t]);
+    runClaim(thing, code, devicePassword);
+  }, [deviceId, claimCode, password, runClaim, t]);
 
   const scanning = mode === 'scan';
 
@@ -208,7 +248,11 @@ export function ClaimDeviceScreen() {
               label={t('claim.thingLabel')}
               placeholder={t('claim.thingPlaceholder')}
               value={deviceId}
-              onChangeText={setDeviceId}
+              onChangeText={text => {
+                setDeviceId(text);
+                setErrors(prev => ({ ...prev, deviceId: undefined }));
+              }}
+              error={message(errors.deviceId)}
               // hint={t('claim.thingHint')}
               leftIcon={
                 <Icon
@@ -225,11 +269,40 @@ export function ClaimDeviceScreen() {
               label={t('claim.codeLabel')}
               placeholder={t('claim.codePlaceholder')}
               value={claimCode}
-              onChangeText={setClaimCode}
+              onChangeText={text => {
+                setClaimCode(text);
+                setErrors(prev => ({ ...prev, claimCode: undefined }));
+              }}
+              error={message(errors.claimCode)}
               leftIcon={
                 <Icon name="key-outline" size={20} color={colors.textSecondary} />
               }
               autoCapitalize="characters"
+              autoCorrect={false}
+              editable={!claiming}
+              returnKeyType="next"
+            />
+            <Input
+              label={t('claim.passwordLabel')}
+              placeholder={t('claim.passwordPlaceholder')}
+              value={password}
+              onChangeText={text => {
+                setPassword(text);
+                setErrors(prev => ({ ...prev, password: undefined }));
+              }}
+              error={message(errors.password)}
+              keyboardType="number-pad"
+              maxLength={MAX_PANEL_PASSWORD_LENGTH}
+              leftIcon={<LockIcon size={20} />}
+              rightIcon={
+                secure ? <EyeOffIcon size={20} /> : <EyeIcon size={20} />
+              }
+              onRightIconPress={() => setSecure(value => !value)}
+              rightIconLabel={
+                secure ? t('a11y.showPassword') : t('a11y.hidePassword')
+              }
+              secureTextEntry={secure}
+              autoCapitalize="none"
               autoCorrect={false}
               editable={!claiming}
               returnKeyType="go"
