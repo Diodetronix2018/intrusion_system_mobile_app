@@ -32,6 +32,7 @@ jest.mock('../src/session/cognito', () => ({
 jest.mock('../src/utils/dynamoDb', () => ({
   ...jest.requireActual('../src/utils/dynamoDb'),
   queryUserDevices: jest.fn(() => Promise.resolve([])),
+  queryTelemetry: jest.fn(() => Promise.resolve([{ pwd: '1234' }])),
 }));
 
 // The claim itself (validating against `dtx_devices`, writing to
@@ -342,6 +343,30 @@ test('claiming a second device adds it without dropping the first, and switchDev
     seen.current!.switchDevice(THING);
   });
   expect(seen.current!.session!.activeThingName).toBe(THING);
+
+  await unmount();
+});
+
+test('the active device stays locked each launch until its panel password matches', async () => {
+  StorageService.setString(SESSION_KEY, JSON.stringify(persisted(Date.now() + HOUR)));
+  dynamoDb.queryUserDevices.mockResolvedValue([{ thingName: THING }]);
+
+  const { seen, unmount } = await mount();
+  expect(seen.current!.hasDevice).toBe(true);
+  expect(seen.current!.panelLocked).toBe(true);
+
+  await ReactTestRenderer.act(async () => {
+    await expect(
+      seen.current!.verifyPanelPassword(THING, '9999'),
+    ).rejects.toThrow('Incorrect device password.');
+  });
+  expect(seen.current!.panelLocked).toBe(true);
+
+  await ReactTestRenderer.act(async () => {
+    await seen.current!.verifyPanelPassword(THING, '1234');
+  });
+  expect(seen.current!.panelLocked).toBe(false);
+  expect(seen.current!.unlockedThings.has(THING)).toBe(true);
 
   await unmount();
 });

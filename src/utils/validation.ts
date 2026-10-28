@@ -45,9 +45,9 @@ export function validatePassword(
       };
 }
 
-// shortcut: assumed panel password length range; set to the device spec once confirmed.
+// The panel password is exactly 4 digits.
 export const MIN_PANEL_PASSWORD_LENGTH = 4;
-export const MAX_PANEL_PASSWORD_LENGTH = 8;
+export const MAX_PANEL_PASSWORD_LENGTH = 4;
 
 /** The panel's device password: digits only, within the length range. */
 export function validatePanelPassword(
@@ -66,12 +66,8 @@ export function validatePanelPassword(
     digits.length <= MAX_PANEL_PASSWORD_LENGTH
     ? undefined
     : {
-        key: 'validation.lengthRange',
-        params: {
-          field,
-          min: MIN_PANEL_PASSWORD_LENGTH,
-          max: MAX_PANEL_PASSWORD_LENGTH,
-        },
+        key: 'validation.exactDigits',
+        params: { field, count: MIN_PANEL_PASSWORD_LENGTH },
       };
 }
 

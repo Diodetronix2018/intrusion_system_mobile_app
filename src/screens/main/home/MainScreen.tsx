@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
 
 import { OptionSheet, Screen } from '../../../components';
+import { PanelPasswordModal } from '../../device/PanelPasswordModal';
 import { useSession } from '../../../session/SessionProvider';
 import { useTheme } from '../../../theme';
 import { useIotConnection } from '../../../utils/IotConnection';
@@ -151,7 +152,7 @@ export function MainScreen() {
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshing]);
-  const { session, switchDevice } = useSession();
+  const { session, switchDevice, unlockedThings } = useSession();
   const [deviceSheetOpen, setDeviceSheetOpen] = useState(false);
   const devices = session?.devices ?? [];
 
@@ -159,10 +160,19 @@ export function MainScreen() {
   // until that device is connected and its state is in (+ a short settle),
   // so Stay/Away can't be sent before the new connection is ready.
   const [switchingTo, setSwitchingTo] = useState<string | null>(null);
-  const onSelectDevice = (thingName: string) => {
-    if (thingName === session?.activeThingName) return;
+  const startSwitch = (thingName: string) => {
     setSwitchingTo(thingName);
     switchDevice(thingName);
+  };
+  // A device not unlocked yet this run asks for its panel password first.
+  const [unlockTarget, setUnlockTarget] = useState<string | null>(null);
+  const onSelectDevice = (thingName: string) => {
+    if (thingName === session?.activeThingName) return;
+    if (unlockedThings.has(thingName)) {
+      startSwitch(thingName);
+    } else {
+      setUnlockTarget(thingName);
+    }
   };
   useEffect(() => {
     if (!switchingTo) return;
@@ -400,6 +410,16 @@ export function MainScreen() {
         selected={session?.activeThingName ?? ''}
         onSelect={onSelectDevice}
         onClose={() => setDeviceSheetOpen(false)}
+      />
+
+      <PanelPasswordModal
+        thingName={unlockTarget}
+        onCancel={() => setUnlockTarget(null)}
+        onUnlocked={() => {
+          const target = unlockTarget;
+          setUnlockTarget(null);
+          if (target) startSwitch(target);
+        }}
       />
 
       <SwitchingDeviceOverlay thingName={switchingTo} />

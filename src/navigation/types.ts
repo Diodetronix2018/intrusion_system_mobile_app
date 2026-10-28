@@ -20,6 +20,7 @@ export type RootStackParamList = {
   ResetPassword: { email: string; destination?: string };
   /** The only screen a signed-in user sees until they have claimed a device. */
   ClaimDevice: undefined;
+  PanelPassword: undefined;
   Tabs: NavigatorScreenParams<TabParamList> | undefined;
   Profile: undefined;
   Help: undefined;

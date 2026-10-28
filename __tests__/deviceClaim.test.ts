@@ -56,11 +56,11 @@ test('a wrong claim code is still rejected before the password check', async () 
   expect(mocked.queryTelemetry).not.toHaveBeenCalled();
 });
 
-test('panel password must be 4–8 digits', () => {
+test('panel password must be exactly 4 digits', () => {
   const { validatePanelPassword } = require('../src/utils/validation');
   expect(validatePanelPassword('', 'P')).toMatchObject({ key: 'validation.required' });
   expect(validatePanelPassword('12a4', 'P')).toMatchObject({ key: 'validation.digitsOnly' });
-  expect(validatePanelPassword('123', 'P')).toMatchObject({ key: 'validation.lengthRange' });
-  expect(validatePanelPassword('123456789', 'P')).toMatchObject({ key: 'validation.lengthRange' });
+  expect(validatePanelPassword('123', 'P')).toMatchObject({ key: 'validation.exactDigits' });
+  expect(validatePanelPassword('12345', 'P')).toMatchObject({ key: 'validation.exactDigits' });
   expect(validatePanelPassword('1234', 'P')).toBeUndefined();
 });

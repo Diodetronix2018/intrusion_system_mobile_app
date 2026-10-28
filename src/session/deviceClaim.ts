@@ -115,6 +115,27 @@ async function fetchDevicePassword(opts: {
 }
 
 /**
+ * Check a typed panel password against the `pwd` the device last reported.
+ * Throws {@link DevicePasswordError} (`unavailable` when there's nothing to
+ * compare against); resolves when it matches.
+ */
+export async function checkPanelPassword(opts: {
+  region: string;
+  telemetryTable: string;
+  thingName: string;
+  password: string;
+  creds: AwsCredentials;
+}): Promise<void> {
+  const devicePassword = await fetchDevicePassword(opts);
+  if (devicePassword === undefined) {
+    throw new DevicePasswordError(true);
+  }
+  if (devicePassword !== opts.password.trim()) {
+    throw new DevicePasswordError();
+  }
+}
+
+/**
  * Claim a device: validate the scanned `claimCode` against the `dtx_devices`
  * catalog, then record this user's ownership as a new row in
  * `dtx_user_devices`. Many different users can claim the same device — the
@@ -145,18 +166,7 @@ export async function claimDeviceInDynamo(opts: {
     throw new ClaimRejectedError();
   }
 
-  const devicePassword = await fetchDevicePassword({
-    region: opts.region,
-    telemetryTable: opts.telemetryTable,
-    thingName: opts.thingName,
-    creds: opts.creds,
-  });
-  if (devicePassword === undefined) {
-    throw new DevicePasswordError(true);
-  }
-  if (devicePassword !== opts.password) {
-    throw new DevicePasswordError();
-  }
+  await checkPanelPassword(opts);
 
   try {
     await putDynamoItem({

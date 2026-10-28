@@ -29,7 +29,7 @@ import {
   signInUserPool,
   signUp as cognitoSignUp,
 } from './cognito';
-import { claimDeviceInDynamo } from './deviceClaim';
+import { checkPanelPassword, claimDeviceInDynamo } from './deviceClaim';
 
 const SESSION_KEY = 'auth_session';
 /** Refresh the ID token this many ms before it actually expires. */
@@ -110,6 +110,18 @@ type SessionContextValue = {
     claimCode: string,
     password: string,
   ) => Promise<void>;
+  /**
+   * Devices whose panel password was entered since the app started. Held in
+   * memory only, so every launch (and every sign-in) asks again.
+   */
+  unlockedThings: ReadonlySet<string>;
+  /** True while the active device still needs its panel password this run. */
+  panelLocked: boolean;
+  /**
+   * Checks `password` against the device's reported `pwd` and, on a match,
+   * marks it unlocked for this run. Throws `DevicePasswordError` otherwise.
+   */
+  verifyPanelPassword: (thingName: string, password: string) => Promise<void>;
   /** Switches the active device among the ones this user has already claimed. */
   switchDevice: (thingName: string) => void;
   signOut: () => void;
@@ -353,6 +365,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   // than on every token refresh, since a plain refresh never changes
   // ownership.
   const devicesFetchedForSub = useRef<string | null>(null);
+  const [unlockedThings, setUnlockedThings] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  const markUnlocked = useCallback((thingName: string) => {
+    setUnlockedThings(prev =>
+      prev.has(thingName) ? prev : new Set(prev).add(thingName),
+    );
+  }, []);
   // False from the moment an account signs in / restores until its device
   // list has been fetched at least once — see `deviceCheckSettled` above.
   const [deviceCheckSettled, setDeviceCheckSettled] = useState(false);
@@ -374,6 +394,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     if (!session) {
       devicesFetchedForSub.current = null;
       setDeviceCheckSettled(false);
+      // signed out — the next account must enter its own panel passwords
+      setUnlockedThings(new Set());
       return;
     }
     let sub: string | undefined;
@@ -419,6 +441,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         owner,
         creds: credentials,
       });
+      // The claim just checked the panel password — don't ask for it again.
+      markUnlocked(thingName);
 
       // Refresh the device list so the newly claimed thing shows up, and
       // switch straight to it.
@@ -429,7 +453,23 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       }
       applySession({ ...current, devices, activeThingName: thingName });
     },
-    [getFreshIdToken, applySession],
+    [getFreshIdToken, applySession, markUnlocked],
+  );
+
+  const verifyPanelPassword = useCallback(
+    async (thingName: string, password: string): Promise<void> => {
+      const idToken = await getFreshIdToken();
+      const { credentials } = await getCredentials(COGNITO, idToken);
+      await checkPanelPassword({
+        region: COGNITO.region,
+        telemetryTable: TELEMETRY_TABLE,
+        thingName,
+        password,
+        creds: credentials,
+      });
+      markUnlocked(thingName);
+    },
+    [getFreshIdToken, markUnlocked],
   );
 
   const signUp = useCallback(
@@ -487,6 +527,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       hasDevice: Boolean(session?.activeThingName),
       restoring,
       deviceCheckSettled,
+      unlockedThings,
+      panelLocked: Boolean(
+        session?.activeThingName &&
+          !unlockedThings.has(session.activeThingName),
+      ),
+      verifyPanelPassword,
       signIn,
       signUp,
       confirmSignUp,
@@ -503,6 +549,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       session,
       restoring,
       deviceCheckSettled,
+      unlockedThings,
+      verifyPanelPassword,
       signIn,
       signUp,
       confirmSignUp,

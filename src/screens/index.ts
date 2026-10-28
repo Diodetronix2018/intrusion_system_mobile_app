@@ -6,6 +6,8 @@ export { ForgotPasswordScreen } from './auth/ForgotPasswordScreen';
 export { ResetPasswordScreen } from './auth/ResetPasswordScreen';
 export { ClaimDeviceScreen } from './device/ClaimDeviceScreen';
 export { QrScanner } from './device/QrScanner';
+export { PanelPasswordModal } from './device/PanelPasswordModal';
+export { PanelPasswordScreen } from './device/PanelPasswordScreen';
 export { SignInScreen } from './auth/SignInScreen';
 export { SignUpScreen } from './auth/SignUpScreen';
 export {

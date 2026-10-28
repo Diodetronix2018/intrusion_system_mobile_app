@@ -13,6 +13,7 @@ import {
   ConfirmSignUpScreen,
   ForgotPasswordScreen,
   HelpSupportScreen,
+  PanelPasswordScreen,
   ProfileScreen,
   ResetPasswordScreen,
   SettingsDetailScreen,
@@ -29,15 +30,22 @@ import type { RootStackParamList } from './types';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 /**
- * Three stacks, one at a time: auth until a session exists, then device
- * claiming until the account owns a panel, then the app.
+ * Four stacks, one at a time: auth until a session exists, then device
+ * claiming until the account owns a panel, then the panel password for the
+ * active device (every launch), then the app.
  *
  * Swapping the whole stack rather than navigating is the React Navigation
  * pattern for auth: there is no stale history to pop back into after logout or
  * after a claim, and no imperative reset to get wrong.
  */
 export function RootNavigator() {
-  const { isAuthenticated, hasDevice, restoring, deviceCheckSettled } = useSession();
+  const {
+    isAuthenticated,
+    hasDevice,
+    restoring,
+    deviceCheckSettled,
+    panelLocked,
+  } = useSession();
   const { colors, isDark } = useTheme();
 
   // hands React Navigation our palette so its own surfaces (the screen
@@ -63,7 +71,10 @@ export function RootNavigator() {
   // there's no cached device to show meanwhile — hold on a plain splash
   // rather than flashing sign-in, or the claim screen, at someone who
   // already has a device.
-  const waitingOnDevices = isAuthenticated && !hasDevice && !deviceCheckSettled;
+  // Same while locked: don't ask for the password of a cached device the
+  // list may be about to drop (e.g. unmapped after a panel password change).
+  const waitingOnDevices =
+    isAuthenticated && (!hasDevice || panelLocked) && !deviceCheckSettled;
   if (restoring || waitingOnDevices) {
     return (
       <View style={[styles.splash, { backgroundColor: colors.background }]}>
@@ -72,7 +83,7 @@ export function RootNavigator() {
     );
   }
 
-  const appReady = isAuthenticated && hasDevice;
+  const appReady = isAuthenticated && hasDevice && !panelLocked;
 
   const navigator = (
     <NavigationContainer theme={navigationTheme}>
@@ -102,6 +113,12 @@ export function RootNavigator() {
           // until a panel is linked, so claiming is the whole app.
           <Stack.Group screenOptions={{ animation: 'fade' }}>
             <Stack.Screen name="ClaimDevice" component={ClaimDeviceScreen} />
+          </Stack.Group>
+        ) : panelLocked ? (
+          // Every launch: the active device's panel password before the
+          // dashboard (and before the bank details reminder inside it).
+          <Stack.Group screenOptions={{ animation: 'fade' }}>
+            <Stack.Screen name="PanelPassword" component={PanelPasswordScreen} />
           </Stack.Group>
         ) : (
           <Stack.Group>

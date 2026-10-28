@@ -121,7 +121,7 @@
     "phoneLength": "Enter a {{count}}-digit mobile number",
     "phoneInvalid": "Enter a valid Indian mobile number",
     "digitsOnly": "{{field}} must contain numbers only",
-    "lengthRange": "{{field}} must be {{min}}–{{max}} digits"
+    "exactDigits": "{{field}} must be {{count}} digits"
   },
   "tabs": {
     "main": "Main",
@@ -540,5 +540,13 @@
       "empty": "No activity found",
       "error": "Couldn't load activity"
     }
+  },
+  "panelPassword": {
+    "title": "Panel Password",
+    "subtitle": "Enter the panel password for {{name}} to continue.",
+    "submit": "Continue",
+    "verifying": "Verifying…",
+    "invalid": "Invalid password",
+    "changeDevice": "Use another device"
   }
 }
