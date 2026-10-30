@@ -33,6 +33,11 @@ export function RepeatScreen() {
     value: count,
     label: t('repeat.times', { count }),
   }));
+  // Number of admins is a headcount, not a repeat — just "1", "2", "3"
+  const adminOptions: ChipOption<RepeatCount>[] = REPEAT_COUNTS.map(count => ({
+    value: count,
+    label: String(count),
+  }));
 
   const cards: { key: RepeatKey; icon: React.ReactNode }[] = [
     {
@@ -86,7 +91,7 @@ export function RepeatScreen() {
           >
             <ChipGroup<RepeatCount>
               accessibilityLabel={t(`repeat.${card.key}.title`)}
-              options={options}
+              options={card.key === 'admin' ? adminOptions : options}
               selected={settings[card.key]}
               onSelect={count => set(card.key, count)}
             />

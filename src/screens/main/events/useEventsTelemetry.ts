@@ -9,8 +9,12 @@ import { resolveThingName } from '../../../utils/thingName';
 const log = (...args: any[]) => console.log('[Events]', ...args);
 const logWarn = (...args: any[]) => console.warn('[Events]', ...args);
 
-/** How many of the most recent rows to pull in one query. */
-const PAGE_SIZE = 50;
+/**
+ * How many of the most recent rows to pull in one query — more than the 50
+ * cards shown, since heartbeat/info/signal rows are dropped before display.
+ */
+// shortcut: one query page (≤1 MB); paginate with LastEvaluatedKey if rows get large.
+const PAGE_SIZE = 200;
 
 /**
  * Fetches the device's event/telemetry history from `dtx_tngrama_telemetry`

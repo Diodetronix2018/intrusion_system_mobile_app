@@ -456,7 +456,8 @@
       "bedroom": "Bedroom"
     },
     "delayRange": "({{min}} - {{max}} Sec)",
-    "countRange": "({{min}} - {{max}})"
+    "countRange": "({{min}} - {{max}})",
+    "awayOnOffOnly": "In Away mode you can only turn zones On or Off"
   },
   "main": {
     "status": {

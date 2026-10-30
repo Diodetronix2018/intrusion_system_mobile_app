@@ -456,7 +456,8 @@
       "bedroom": "शयनकक्ष"
     },
     "delayRange": "({{min}} - {{max}} सेकंड)",
-    "countRange": "({{min}} - {{max}})"
+    "countRange": "({{min}} - {{max}})",
+    "awayOnOffOnly": "अवे मोड में आप केवल ज़ोन चालू या बंद कर सकते हैं"
   },
   "main": {
     "status": {

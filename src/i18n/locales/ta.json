@@ -456,7 +456,8 @@
       "bedroom": "படுக்கையறை"
     },
     "delayRange": "({{min}} - {{max}} வி)",
-    "countRange": "({{min}} - {{max}})"
+    "countRange": "({{min}} - {{max}})",
+    "awayOnOffOnly": "அவே பயன்முறையில் மண்டலங்களை ஆன் அல்லது ஆஃப் மட்டுமே செய்ய முடியும்"
   },
   "main": {
     "status": {

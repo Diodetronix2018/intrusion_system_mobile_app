@@ -205,6 +205,13 @@ export function parseZonValue(raw: string): ZoneConfig[] | undefined {
  * localized default location name, e.g. "Main Door", the same starting
  * label as before this field became editable.
  */
+/** True when `a` and `b` differ in nothing but their On/Off state. */
+export function onlyStateDiffers(a: ZoneConfig, b: ZoneConfig): boolean {
+  return (Object.keys(a) as (keyof ZoneConfig)[]).every(
+    key => key === 'state' || a[key] === b[key],
+  );
+}
+
 export function useZoneConfig(initial?: ZoneConfig[]) {
   const { t } = useTranslation();
   const { reported } = useConfigStatus();
@@ -241,6 +248,11 @@ export function useZoneConfig(initial?: ZoneConfig[]) {
   const { publish, publishing } = useIotShadowPublish(SBA_CONFIG_SHADOW);
 
   const config = zones[index];
+  // What the device has saved for this slot — undefined until it reports.
+  const saved = useMemo(
+    () => (reported?.zon ? parseWithLocalizedDefaults(reported.zon)?.[index] : undefined),
+    [reported?.zon, parseWithLocalizedDefaults, index],
+  );
 
   const goTo = useCallback(
     (next: number) => setIndex(wrap(next, SLOT_COUNT)),
@@ -270,6 +282,7 @@ export function useZoneConfig(initial?: ZoneConfig[]) {
       zones,
       index,
       config,
+      saved,
       previous,
       next,
       goTo,
@@ -277,6 +290,6 @@ export function useZoneConfig(initial?: ZoneConfig[]) {
       save,
       saving: publishing,
     }),
-    [zones, index, config, previous, next, goTo, update, save, publishing],
+    [zones, index, config, saved, previous, next, goTo, update, save, publishing],
   );
 }

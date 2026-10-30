@@ -35,6 +35,7 @@ import {
   DETECTION_COUNT_MIN,
   LOCATION_MAX_LENGTH,
   LOCATION_MIN_LENGTH,
+  onlyStateDiffers,
   TAMPER_INDEX,
   WAIT_TIME_MAX,
   WAIT_TIME_MIN,
@@ -221,10 +222,10 @@ export function ZoneScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
   const { colors, spacing } = theme;
-  const { index, config, previous, next, update, save, saving } =
+  const { index, config, saved, previous, next, update, save, saving } =
     useZoneConfig();
   const [locationError, setLocationError] = useState<string | undefined>();
-  const { requireStayMode } = useEditGuard();
+  const { locked } = useEditGuard();
   // The tamper line only has on/off and location — the rest is zones 1-8 only.
   const isTamper = index === TAMPER_INDEX;
 
@@ -248,7 +249,11 @@ export function ZoneScreen() {
   });
 
   const handleSave = async () => {
-    if (requireStayMode()) return;
+    // Away mode still allows turning a zone / tamper On or Off — nothing else.
+    if (locked && !(saved && onlyStateDiffers(config, saved))) {
+      Toast.show({ type: 'error', text1: t('zone.awayOnOffOnly') });
+      return;
+    }
     if (config.location.trim().length < LOCATION_MIN_LENGTH) {
       setLocationError(t('zone.locationRequired'));
       return;

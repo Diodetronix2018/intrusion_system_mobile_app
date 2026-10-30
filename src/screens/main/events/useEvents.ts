@@ -15,7 +15,7 @@ const logFilter = (category: EventCategoryId, ...args: any[]) =>
   console.log(`[Events][${category}]`, ...args);
 
 /** How many events to show at once, after filtering. */
-const MAX_VISIBLE = 10;
+const MAX_VISIBLE = 50;
 
 export type { EventItem };
 
@@ -26,7 +26,7 @@ export type { EventItem };
  * each remaining row into its actual event card(s) (`buildEventItems` — a
  * single row can produce several, e.g. Power Fail's AC + Charge), and applies
  * the active category filter plus a text search over each card's own
- * title, chips and details — capping the result to the 10 most recent.
+ * title, chips and details — capping the result to the 50 most recent.
  *
  * `initialFilter` seeds the category chip (e.g. arriving from the Main
  * screen's Hooter tile with `hooterFail` preselected) — only read once, on
