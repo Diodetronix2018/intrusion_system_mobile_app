@@ -203,6 +203,8 @@ export async function claimDeviceInDynamo(opts: {
         owner: { S: opts.owner },
         thingName: { S: opts.thingName },
         claimedAt: { S: new Date().toISOString() },
+        // Which app the claim came from ('DTX_Starter' is the 3-phase app).
+        claimedFrom: { S: 'DTX_Secure' },
       },
       // Only blocks re-claiming a device this exact user already owns — a
       // different owner claiming the same thingName is a different item
